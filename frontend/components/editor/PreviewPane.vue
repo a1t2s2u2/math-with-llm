@@ -17,6 +17,13 @@ const renderedHtml = ref('')
 const renderLatex = (source: string) => {
   let html = source
 
+  // Extract custom commands defined with \newcommand
+  const customCommands: Record<string, string> = {}
+  html = html.replace(/\\newcommand\{\\([^}]+)\}\{([^}]+)\}/g, (match, name, replacement) => {
+    customCommands[name] = replacement
+    return ''
+  })
+
   // Remove LaTeX preamble commands (they define structure but don't render content)
   html = html.replace(/\\documentclass(\[.*?\])?\{.*?\}/g, '')
   html = html.replace(/\\usepackage(\[.*?\])?\{.*?\}/g, '')
@@ -26,6 +33,27 @@ const renderLatex = (source: string) => {
   html = html.replace(/\\author\{.*?\}/g, '')
   html = html.replace(/\\date\{.*?\}/g, '')
   html = html.replace(/\\maketitle/g, '')
+
+  // Remove document environment markers
+  html = html.replace(/\\begin\{document\}/g, '')
+  html = html.replace(/\\end\{document\}/g, '')
+
+  // Remove comments (lines starting with %)
+  html = html.replace(/^%.*$/gm, '')
+
+  // Apply custom commands
+  for (const [name, replacement] of Object.entries(customCommands)) {
+    const regex = new RegExp(`\\\\${name}\\b`, 'g')
+    html = html.replace(regex, replacement)
+  }
+
+  // Handle \section commands
+  html = html.replace(/\\section\{([^}]+)\}/g, '<h2 class="latex-section">$1</h2>')
+  html = html.replace(/\\subsection\{([^}]+)\}/g, '<h3 class="latex-subsection">$1</h3>')
+  html = html.replace(/\\subsubsection\{([^}]+)\}/g, '<h4 class="latex-subsubsection">$1</h4>')
+
+  // Remove \displaystyle (it's handled by KaTeX automatically in display mode)
+  html = html.replace(/\\displaystyle\s*/g, '')
 
   // Display math blocks: \[...\]
   html = html.replace(/\\\[([\s\S]+?)\\\]/g, (match, tex) => {
@@ -174,5 +202,28 @@ onMounted(() => {
   padding: 2px 6px;
   border-radius: 3px;
   color: #ce9178;
+}
+
+.latex-section {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 24px 0 16px 0;
+  color: #4ec9b0;
+  border-bottom: 2px solid #3e3e3e;
+  padding-bottom: 8px;
+}
+
+.latex-subsection {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 20px 0 12px 0;
+  color: #4ec9b0;
+}
+
+.latex-subsubsection {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 16px 0 10px 0;
+  color: #4ec9b0;
 }
 </style>

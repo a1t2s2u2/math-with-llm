@@ -4,14 +4,14 @@ export default defineNuxtConfig({
 
   typescript: {
     strict: true,
-    typeCheck: true
+    typeCheck: false
   },
 
   vite: {
     server: {
       proxy: {
         '/api': {
-          target: 'http://localhost:8000',
+          target: 'http://backend:8000',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, '')
         }

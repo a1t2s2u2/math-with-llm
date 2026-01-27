@@ -2,9 +2,9 @@
   <div class="latex-editor">
     <textarea
       v-model="localSource"
-      @input="onInput"
       placeholder="Enter LaTeX here..."
       class="editor-textarea"
+      @input="onInput"
     />
   </div>
 </template>
@@ -31,11 +31,14 @@ const onInput = () => {
   debouncedEmit(localSource.value)
 }
 
-watch(() => props.modelValue, (newValue) => {
-  if (newValue !== localSource.value) {
-    localSource.value = newValue
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    if (newValue !== localSource.value) {
+      localSource.value = newValue
+    }
   }
-})
+)
 </script>
 
 <style scoped>

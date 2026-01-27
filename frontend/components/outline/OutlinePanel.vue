@@ -16,15 +16,15 @@
         <div class="block-actions">
           <button
             class="action-button strategy-button"
-            @click="$emit('generateSkeleton', block.id)"
             title="証明戦略を生成"
+            @click="$emit('generateSkeleton', block.id)"
           >
             💡
           </button>
           <button
             class="action-button lean-button"
-            @click="$emit('generateLean', block.id)"
             title="Leanコードを生成"
+            @click="$emit('generateLean', block.id)"
           >
             ⚡
           </button>

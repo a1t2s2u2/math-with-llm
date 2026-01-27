@@ -5,9 +5,7 @@
       <p>LaTeX editor with LLM assistance and Lean verification</p>
 
       <div class="actions">
-        <button @click="createNewNote" class="create-button">
-          Create New Note
-        </button>
+        <button class="create-button" @click="createNewNote">Create New Note</button>
       </div>
 
       <div v-if="notes.length > 0" class="notes-list">

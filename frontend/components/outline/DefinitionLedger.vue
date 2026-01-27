@@ -70,7 +70,7 @@ h3 {
 
 .definition-item:hover {
   border-color: #0d6efd;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .def-label {

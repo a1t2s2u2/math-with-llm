@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useNote } from '~/composables/useNote'
 import { useLatex } from '~/composables/useLatex'
 import { useLean } from '~/composables/useLean'

@@ -11,7 +11,10 @@
   box-sizing: border-box;
 }
 
-html, body, #__nuxt, .app {
+html,
+body,
+#__nuxt,
+.app {
   height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }

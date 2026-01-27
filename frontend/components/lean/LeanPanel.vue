@@ -2,19 +2,17 @@
   <div class="lean-panel">
     <div class="panel-header">
       <h3>Lean Code</h3>
-      <button @click="checkCode" :disabled="checking" class="check-button">
+      <button :disabled="checking" class="check-button" @click="checkCode">
         {{ checking ? 'Checking...' : 'Check' }}
       </button>
     </div>
 
-    <textarea
-      v-model="code"
-      class="lean-editor"
-      placeholder="Lean code will appear here..."
-    />
+    <textarea v-model="code" class="lean-editor" placeholder="Lean code will appear here..." />
 
     <div v-if="result" class="result-section">
-      <h4>Result: <span :class="result.status">{{ result.status }}</span></h4>
+      <h4>
+        Result: <span :class="result.status">{{ result.status }}</span>
+      </h4>
       <div v-if="result.diagnostics.length > 0" class="diagnostics">
         <div
           v-for="(diag, i) in result.diagnostics"

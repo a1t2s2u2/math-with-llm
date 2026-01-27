@@ -3,7 +3,7 @@
     <div class="modal-content" @click.stop>
       <div class="modal-header">
         <h3>Proof Strategy Suggestions</h3>
-        <button @click="$emit('close')" class="close-btn">×</button>
+        <button class="close-btn" @click="$emit('close')">×</button>
       </div>
 
       <div class="modal-body">
@@ -108,7 +108,8 @@ defineEmits<{
   overflow-y: auto;
 }
 
-.loading, .empty {
+.loading,
+.empty {
   text-align: center;
   color: #6c757d;
   padding: 40px 20px;

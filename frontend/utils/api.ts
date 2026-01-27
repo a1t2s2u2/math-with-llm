@@ -38,7 +38,10 @@ export async function parseLatex(latexSource: string): Promise<ParseResult> {
   return response.json()
 }
 
-export async function generateSkeleton(noteId: string, blockId: string): Promise<{ cards: SkeletonCard[] }> {
+export async function generateSkeleton(
+  noteId: string,
+  blockId: string
+): Promise<{ cards: SkeletonCard[] }> {
   const response = await fetch(`${API_BASE}/assist/skeleton`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

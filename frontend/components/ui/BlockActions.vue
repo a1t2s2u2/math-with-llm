@@ -1,17 +1,9 @@
 <template>
   <div class="block-actions">
-    <button
-      @click="$emit('generate-skeleton')"
-      :disabled="loading"
-      class="action-btn skeleton-btn"
-    >
+    <button :disabled="loading" class="action-btn skeleton-btn" @click="$emit('generate-skeleton')">
       📋 Generate Skeleton
     </button>
-    <button
-      @click="$emit('generate-lean')"
-      :disabled="loading"
-      class="action-btn lean-btn"
-    >
+    <button :disabled="loading" class="action-btn lean-btn" @click="$emit('generate-lean')">
       🔧 Generate Lean
     </button>
   </div>

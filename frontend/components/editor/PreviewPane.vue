@@ -1,5 +1,6 @@
 <template>
   <div class="preview-pane-wrapper">
+    <!-- eslint-disable-next-line vue/no-v-html -->
     <div class="preview-content" v-html="renderedHtml" />
   </div>
 </template>
@@ -19,15 +20,19 @@ const renderLatex = (source: string) => {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .split('\n')
-    .map(line => `<p>${line || '&nbsp;'}</p>`)
+    .map((line) => `<p>${line || '&nbsp;'}</p>`)
     .join('')
 
   renderedHtml.value = escaped
 }
 
-watch(() => props.source, (newSource) => {
-  renderLatex(newSource)
-}, { immediate: true })
+watch(
+  () => props.source,
+  (newSource) => {
+    renderLatex(newSource)
+  },
+  { immediate: true }
+)
 </script>
 
 <style>

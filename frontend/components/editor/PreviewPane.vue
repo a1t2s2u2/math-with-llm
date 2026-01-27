@@ -5,8 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
-import { HtmlGenerator } from 'latex.js'
+import { ref, watch } from 'vue'
 
 const props = defineProps<{
   source: string
@@ -14,38 +13,21 @@ const props = defineProps<{
 
 const renderedHtml = ref('')
 
-const renderLatex = async (source: string) => {
-  try {
-    // Use latex.js to parse and render LaTeX
-    const generator = new HtmlGenerator({ hyphenate: false })
-    const doc = await generator.parse(source)
+const renderLatex = (source: string) => {
+  const escaped = source
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .split('\n')
+    .map(line => `<p>${line || '&nbsp;'}</p>`)
+    .join('')
 
-    // Extract the body HTML
-    const bodyElement = doc.querySelector('.body')
-    if (bodyElement) {
-      renderedHtml.value = bodyElement.innerHTML
-    } else {
-      renderedHtml.value = doc.documentElement.innerHTML
-    }
-  } catch (error) {
-    console.error('LaTeX parsing error:', error)
-    // Fallback to showing the source with error message
-    renderedHtml.value = `<div class="latex-error">
-      <p><strong>LaTeX Parse Error:</strong></p>
-      <pre>${String(error)}</pre>
-      <p><strong>Source:</strong></p>
-      <pre>${source}</pre>
-    </div>`
-  }
+  renderedHtml.value = escaped
 }
 
-watch(() => props.source, async (newSource) => {
-  await renderLatex(newSource)
+watch(() => props.source, (newSource) => {
+  renderLatex(newSource)
 }, { immediate: true })
-
-onMounted(async () => {
-  await renderLatex(props.source)
-})
 </script>
 
 <style>

@@ -8,9 +8,6 @@ export default defineNuxtConfig({
   },
 
   vite: {
-    optimizeDeps: {
-      exclude: ['latex.js']
-    },
     server: {
       proxy: {
         '/api': {

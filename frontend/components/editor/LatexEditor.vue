@@ -43,6 +43,7 @@ watch(() => props.modelValue, (newValue) => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .editor-textarea {
@@ -56,5 +57,6 @@ watch(() => props.modelValue, (newValue) => {
   outline: none;
   background: #1e1e1e;
   color: #d4d4d4;
+  overflow-y: auto;
 }
 </style>

@@ -117,6 +117,7 @@ onMounted(() => {
   flex-direction: column;
   background: #2d2d2d;
   color: #d4d4d4;
+  overflow: hidden;
 }
 
 .header {
@@ -202,13 +203,15 @@ onMounted(() => {
   grid-template-columns: 1fr 1fr;
   gap: 0;
   overflow: hidden;
+  min-height: 0;
 }
 
 .pane {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 0;
   border-right: 1px solid #3e3e42;
+  overflow: hidden;
 }
 
 .pane:last-child {

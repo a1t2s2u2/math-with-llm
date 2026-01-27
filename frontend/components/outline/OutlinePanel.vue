@@ -32,8 +32,8 @@ defineEmits<{
 <style scoped>
 .outline-panel {
   padding: 16px;
-  background: #f8f9fa;
-  border-right: 1px solid #dee2e6;
+  background: #1e1e1e;
+  border-right: 1px solid #3e3e3e;
   height: 100%;
   overflow-y: auto;
 }
@@ -42,11 +42,11 @@ h3 {
   font-size: 14px;
   font-weight: 600;
   margin-bottom: 12px;
-  color: #495057;
+  color: #d4d4d4;
 }
 
 .empty {
-  color: #6c757d;
+  color: #858585;
   font-size: 13px;
 }
 
@@ -67,7 +67,7 @@ h3 {
 }
 
 .block-item:hover {
-  background: #e9ecef;
+  background: #2d2d2d;
 }
 
 .block-type {
@@ -96,7 +96,7 @@ h3 {
 
 .block-label {
   font-size: 13px;
-  color: #212529;
+  color: #d4d4d4;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -61,8 +61,8 @@ const checkCode = async () => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #f5f5f5;
-  border-top: 1px solid #ccc;
+  background: #1e1e1e;
+  border-top: 1px solid #3e3e3e;
 }
 
 .panel-header {
@@ -70,13 +70,14 @@ const checkCode = async () => {
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  background: #fff;
-  border-bottom: 1px solid #ccc;
+  background: #252526;
+  border-bottom: 1px solid #3e3e3e;
 }
 
 .panel-header h3 {
   margin: 0;
   font-size: 14px;
+  color: #d4d4d4;
 }
 
 .check-button {
@@ -105,14 +106,17 @@ const checkCode = async () => {
   border: none;
   resize: none;
   outline: none;
+  background: #1e1e1e;
+  color: #d4d4d4;
 }
 
 .result-section {
   padding: 12px 16px;
-  background: #fff;
-  border-top: 1px solid #ccc;
+  background: #252526;
+  border-top: 1px solid #3e3e3e;
   max-height: 200px;
   overflow-y: auto;
+  color: #d4d4d4;
 }
 
 .result-section h4 {
@@ -144,19 +148,22 @@ const checkCode = async () => {
 }
 
 .diagnostic.error {
-  background: #ffe6e6;
-  border-left: 3px solid #dc3545;
+  background: #5a1d1d;
+  border-left: 3px solid #f14c4c;
+  color: #f48771;
 }
 
 .diagnostic.warning {
-  background: #fff3cd;
+  background: #4d4a2a;
   border-left: 3px solid #ffc107;
+  color: #f0e68c;
 }
 
 .logs {
   font-size: 11px;
-  background: #f8f8f8;
+  background: #1e1e1e;
   padding: 8px;
   overflow-x: auto;
+  color: #d4d4d4;
 }
 </style>

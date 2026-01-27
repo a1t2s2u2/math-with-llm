@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
-import katex from 'katex'
+import { HtmlGenerator } from 'latex.js'
 
 const props = defineProps<{
   source: string
@@ -14,124 +14,43 @@ const props = defineProps<{
 
 const renderedHtml = ref('')
 
-const renderLatex = (source: string) => {
-  let html = source
+const renderLatex = async (source: string) => {
+  try {
+    // Use latex.js to parse and render LaTeX
+    const generator = new HtmlGenerator({ hyphenate: false })
+    const doc = await generator.parse(source)
 
-  // Extract custom commands defined with \newcommand
-  const customCommands: Record<string, string> = {}
-  html = html.replace(/\\newcommand\{\\([^}]+)\}\{([^}]+)\}/g, (match, name, replacement) => {
-    customCommands[name] = replacement
-    return ''
-  })
-
-  // Remove LaTeX preamble commands (they define structure but don't render content)
-  html = html.replace(/\\documentclass(\[.*?\])?\{.*?\}/g, '')
-  html = html.replace(/\\usepackage(\[.*?\])?\{.*?\}/g, '')
-  html = html.replace(/\\newtheorem\{.*?\}(\[.*?\])?\{.*?\}(\[.*?\])?/g, '')
-  html = html.replace(/\\theoremstyle\{.*?\}/g, '')
-  html = html.replace(/\\title\{.*?\}/g, '')
-  html = html.replace(/\\author\{.*?\}/g, '')
-  html = html.replace(/\\date\{.*?\}/g, '')
-  html = html.replace(/\\maketitle/g, '')
-
-  // Remove document environment markers
-  html = html.replace(/\\begin\{document\}/g, '')
-  html = html.replace(/\\end\{document\}/g, '')
-
-  // Remove comments (lines starting with %)
-  html = html.replace(/^%.*$/gm, '')
-
-  // Apply custom commands
-  for (const [name, replacement] of Object.entries(customCommands)) {
-    const regex = new RegExp(`\\\\${name}\\b`, 'g')
-    html = html.replace(regex, replacement)
-  }
-
-  // Handle \section commands
-  html = html.replace(/\\section\{([^}]+)\}/g, '<h2 class="latex-section">$1</h2>')
-  html = html.replace(/\\subsection\{([^}]+)\}/g, '<h3 class="latex-subsection">$1</h3>')
-  html = html.replace(/\\subsubsection\{([^}]+)\}/g, '<h4 class="latex-subsubsection">$1</h4>')
-
-  // Remove \displaystyle (it's handled by KaTeX automatically in display mode)
-  html = html.replace(/\\displaystyle\s*/g, '')
-
-  // Display math blocks: \[...\]
-  html = html.replace(/\\\[([\s\S]+?)\\\]/g, (match, tex) => {
-    try {
-      return katex.renderToString(tex, { displayMode: true, throwOnError: false })
-    } catch {
-      return match
+    // Extract the body HTML
+    const bodyElement = doc.querySelector('.body')
+    if (bodyElement) {
+      renderedHtml.value = bodyElement.innerHTML
+    } else {
+      renderedHtml.value = doc.documentElement.innerHTML
     }
-  })
-
-  // Display math: $$...$$
-  html = html.replace(/\$\$([\s\S]+?)\$\$/g, (match, tex) => {
-    try {
-      return katex.renderToString(tex, { displayMode: true, throwOnError: false })
-    } catch {
-      return match
-    }
-  })
-
-  // Inline math: $...$
-  html = html.replace(/\$([^\n]+?)\$/g, (match, tex) => {
-    try {
-      return katex.renderToString(tex, { displayMode: false, throwOnError: false })
-    } catch {
-      return match
-    }
-  })
-
-  // LaTeX enumerate environment
-  html = html.replace(/\\begin\{enumerate\}([\s\S]*?)\\end\{enumerate\}/g, (match, content) => {
-    const items = content.split(/\\item\s+/).filter((item: string) => item.trim())
-    const listItems = items.map((item: string) => `<li>${item.trim()}</li>`).join('')
-    return `<ol class="latex-list">${listItems}</ol>`
-  })
-
-  // LaTeX itemize environment
-  html = html.replace(/\\begin\{itemize\}([\s\S]*?)\\end\{itemize\}/g, (match, content) => {
-    const items = content.split(/\\item\s+/).filter((item: string) => item.trim())
-    const listItems = items.map((item: string) => `<li>${item.trim()}</li>`).join('')
-    return `<ul class="latex-list">${listItems}</ul>`
-  })
-
-  // Text formatting commands
-  html = html.replace(/\\emph\{([^}]+)\}/g, '<em>$1</em>')
-  html = html.replace(/\\textbf\{([^}]+)\}/g, '<strong>$1</strong>')
-  html = html.replace(/\\textit\{([^}]+)\}/g, '<em>$1</em>')
-  html = html.replace(/\\texttt\{([^}]+)\}/g, '<code>$1</code>')
-
-  // Labels and refs (just remove them for now)
-  html = html.replace(/\\label\{[^}]+\}/g, '')
-  html = html.replace(/\\ref\{[^}]+\}/g, '[ref]')
-
-  // Other LaTeX environments (display as blocks)
-  html = html.replace(/\\begin\{([^}]+)\}([\s\S]*?)\\end\{\1\}/g, (match, env, content) => {
-    return `<div class="latex-env latex-${env}">
-      <div class="env-type">${env}</div>
-      <div class="env-content">${content.trim()}</div>
+  } catch (error) {
+    console.error('LaTeX parsing error:', error)
+    // Fallback to showing the source with error message
+    renderedHtml.value = `<div class="latex-error">
+      <p><strong>LaTeX Parse Error:</strong></p>
+      <pre>${String(error)}</pre>
+      <p><strong>Source:</strong></p>
+      <pre>${source}</pre>
     </div>`
-  })
-
-  // Line breaks
-  html = html.replace(/\n\n+/g, '</p><p>')
-  html = html.replace(/\n/g, '<br>')
-
-  renderedHtml.value = `<p>${html}</p>`
+  }
 }
 
-watch(() => props.source, (newSource) => {
-  renderLatex(newSource)
+watch(() => props.source, async (newSource) => {
+  await renderLatex(newSource)
 }, { immediate: true })
 
-onMounted(() => {
-  renderLatex(props.source)
+onMounted(async () => {
+  await renderLatex(props.source)
 })
 </script>
 
 <style>
 @import 'katex/dist/katex.min.css';
+@import 'latex.js/dist/css/base.css';
 </style>
 
 <style scoped>
@@ -225,5 +144,27 @@ onMounted(() => {
   font-weight: bold;
   margin: 16px 0 10px 0;
   color: #4ec9b0;
+}
+
+.latex-error {
+  background: #5a1d1d;
+  border: 2px solid #f14c4c;
+  border-radius: 4px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.latex-error strong {
+  color: #f48771;
+}
+
+.latex-error pre {
+  background: #1e1e1e;
+  padding: 8px;
+  border-radius: 3px;
+  overflow-x: auto;
+  margin: 8px 0;
+  color: #d4d4d4;
+  font-size: 12px;
 }
 </style>

@@ -50,7 +50,6 @@ onMounted(async () => {
 
 <style>
 @import 'katex/dist/katex.min.css';
-@import 'latex.js/dist/css/base.css';
 </style>
 
 <style scoped>

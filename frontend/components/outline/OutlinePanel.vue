@@ -8,10 +8,27 @@
         :key="block.id"
         class="block-item"
         :class="`block-${block.type}`"
-        @click="$emit('jump', block.range[0])"
       >
-        <span class="block-type">{{ block.type }}</span>
-        <span class="block-label">{{ block.label || block.id }}</span>
+        <div class="block-info" @click="$emit('jump', block.range[0])">
+          <span class="block-type">{{ block.type }}</span>
+          <span class="block-label">{{ block.label || block.id }}</span>
+        </div>
+        <div class="block-actions">
+          <button
+            class="action-button strategy-button"
+            @click="$emit('generateSkeleton', block.id)"
+            title="証明戦略を生成"
+          >
+            💡
+          </button>
+          <button
+            class="action-button lean-button"
+            @click="$emit('generateLean', block.id)"
+            title="Leanコードを生成"
+          >
+            ⚡
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -26,6 +43,8 @@ defineProps<{
 
 defineEmits<{
   jump: [position: number]
+  generateSkeleton: [blockId: string]
+  generateLean: [blockId: string]
 }>()
 </script>
 
@@ -59,15 +78,50 @@ h3 {
 .block-item {
   padding: 8px 12px;
   border-radius: 4px;
-  cursor: pointer;
   display: flex;
-  gap: 8px;
+  justify-content: space-between;
   align-items: center;
+  gap: 8px;
   transition: background 0.2s;
 }
 
 .block-item:hover {
   background: #2d2d2d;
+}
+
+.block-info {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex: 1;
+  cursor: pointer;
+}
+
+.block-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.action-button {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 14px;
+  background: #3e3e3e;
+  transition: background 0.2s;
+}
+
+.action-button:hover {
+  background: #4e4e4e;
+}
+
+.strategy-button:hover {
+  background: #0d6efd;
+}
+
+.lean-button:hover {
+  background: #198754;
 }
 
 .block-type {

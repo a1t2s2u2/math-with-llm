@@ -18,7 +18,12 @@
           </button>
         </div>
         <div class="sidebar-content">
-          <OutlinePanel v-if="activeTab === 'outline'" :blocks="blocks" />
+          <OutlinePanel
+            v-if="activeTab === 'outline'"
+            :blocks="blocks"
+            @generate-skeleton="handleGenerateSkeleton"
+            @generate-lean="handleGenerateLean"
+          />
           <DefinitionLedger v-if="activeTab === 'definitions'" :definitions="definitions" />
           <SymbolTable v-if="activeTab === 'symbols'" :symbols="symbols" />
           <TodoList v-if="activeTab === 'todos'" :todos="todos" />
@@ -99,6 +104,11 @@ watch(note, (newNote) => {
     latexSource.value = newNote.latex_source
   }
 })
+
+const handleGenerateSkeleton = async (blockId: string) => {
+  showSkeletonModal.value = true
+  await requestSkeleton(blockId)
+}
 
 const handleGenerateLean = async (blockId: string) => {
   const result = await requestLean(blockId)

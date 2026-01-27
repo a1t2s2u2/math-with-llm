@@ -52,32 +52,36 @@ cp .env.example .env
 # .envを編集してOPENAI_API_KEYを設定
 ```
 
-3. **バックエンド起動（開発）**
+3. **起動（推奨: Docker Compose）**
 
+```bash
+docker-compose up --build
+```
+
+これだけで、バックエンド＋フロントエンドが同時に起動します。
+
+4. **ブラウザでアクセス**
+
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
+
+## 手動起動（開発時）
+
+Docker Composeを使わない場合：
+
+**バックエンド:**
 ```bash
 cd backend
 uv sync
 PYTHONPATH=/workspaces/math-with-llm/backend uv run uvicorn app.main:app --reload --host 0.0.0.0
 ```
 
-4. **フロントエンド起動（開発）**
-
+**フロントエンド（別ターミナル）:**
 ```bash
 cd frontend
 npm install
 npm run dev
-```
-
-5. **ブラウザでアクセス**
-
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- API Docs: http://localhost:8000/docs
-
-## Docker Compose起動（本番想定）
-
-```bash
-docker-compose up --build
 ```
 
 ## API構造

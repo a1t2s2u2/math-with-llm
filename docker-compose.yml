@@ -3,8 +3,8 @@ version: '3.8'
 services:
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     ports:
       - "8000:8000"
     volumes:
@@ -13,7 +13,7 @@ services:
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - DATA_DIR=/app/data
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      - PYTHONPATH=/app
 
   frontend:
     build:
@@ -24,18 +24,13 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      - /app/.nuxt
     environment:
-      - API_BASE_URL=http://backend:8000
-    command: npm run dev
-
-  lean:
-    build:
-      context: ./lean
-      dockerfile: Dockerfile
-    volumes:
-      - lean_cache:/root/.elan
-    environment:
-      - LEAN_MEMORY_LIMIT=2048
+      - NITRO_HOST=0.0.0.0
+      - NITRO_PORT=3000
+    depends_on:
+      - backend
 
 volumes:
-  lean_cache:
+  node_modules:
+  nuxt_build:

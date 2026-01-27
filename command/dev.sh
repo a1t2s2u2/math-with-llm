@@ -23,7 +23,7 @@ echo ""
 # フロントエンド起動（フォアグラウンド）
 echo "🎨 Starting frontend server..."
 cd "$PROJECT_ROOT/frontend"
-npm run dev &
+BACKEND_URL=http://localhost:8000 npm run dev &
 FRONTEND_PID=$!
 echo "   Frontend PID: $FRONTEND_PID"
 echo ""

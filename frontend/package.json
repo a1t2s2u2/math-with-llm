@@ -1,0 +1,22 @@
+{
+  "name": "math-with-llm-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "preview": "nuxt preview"
+  },
+  "dependencies": {
+    "nuxt": "^3.15.0",
+    "vue": "^3.5.0",
+    "katex": "^0.16.0",
+    "monaco-editor": "^0.52.0"
+  },
+  "devDependencies": {
+    "@nuxt/devtools": "^1.6.0",
+    "@types/katex": "^0.16.0",
+    "typescript": "^5.7.0"
+  }
+}

@@ -52,15 +52,21 @@ cp .env.example .env
 # .envを編集してOPENAI_API_KEYを設定
 ```
 
-3. **起動（推奨: Docker Compose）**
+3. **devcontainerの再起動（初回のみ）**
+
+Docker-in-Dockerを有効化したので、VSCodeでdevcontainerを再ビルド：
+
+- VSCode: `Cmd/Ctrl + Shift + P` → "Dev Containers: Rebuild Container"
+
+4. **起動（推奨: Docker Compose）**
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 これだけで、バックエンド＋フロントエンドが同時に起動します。
 
-4. **ブラウザでアクセス**
+5. **ブラウザでアクセス**
 
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:8000

@@ -2,7 +2,12 @@
   "name": "Python Dev Container",
   "image": "mcr.microsoft.com/devcontainers/python:3.12",
   "features": {
-    "ghcr.io/devcontainers-extra/features/uv:latest": {}
+    "ghcr.io/devcontainers-extra/features/uv:latest": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:latest": {
+      "version": "latest",
+      "moby": true,
+      "dockerDashComposeVersion": "v2"
+    }
   },
   "customizations": {
     "vscode": {
@@ -28,7 +33,8 @@
   "remoteUser": "vscode",
   "initializeCommand": "mkdir -p ${localEnv:HOME}/.claude",
   "mounts": [
-    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind"
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind",
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
   "postCreateCommand": "uv sync",
   "postStartCommand": "uv run pre-commit install"

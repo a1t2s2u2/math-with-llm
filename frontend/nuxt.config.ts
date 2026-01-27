@@ -8,12 +8,15 @@ export default defineNuxtConfig({
   },
 
   vite: {
+    optimizeDeps: {
+      exclude: ['latex.js']
+    },
     server: {
       proxy: {
         '/api': {
           target: 'http://backend:8000',
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, '')
+          rewrite: (path: string) => path.replace(/^\/api/, '')
         }
       }
     }

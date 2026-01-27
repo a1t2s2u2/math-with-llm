@@ -1,37 +1,68 @@
 <template>
   <div class="preview-pane-wrapper">
-    <!-- eslint-disable-next-line vue/no-v-html -->
-    <div class="preview-content" v-html="renderedHtml" />
+    <div ref="contentRef" class="preview-content" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, nextTick } from 'vue'
 
 const props = defineProps<{
   source: string
 }>()
 
-const renderedHtml = ref('')
+const contentRef = ref<HTMLElement | null>(null)
 
-const renderLatex = (source: string) => {
-  const escaped = source
-    .replace(/&/g, '&amp;')
+let MathJax: any = null
+
+onMounted(async () => {
+  // Load MathJax dynamically
+  const mathjax = await import('mathjax-full/js/mathjax')
+  const { TeX } = await import('mathjax-full/js/input/tex')
+  const { CHTML } = await import('mathjax-full/js/output/chtml')
+  const { liteAdaptor } = await import('mathjax-full/js/adaptors/liteAdaptor')
+  const { RegisterHTMLHandler } = await import('mathjax-full/js/handlers/html')
+  const { AllPackages } = await import('mathjax-full/js/input/tex/AllPackages')
+
+  const adaptor = liteAdaptor()
+  RegisterHTMLHandler(adaptor)
+
+  MathJax = mathjax.mathjax.document('', {
+    InputJax: new TeX({ packages: AllPackages }),
+    OutputJax: new CHTML({ fontURL: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml/fonts/woff-v2' })
+  })
+
+  await renderContent(props.source)
+})
+
+const renderContent = async (source: string) => {
+  if (!contentRef.value || !MathJax) return
+
+  // Simple preprocessing: wrap content in a container
+  const processed = `<div class="latex-document">${source
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .split('\n')
-    .map((line) => `<p>${line || '&nbsp;'}</p>`)
-    .join('')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>')}</div>`
 
-  renderedHtml.value = escaped
+  contentRef.value.innerHTML = processed
+
+  await nextTick()
+
+  // Typeset with MathJax
+  try {
+    MathJax.typesetClear([contentRef.value])
+    await MathJax.typesetPromise([contentRef.value])
+  } catch (e) {
+    console.error('MathJax typeset error:', e)
+  }
 }
 
 watch(
   () => props.source,
-  (newSource) => {
-    renderLatex(newSource)
-  },
-  { immediate: true }
+  async (newSource) => {
+    await renderContent(newSource)
+  }
 )
 </script>
 

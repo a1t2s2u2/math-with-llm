@@ -6,9 +6,13 @@ set -e
 echo "🚀 Starting development servers..."
 echo ""
 
+# プロジェクトルートに移動
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT"
+
 # バックエンド起動（バックグラウンド）
 echo "📦 Starting backend server..."
-cd "$(dirname "$0")"
 uv run uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
 echo "   Backend PID: $BACKEND_PID"
@@ -16,7 +20,7 @@ echo ""
 
 # フロントエンド起動（フォアグラウンド）
 echo "🎨 Starting frontend server..."
-cd frontend
+cd "$PROJECT_ROOT/frontend"
 npm run dev &
 FRONTEND_PID=$!
 echo "   Frontend PID: $FRONTEND_PID"

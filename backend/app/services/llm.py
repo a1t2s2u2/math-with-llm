@@ -41,7 +41,7 @@ IMPORTANT: Do NOT provide definitive proofs.
 Only suggest strategies and what to check."""
 
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-5-mini",
         messages=[
             {
                 "role": "system",
@@ -87,7 +87,7 @@ Output as JSON:
 }}"""
 
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-5-mini",
         messages=[
             {
                 "role": "system",
@@ -133,7 +133,7 @@ Output as JSON:
 }}"""
 
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-5-mini",
         messages=[
             {
                 "role": "system",

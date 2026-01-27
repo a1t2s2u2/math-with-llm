@@ -18,7 +18,7 @@ LaTeX数学ノートエディタ with LLM支援 + Lean4検証
 
 - **Backend**: FastAPI（Python 3.12）
   - LaTeX解析（ブロック・シンボル・TODO抽出）
-  - OpenAI gpt-4o-mini統合
+  - OpenAI gpt-5-mini統合
   - Lean4サンドボックス実行
   - ファイルベースJSON永続化
 

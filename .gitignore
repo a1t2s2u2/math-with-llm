@@ -49,3 +49,10 @@ Thumbs.db
 .env
 .env.local
 backend/data/*.json
+
+# Node.js
+node_modules/
+frontend/node_modules/
+frontend/.nuxt/
+frontend/.output/
+frontend/dist/

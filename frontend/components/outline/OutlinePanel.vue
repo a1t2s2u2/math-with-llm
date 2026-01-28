@@ -1,6 +1,5 @@
 <template>
   <div class="outline-panel">
-    <h3>Outline</h3>
     <div v-if="blocks.length === 0" class="empty">No blocks found</div>
     <div v-else class="block-list">
       <div
@@ -8,23 +7,25 @@
         :key="block.id"
         class="block-item"
         :class="`block-${block.type}`"
+        @click="$emit('jump', block.range[0])"
       >
-        <div class="block-info" @click="$emit('jump', block.range[0])">
-          <span class="block-type">{{ block.type }}</span>
-          <span class="block-label">{{ block.label || block.id }}</span>
+        <div class="block-header">
+          <span class="block-type">{{ formatType(block.type) }}</span>
+          <span v-if="block.label" class="block-label">{{ block.label }}</span>
         </div>
+        <div v-if="block.title" class="block-title">{{ block.title }}</div>
         <div class="block-actions">
           <button
-            class="action-button strategy-button"
+            class="action-button"
             title="証明戦略を生成"
-            @click="$emit('generateSkeleton', block.id)"
+            @click.stop="$emit('generateSkeleton', block.id)"
           >
             💡
           </button>
           <button
-            class="action-button lean-button"
+            class="action-button"
             title="Leanコードを生成"
-            @click="$emit('generateLean', block.id)"
+            @click.stop="$emit('generateLean', block.id)"
           >
             ⚡
           </button>
@@ -46,113 +47,147 @@ defineEmits<{
   generateSkeleton: [blockId: string]
   generateLean: [blockId: string]
 }>()
+
+const formatType = (type: string) => {
+  const typeMap: Record<string, string> = {
+    definition: 'Def',
+    theorem: 'Thm',
+    lemma: 'Lem',
+    proposition: 'Prop',
+    corollary: 'Cor',
+    proof: 'Prf',
+    remark: 'Rem',
+    example: 'Ex'
+  }
+  return typeMap[type] || type
+}
 </script>
 
 <style scoped>
 .outline-panel {
-  padding: 16px;
+  padding: 8px;
   background: #1e1e1e;
-  border-right: 1px solid #3e3e3e;
   height: 100%;
   overflow-y: auto;
 }
 
-h3 {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  color: #d4d4d4;
-}
-
 .empty {
   color: #858585;
-  font-size: 13px;
+  font-size: 12px;
+  padding: 8px;
 }
 
 .block-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .block-item {
-  padding: 8px 12px;
+  padding: 6px 8px;
   border-radius: 4px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  transition: background 0.2s;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-left: 3px solid transparent;
 }
 
 .block-item:hover {
   background: #2d2d2d;
 }
 
-.block-info {
+.block-definition {
+  border-left-color: #0d6efd;
+}
+
+.block-theorem,
+.block-lemma,
+.block-proposition,
+.block-corollary {
+  border-left-color: #198754;
+}
+
+.block-proof {
+  border-left-color: #ffc107;
+}
+
+.block-remark,
+.block-example {
+  border-left-color: #6c757d;
+}
+
+.block-header {
   display: flex;
-  gap: 8px;
   align-items: center;
-  flex: 1;
-  cursor: pointer;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.block-type {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 1px 4px;
+  border-radius: 2px;
+  background: #3e3e3e;
+  color: #cccccc;
+}
+
+.block-definition .block-type {
+  background: #0d6efd33;
+  color: #6cb2f7;
+}
+
+.block-theorem .block-type,
+.block-lemma .block-type,
+.block-proposition .block-type,
+.block-corollary .block-type {
+  background: #19875433;
+  color: #6fcf97;
+}
+
+.block-proof .block-type {
+  background: #ffc10733;
+  color: #ffd966;
+}
+
+.block-label {
+  font-size: 11px;
+  color: #808080;
+  font-family: monospace;
+}
+
+.block-title {
+  font-size: 12px;
+  color: #d4d4d4;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .block-actions {
   display: flex;
   gap: 4px;
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.block-item:hover .block-actions {
+  opacity: 1;
 }
 
 .action-button {
-  padding: 4px 8px;
+  padding: 2px 6px;
   border: none;
   border-radius: 3px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 12px;
   background: #3e3e3e;
-  transition: background 0.2s;
+  transition: background 0.15s;
 }
 
 .action-button:hover {
   background: #4e4e4e;
-}
-
-.strategy-button:hover {
-  background: #0d6efd;
-}
-
-.lean-button:hover {
-  background: #198754;
-}
-
-.block-type {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  padding: 2px 6px;
-  border-radius: 3px;
-  background: #6c757d;
-  color: white;
-}
-
-.block-definition .block-type {
-  background: #0d6efd;
-}
-
-.block-theorem .block-type,
-.block-lemma .block-type {
-  background: #198754;
-}
-
-.block-proof .block-type {
-  background: #ffc107;
-  color: #000;
-}
-
-.block-label {
-  font-size: 13px;
-  color: #d4d4d4;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 </style>

@@ -1,6 +1,5 @@
 <template>
   <div class="definition-ledger">
-    <h3>Definitions</h3>
     <div v-if="definitions.length === 0" class="empty">No definitions found</div>
     <div v-else class="definition-list">
       <div
@@ -9,8 +8,11 @@
         class="definition-item"
         @click="$emit('jump', def.range[0])"
       >
-        <div class="def-label">{{ def.label || def.id }}</div>
-        <div class="def-preview">{{ getPreview(def.latex_fragment) }}</div>
+        <div class="def-header">
+          <span class="def-type">Def</span>
+          <span v-if="def.label" class="def-label">{{ def.label }}</span>
+        </div>
+        <div v-if="def.title" class="def-title">{{ def.title }}</div>
       </div>
     </div>
   </div>
@@ -26,63 +28,69 @@ defineProps<{
 defineEmits<{
   jump: [position: number]
 }>()
-
-const getPreview = (fragment: string) => {
-  return fragment.slice(0, 100).replace(/\n/g, ' ') + '...'
-}
 </script>
 
 <style scoped>
 .definition-ledger {
-  padding: 16px;
-  background: #f8f9fa;
-  border-right: 1px solid #dee2e6;
+  padding: 8px;
+  background: #1e1e1e;
   height: 100%;
   overflow-y: auto;
 }
 
-h3 {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  color: #495057;
-}
-
 .empty {
-  color: #6c757d;
-  font-size: 13px;
+  color: #858585;
+  font-size: 12px;
+  padding: 8px;
 }
 
 .definition-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 2px;
 }
 
 .definition-item {
-  padding: 12px;
-  background: white;
-  border: 1px solid #dee2e6;
+  padding: 6px 8px;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.15s;
+  border-left: 3px solid #0d6efd;
 }
 
 .definition-item:hover {
-  border-color: #0d6efd;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: #2d2d2d;
+}
+
+.def-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.def-type {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 1px 4px;
+  border-radius: 2px;
+  background: #0d6efd33;
+  color: #6cb2f7;
 }
 
 .def-label {
-  font-weight: 600;
-  font-size: 13px;
-  color: #0d6efd;
-  margin-bottom: 4px;
+  font-size: 11px;
+  color: #808080;
+  font-family: monospace;
 }
 
-.def-preview {
+.def-title {
   font-size: 12px;
-  color: #6c757d;
+  color: #d4d4d4;
   line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

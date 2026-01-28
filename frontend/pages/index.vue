@@ -47,12 +47,14 @@
                     <OutlinePanel
                       v-if="activeTab === 'outline'"
                       :blocks="blocks"
+                      @jump="handleJump"
                       @generate-skeleton="handleGenerateSkeleton"
                       @generate-lean="handleGenerateLean"
                     />
                     <DefinitionLedger
                       v-if="activeTab === 'definitions'"
                       :definitions="definitions"
+                      @jump="handleJump"
                     />
                     <SymbolTable v-if="activeTab === 'symbols'" :symbols="symbols" />
                     <TodoList v-if="activeTab === 'todos'" :todos="todos" />
@@ -79,6 +81,7 @@
                     <div class="pane latex-pane">
                       <div class="pane-header">{{ currentFile.name }}</div>
                       <LatexEditor
+                        ref="editorRef"
                         v-model="latexSource"
                         :scroll-line="previewScrollLine"
                         :sync-enabled="scrollSyncEnabled"
@@ -171,6 +174,7 @@ const activeTab = ref('outline')
 const scrollSyncEnabled = ref(true)
 const editorScrollLine = ref(1)
 const previewScrollLine = ref(1)
+const editorRef = ref<InstanceType<typeof LatexEditor> | null>(null)
 
 // Skeleton modal state
 const showSkeletonModal = ref(false)
@@ -245,6 +249,10 @@ const handleEditorScroll = (line: number) => {
 
 const handlePreviewScroll = (line: number) => {
   previewScrollLine.value = line
+}
+
+const handleJump = (position: number) => {
+  editorRef.value?.scrollToPosition(position)
 }
 
 // Sync latex source with file

@@ -12,6 +12,7 @@ export interface Note {
 export interface Block {
   type: string
   label: string | null
+  title: string | null
   id: string
   range: [number, number]
   latex_fragment: string

@@ -152,6 +152,23 @@ watch(
     }
   }
 )
+
+// Expose method to scroll to a specific character position
+const scrollToPosition = (charPos: number) => {
+  if (!editorRef.value) return
+  const model = editorRef.value.getModel()
+  if (!model) return
+  const position = model.getPositionAt(charPos)
+  isScrollingProgrammatically.value = true
+  editorRef.value.revealLineInCenter(position.lineNumber)
+  editorRef.value.setPosition(position)
+  editorRef.value.focus()
+  setTimeout(() => {
+    isScrollingProgrammatically.value = false
+  }, 50)
+}
+
+defineExpose({ scrollToPosition })
 </script>
 
 <style scoped>

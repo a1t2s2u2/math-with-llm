@@ -30,53 +30,54 @@ defineEmits<{
 
 <style scoped>
 .todo-list {
-  padding: 16px;
-  background: #f8f9fa;
-  border-right: 1px solid #dee2e6;
+  padding: 8px;
+  background: #1e1e1e;
   height: 100%;
   overflow-y: auto;
 }
 
 h3 {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
-  margin-bottom: 12px;
-  color: #495057;
+  margin-bottom: 8px;
+  padding: 0 8px;
+  color: #cccccc;
 }
 
 .empty {
-  color: #6c757d;
-  font-size: 13px;
+  color: #858585;
+  font-size: 12px;
+  padding: 8px;
 }
 
 .todo-items {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
 }
 
 .todo-item {
-  padding: 10px 12px;
-  background: #fff3cd;
-  border: 1px solid #ffc107;
+  padding: 6px 8px;
+  background: #ffc10722;
+  border-left: 3px solid #ffc107;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.15s;
 }
 
 .todo-item:hover {
-  background: #ffe69c;
+  background: #ffc10744;
 }
 
 .todo-line {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  color: #856404;
+  color: #ffd966;
   margin-right: 8px;
 }
 
 .todo-content {
-  font-size: 13px;
-  color: #212529;
+  font-size: 12px;
+  color: #d4d4d4;
 }
 </style>

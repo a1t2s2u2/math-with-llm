@@ -187,14 +187,11 @@ defineExpose({
   font-size: 12px;
   font-weight: 500;
   color: #cccccc;
-  line-height: 1;
 }
 
 .clear-button {
-  padding: 1px 6px;
-  font-size: 10px;
-  line-height: 1.2;
-  margin: -2px 0;
+  padding: 2px 8px;
+  font-size: 11px;
   background: #3e3e42;
   color: #cccccc;
   border: none;

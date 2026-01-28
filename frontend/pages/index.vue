@@ -15,33 +15,24 @@
     <div class="main-layout">
       <ResizablePanes :horizontal="true" :initial-sizes="[20, 80]">
         <template #pane-0>
-          <div class="file-sidebar">
-            <FileTree
-              :tree="fileTree"
-              :selected-path="currentPath"
-              :loading="treeLoading"
-              @select="handleFileSelect"
-              @refresh="loadTree"
-              @create-file="handleCreateFile"
-              @create-folder="handleCreateFolder"
-              @rename="handleRename"
-              @delete="handleDelete"
-            />
-          </div>
-        </template>
-
-        <template #pane-1>
-          <div v-if="!currentFile" class="empty-state">
-            <div class="empty-content">
-              <h2>No file selected</h2>
-              <p>Select a file from the tree or create a new one to get started.</p>
-            </div>
-          </div>
-
-          <template v-else>
-            <ResizablePanes :horizontal="true" :initial-sizes="[15, 85]">
+          <div class="sidebar">
+            <ResizablePanes :horizontal="false" :initial-sizes="[50, 50]">
               <template #pane-0>
-                <div class="sidebar">
+                <FileTree
+                  :tree="fileTree"
+                  :selected-path="currentPath"
+                  :loading="treeLoading"
+                  @select="handleFileSelect"
+                  @refresh="loadTree"
+                  @create-file="handleCreateFile"
+                  @create-folder="handleCreateFolder"
+                  @rename="handleRename"
+                  @delete="handleDelete"
+                />
+              </template>
+
+              <template #pane-1>
+                <div class="outline-section">
                   <div class="tabs">
                     <button
                       v-for="tab in tabs"
@@ -52,7 +43,7 @@
                       {{ tab.label }}
                     </button>
                   </div>
-                  <div class="sidebar-content">
+                  <div class="outline-content">
                     <OutlinePanel
                       v-if="activeTab === 'outline'"
                       :blocks="blocks"
@@ -68,46 +59,55 @@
                   </div>
                 </div>
               </template>
+            </ResizablePanes>
+          </div>
+        </template>
 
-              <template #pane-1>
-                <ResizablePanes :horizontal="false" :initial-sizes="[70, 30]">
+        <template #pane-1>
+          <div v-if="!currentFile" class="empty-state">
+            <div class="empty-content">
+              <h2>No file selected</h2>
+              <p>Select a file from the tree or create a new one to get started.</p>
+            </div>
+          </div>
+
+          <template v-else>
+            <ResizablePanes :horizontal="false" :initial-sizes="[70, 30]">
+              <template #pane-0>
+                <ResizablePanes :horizontal="true" :initial-sizes="[50, 50]">
                   <template #pane-0>
-                    <ResizablePanes :horizontal="true" :initial-sizes="[50, 50]">
-                      <template #pane-0>
-                        <div class="pane latex-pane">
-                          <div class="pane-header">{{ currentFile.name }}</div>
-                          <LatexEditor
-                            v-model="latexSource"
-                            :scroll-line="previewScrollLine"
-                            :sync-enabled="scrollSyncEnabled"
-                            @scroll="handleEditorScroll"
-                          />
-                        </div>
-                      </template>
-                      <template #pane-1>
-                        <div class="pane preview-pane">
-                          <div class="pane-header">Preview</div>
-                          <PreviewPane
-                            :rendered-html="currentFile.rendered_html"
-                            :scroll-line="editorScrollLine"
-                            :sync-enabled="scrollSyncEnabled"
-                            @scroll="handlePreviewScroll"
-                          />
-                        </div>
-                      </template>
-                    </ResizablePanes>
+                    <div class="pane latex-pane">
+                      <div class="pane-header">{{ currentFile.name }}</div>
+                      <LatexEditor
+                        v-model="latexSource"
+                        :scroll-line="previewScrollLine"
+                        :sync-enabled="scrollSyncEnabled"
+                        @scroll="handleEditorScroll"
+                      />
+                    </div>
                   </template>
-
                   <template #pane-1>
-                    <div class="lean-section">
-                      <LeanPanel
-                        :lean-code="leanCode"
-                        :imports="leanImports"
-                        @generate-for-block="handleGenerateLean"
+                    <div class="pane preview-pane">
+                      <div class="pane-header">Preview</div>
+                      <PreviewPane
+                        :rendered-html="currentFile.rendered_html"
+                        :scroll-line="editorScrollLine"
+                        :sync-enabled="scrollSyncEnabled"
+                        @scroll="handlePreviewScroll"
                       />
                     </div>
                   </template>
                 </ResizablePanes>
+              </template>
+
+              <template #pane-1>
+                <div class="lean-section">
+                  <LeanPanel
+                    :lean-code="leanCode"
+                    :imports="leanImports"
+                    @generate-for-block="handleGenerateLean"
+                  />
+                </div>
               </template>
             </ResizablePanes>
           </template>
@@ -134,9 +134,7 @@ import {
   createFolder,
   renameFile,
   deleteFile,
-  deleteFolder,
-  generateSkeleton as apiGenerateSkeleton,
-  generateLean as apiGenerateLean
+  deleteFolder
 } from '~/utils/api'
 import type { FileNode, Block, Symbol, Todo, SkeletonCard } from '~/types/api'
 
@@ -158,7 +156,6 @@ const treeLoading = ref(false)
 // Current file state
 const {
   file: currentFile,
-  loading: fileLoading,
   currentPath,
   load: loadFile,
   updateContent,
@@ -166,7 +163,7 @@ const {
 } = useFile()
 
 // Lean state
-const { code: leanCode, imports: leanImports, setCode } = useLean()
+const { code: leanCode, imports: leanImports } = useLean()
 
 // Editor state
 const latexSource = ref('')
@@ -182,7 +179,7 @@ const loadingSkeleton = ref(false)
 
 const tabs = [
   { id: 'outline', label: 'Outline' },
-  { id: 'definitions', label: 'Definitions' },
+  { id: 'definitions', label: 'Defs' },
   { id: 'symbols', label: 'Symbols' },
   { id: 'todos', label: 'TODOs' }
 ]
@@ -261,21 +258,17 @@ watch(currentFile, (newFile) => {
   }
 })
 
-// LLM assist (using file path as note context)
-const handleGenerateSkeleton = async (blockId: string) => {
+// LLM assist
+const handleGenerateSkeleton = async (_blockId: string) => {
   if (!currentPath.value) return
   showSkeletonModal.value = true
   loadingSkeleton.value = true
-  // Note: The skeleton API expects note_id, we use file path for now
-  // This may need backend changes to support file-based skeleton generation
   skeletonCards.value = []
   loadingSkeleton.value = false
 }
 
-const handleGenerateLean = async (blockId: string) => {
+const handleGenerateLean = async (_blockId: string) => {
   if (!currentPath.value) return
-  // Note: The lean generation API expects note_id, we use file path for now
-  // This may need backend changes to support file-based lean generation
 }
 
 onMounted(() => {
@@ -339,10 +332,50 @@ onMounted(() => {
   overflow: hidden;
 }
 
-.file-sidebar {
+.sidebar {
   height: 100%;
   background: #1e1e1e;
   border-right: 1px solid #3e3e42;
+}
+
+.outline-section {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #1e1e1e;
+  border-top: 1px solid #3e3e42;
+}
+
+.tabs {
+  display: flex;
+  background: #252526;
+  border-bottom: 1px solid #3e3e42;
+  flex-shrink: 0;
+}
+
+.tab {
+  flex: 1;
+  padding: 6px 4px;
+  background: none;
+  border: none;
+  color: #cccccc;
+  font-size: 10px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.tab:hover {
+  color: #ffffff;
+}
+
+.tab.active {
+  color: #ffffff;
+  border-bottom-color: #007acc;
+}
+
+.outline-content {
+  flex: 1;
+  overflow: hidden;
 }
 
 .empty-state {
@@ -366,45 +399,6 @@ onMounted(() => {
 
 .empty-content p {
   font-size: 14px;
-}
-
-.sidebar {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: #1e1e1e;
-  border-right: 1px solid #3e3e42;
-}
-
-.tabs {
-  display: flex;
-  background: #252526;
-  border-bottom: 1px solid #3e3e42;
-}
-
-.tab {
-  flex: 1;
-  padding: 8px 4px;
-  background: none;
-  border: none;
-  color: #cccccc;
-  font-size: 11px;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-}
-
-.tab:hover {
-  color: #ffffff;
-}
-
-.tab.active {
-  color: #ffffff;
-  border-bottom-color: #007acc;
-}
-
-.sidebar-content {
-  flex: 1;
-  overflow: hidden;
 }
 
 .pane {

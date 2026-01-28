@@ -13,7 +13,14 @@
       <div v-for="(msg, i) in messages" :key="i" class="message" :class="msg.role">
         <div class="message-content" v-html="renderMath(msg.content)" />
         <button class="copy-button" @click="copyMessage(msg.content)" title="コピー">
-          {{ copiedIndex === i ? '✓' : '⧉' }}
+          <svg v-if="copiedIndex === i" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+          </svg>
+          <svg v-else viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
+            />
+          </svg>
         </button>
       </div>
 
@@ -226,15 +233,22 @@ defineExpose({
   position: absolute;
   top: 6px;
   right: 6px;
-  padding: 2px 6px;
+  width: 24px;
+  height: 24px;
+  padding: 4px;
   background: #3e3e42;
   border: none;
   border-radius: 3px;
   color: #858585;
-  font-size: 12px;
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.15s;
+}
+
+.copy-button svg {
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
 .message:hover .copy-button {

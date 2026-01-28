@@ -6,50 +6,64 @@
     </div>
 
     <div class="main-layout">
-      <div class="sidebar">
-        <div class="tabs">
-          <button
-            v-for="tab in tabs"
-            :key="tab.id"
-            :class="['tab', { active: activeTab === tab.id }]"
-            @click="activeTab = tab.id"
-          >
-            {{ tab.label }}
-          </button>
-        </div>
-        <div class="sidebar-content">
-          <OutlinePanel
-            v-if="activeTab === 'outline'"
-            :blocks="blocks"
-            @generate-skeleton="handleGenerateSkeleton"
-            @generate-lean="handleGenerateLean"
-          />
-          <DefinitionLedger v-if="activeTab === 'definitions'" :definitions="definitions" />
-          <SymbolTable v-if="activeTab === 'symbols'" :symbols="symbols" />
-          <TodoList v-if="activeTab === 'todos'" :todos="todos" />
-        </div>
-      </div>
-
-      <div class="editor-layout">
-        <div class="editor-section">
-          <div class="pane latex-pane">
-            <div class="pane-header">LaTeX Editor</div>
-            <LatexEditor v-model="latexSource" />
+      <ResizablePanes :horizontal="true" :initial-sizes="[15, 85]">
+        <template #pane-0>
+          <div class="sidebar">
+            <div class="tabs">
+              <button
+                v-for="tab in tabs"
+                :key="tab.id"
+                :class="['tab', { active: activeTab === tab.id }]"
+                @click="activeTab = tab.id"
+              >
+                {{ tab.label }}
+              </button>
+            </div>
+            <div class="sidebar-content">
+              <OutlinePanel
+                v-if="activeTab === 'outline'"
+                :blocks="blocks"
+                @generate-skeleton="handleGenerateSkeleton"
+                @generate-lean="handleGenerateLean"
+              />
+              <DefinitionLedger v-if="activeTab === 'definitions'" :definitions="definitions" />
+              <SymbolTable v-if="activeTab === 'symbols'" :symbols="symbols" />
+              <TodoList v-if="activeTab === 'todos'" :todos="todos" />
+            </div>
           </div>
-          <div class="pane preview-pane">
-            <div class="pane-header">Preview</div>
-            <PreviewPane :rendered-html="note?.rendered_html || ''" />
-          </div>
-        </div>
+        </template>
 
-        <div class="lean-section">
-          <LeanPanel
-            :lean-code="leanCode"
-            :imports="leanImports"
-            @generate-for-block="handleGenerateLean"
-          />
-        </div>
-      </div>
+        <template #pane-1>
+          <ResizablePanes :horizontal="false" :initial-sizes="[70, 30]">
+            <template #pane-0>
+              <ResizablePanes :horizontal="true" :initial-sizes="[50, 50]">
+                <template #pane-0>
+                  <div class="pane latex-pane">
+                    <div class="pane-header">LaTeX Editor</div>
+                    <LatexEditor v-model="latexSource" />
+                  </div>
+                </template>
+                <template #pane-1>
+                  <div class="pane preview-pane">
+                    <div class="pane-header">Preview</div>
+                    <PreviewPane :rendered-html="note?.rendered_html || ''" />
+                  </div>
+                </template>
+              </ResizablePanes>
+            </template>
+
+            <template #pane-1>
+              <div class="lean-section">
+                <LeanPanel
+                  :lean-code="leanCode"
+                  :imports="leanImports"
+                  @generate-for-block="handleGenerateLean"
+                />
+              </div>
+            </template>
+          </ResizablePanes>
+        </template>
+      </ResizablePanes>
     </div>
 
     <SkeletonModal
@@ -75,6 +89,7 @@ import DefinitionLedger from '~/components/outline/DefinitionLedger.vue'
 import SymbolTable from '~/components/outline/SymbolTable.vue'
 import TodoList from '~/components/outline/TodoList.vue'
 import SkeletonModal from '~/components/ui/SkeletonModal.vue'
+import ResizablePanes from '~/components/ui/ResizablePanes.vue'
 
 const route = useRoute()
 const noteId = route.params.id as string
@@ -157,12 +172,11 @@ onMounted(() => {
 
 .main-layout {
   flex: 1;
-  display: flex;
   overflow: hidden;
 }
 
 .sidebar {
-  width: 250px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background: #1e1e1e;
@@ -200,32 +214,11 @@ onMounted(() => {
   overflow: hidden;
 }
 
-.editor-layout {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.editor-section {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
-  overflow: hidden;
-  min-height: 0;
-}
-
 .pane {
+  height: 100%;
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  border-right: 1px solid #3e3e42;
   overflow: hidden;
-}
-
-.pane:last-child {
-  border-right: none;
 }
 
 .pane-header {
@@ -235,10 +228,18 @@ onMounted(() => {
   font-size: 12px;
   font-weight: 500;
   color: #cccccc;
+  flex-shrink: 0;
+}
+
+.latex-pane,
+.preview-pane {
+  border-right: 1px solid #3e3e42;
 }
 
 .lean-section {
-  height: 300px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   border-top: 1px solid #3e3e42;
 }
 </style>

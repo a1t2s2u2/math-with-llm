@@ -1,13 +1,120 @@
 <template>
-  <div class="preview-pane-wrapper">
-    <div ref="contentRef" class="preview-content" v-html="renderedHtml" />
+  <div ref="wrapperRef" class="preview-pane-wrapper">
+    <div class="preview-content" v-html="renderedHtml" />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
+
 const props = defineProps<{
   renderedHtml: string
+  scrollLine?: number
+  syncEnabled?: boolean
 }>()
+
+const emit = defineEmits<{
+  scroll: [lineNumber: number]
+}>()
+
+const wrapperRef = ref<HTMLElement | null>(null)
+const isScrollingProgrammatically = ref(false)
+
+// Find element with closest data-line attribute and scroll to it
+const scrollToLine = (targetLine: number) => {
+  if (!wrapperRef.value) return
+
+  const elements = wrapperRef.value.querySelectorAll('[data-line]')
+  if (elements.length === 0) return
+
+  let closestElement: Element | null = null
+  let closestDistance = Infinity
+
+  elements.forEach((el) => {
+    const line = parseInt(el.getAttribute('data-line') || '0', 10)
+    if (line > 0 && line <= targetLine) {
+      const distance = targetLine - line
+      if (distance < closestDistance) {
+        closestDistance = distance
+        closestElement = el
+      }
+    }
+  })
+
+  if (closestElement) {
+    isScrollingProgrammatically.value = true
+    const wrapper = wrapperRef.value
+    const elementTop = (closestElement as HTMLElement).offsetTop
+    wrapper.scrollTop = Math.max(0, elementTop - 16)
+    // Reset flag after scroll completes
+    setTimeout(() => {
+      isScrollingProgrammatically.value = false
+    }, 50)
+  }
+}
+
+// Get line number from current scroll position
+const getLineFromScrollPosition = (): number => {
+  if (!wrapperRef.value) return 1
+
+  const wrapper = wrapperRef.value
+  const scrollTop = wrapper.scrollTop
+  const elements = wrapper.querySelectorAll('[data-line]')
+
+  let closestLine = 1
+  let closestDistance = Infinity
+
+  elements.forEach((el) => {
+    const line = parseInt(el.getAttribute('data-line') || '0', 10)
+    if (line > 0) {
+      const elementTop = (el as HTMLElement).offsetTop
+      const distance = Math.abs(elementTop - scrollTop - 16)
+      if (distance < closestDistance) {
+        closestDistance = distance
+        closestLine = line
+      }
+    }
+  })
+
+  return closestLine
+}
+
+// Handle scroll event from user
+const onScroll = () => {
+  if (isScrollingProgrammatically.value || !props.syncEnabled) return
+  const line = getLineFromScrollPosition()
+  if (line > 0) {
+    emit('scroll', line)
+  }
+}
+
+onMounted(() => {
+  wrapperRef.value?.addEventListener('scroll', onScroll)
+})
+
+onUnmounted(() => {
+  wrapperRef.value?.removeEventListener('scroll', onScroll)
+})
+
+watch(
+  () => props.scrollLine,
+  (line) => {
+    if (props.syncEnabled && line !== undefined && line > 0) {
+      scrollToLine(line)
+    }
+  }
+)
+
+// Re-apply scroll position when HTML changes
+watch(
+  () => props.renderedHtml,
+  async () => {
+    await nextTick()
+    if (props.scrollLine !== undefined && props.scrollLine > 0) {
+      scrollToLine(props.scrollLine)
+    }
+  }
+)
 </script>
 
 <style scoped>

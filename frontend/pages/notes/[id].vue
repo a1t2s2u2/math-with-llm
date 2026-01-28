@@ -3,6 +3,13 @@
     <div class="header">
       <NuxtLink to="/" class="back-link">← Back</NuxtLink>
       <h2>{{ note?.title || 'Loading...' }}</h2>
+      <div class="header-spacer" />
+      <button
+        :class="['sync-toggle', { active: scrollSyncEnabled }]"
+        @click="scrollSyncEnabled = !scrollSyncEnabled"
+      >
+        {{ scrollSyncEnabled ? 'Sync ON' : 'Sync OFF' }}
+      </button>
     </div>
 
     <div class="main-layout">
@@ -40,13 +47,23 @@
                 <template #pane-0>
                   <div class="pane latex-pane">
                     <div class="pane-header">LaTeX Editor</div>
-                    <LatexEditor v-model="latexSource" />
+                    <LatexEditor
+                      v-model="latexSource"
+                      :scroll-line="previewScrollLine"
+                      :sync-enabled="scrollSyncEnabled"
+                      @scroll="handleEditorScroll"
+                    />
                   </div>
                 </template>
                 <template #pane-1>
                   <div class="pane preview-pane">
                     <div class="pane-header">Preview</div>
-                    <PreviewPane :rendered-html="note?.rendered_html || ''" />
+                    <PreviewPane
+                      :rendered-html="note?.rendered_html || ''"
+                      :scroll-line="editorScrollLine"
+                      :sync-enabled="scrollSyncEnabled"
+                      @scroll="handlePreviewScroll"
+                    />
                   </div>
                 </template>
               </ResizablePanes>
@@ -102,6 +119,17 @@ const { skeletonCards, loadingSkeleton, requestSkeleton, requestLean } = useAssi
 const latexSource = ref('')
 const activeTab = ref('outline')
 const showSkeletonModal = ref(false)
+const scrollSyncEnabled = ref(true)
+const editorScrollLine = ref(1)
+const previewScrollLine = ref(1)
+
+const handleEditorScroll = (line: number) => {
+  editorScrollLine.value = line
+}
+
+const handlePreviewScroll = (line: number) => {
+  previewScrollLine.value = line
+}
 
 const tabs = [
   { id: 'outline', label: 'Outline' },
@@ -168,6 +196,31 @@ onMounted(() => {
   margin: 0;
   font-size: 16px;
   font-weight: 500;
+}
+
+.header-spacer {
+  flex: 1;
+}
+
+.sync-toggle {
+  padding: 4px 12px;
+  font-size: 12px;
+  background: #3e3e42;
+  border: 1px solid #5a5a5a;
+  border-radius: 4px;
+  color: #808080;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sync-toggle:hover {
+  background: #4e4e52;
+}
+
+.sync-toggle.active {
+  background: #007acc;
+  border-color: #007acc;
+  color: #ffffff;
 }
 
 .main-layout {

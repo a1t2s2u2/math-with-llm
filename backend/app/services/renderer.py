@@ -10,13 +10,20 @@ class RenderResult:
     errors: list[str]
 
 
+def _get_line_number(source: str, pos: int) -> int:
+    """Get 1-based line number from character position."""
+    return source[:pos].count("\n") + 1
+
+
 def render_latex_to_html(source: str) -> RenderResult:
     """Convert LaTeX source to HTML.
 
     Uses latex2mathml for math expressions and custom regex for structure.
+    Adds data-line attributes for scroll synchronization.
     """
-    errors = []
+    errors: list[str] = []
     html = source
+    original_source = source
 
     try:
         # Step 1: Extract and expand custom commands BEFORE math conversion
@@ -25,14 +32,14 @@ def render_latex_to_html(source: str) -> RenderResult:
             escaped_def = cmd_def.replace("\\", r"\\")
             html = re.sub(rf"\\{re.escape(cmd_name)}\b", escaped_def, html)
 
-        # Step 2: Convert display math \[...\]
-        html = _convert_display_math(html, errors)
+        # Step 2: Convert display math \[...\] with line numbers
+        html = _convert_display_math(html, errors, original_source)
 
         # Step 3: Convert inline math $...$
         html = _convert_inline_math(html, errors)
 
-        # Step 4: Convert LaTeX structure to HTML
-        html = _convert_structure(html)
+        # Step 4: Convert LaTeX structure to HTML with line numbers
+        html = _convert_structure(html, original_source)
 
         return RenderResult(html=html, errors=errors)
 
@@ -41,17 +48,26 @@ def render_latex_to_html(source: str) -> RenderResult:
         return RenderResult(html=f"<p>{source}</p>", errors=errors)
 
 
-def _convert_display_math(html: str, errors: list[str]) -> str:
-    r"""Convert display math \[...\] to MathML."""
+def _convert_display_math(html: str, errors: list[str], original_source: str) -> str:
+    r"""Convert display math \[...\] to MathML with line numbers."""
+    used_positions: set[int] = set()
 
     def replace_match(match: re.Match[str]) -> str:
         latex_math = match.group(1)
+        # Find position in original source
+        search_text = f"\\[{latex_math}\\]"
+        line_num = 0
+        for m in re.finditer(re.escape(search_text), original_source, re.DOTALL):
+            if m.start() not in used_positions:
+                line_num = _get_line_number(original_source, m.start())
+                used_positions.add(m.start())
+                break
         try:
             mathml = converter.convert(latex_math)
-            return f'<div class="display-math">{mathml}</div>'
+            return f'<div class="display-math" data-line="{line_num}">{mathml}</div>'
         except Exception as e:
             errors.append(f"Display math error: {str(e)}")
-            return match.group(0)  # Return original on error
+            return match.group(0)
 
     return re.sub(r"\\\[(.*?)\\\]", replace_match, html, flags=re.DOTALL)
 
@@ -96,10 +112,10 @@ def _extract_custom_commands(text: str) -> dict[str, str]:
     return commands
 
 
-def _convert_structure(html: str) -> str:
+def _convert_structure(html: str, original_source: str) -> str:
     """Convert LaTeX structure (sections, environments, lists) to HTML.
 
-    Reuses patterns from parser.py but outputs HTML instead of metadata.
+    Adds data-line attributes for scroll synchronization.
     """
     # Extract and remove preamble
     html = re.sub(r"^[\s\S]*?\\begin\{document\}", "", html)
@@ -111,7 +127,14 @@ def _convert_structure(html: str) -> str:
     date_match = re.search(r"\\date\{([^}]*)\}", html)
 
     if title_match and r"\maketitle" in html:
-        title_block = '<div class="latex-title-block">'
+        # Find line number of \maketitle in original
+        maketitle_match = re.search(r"\\maketitle", original_source)
+        line_num = (
+            _get_line_number(original_source, maketitle_match.start())
+            if maketitle_match
+            else 0
+        )
+        title_block = f'<div class="latex-title-block" data-line="{line_num}">'
         if title_match:
             title_block += f'<h1 class="latex-title">{title_match.group(1)}</h1>'
         if author_match:
@@ -126,18 +149,43 @@ def _convert_structure(html: str) -> str:
     html = re.sub(r"\\author\{[^}]*\}", "", html)
     html = re.sub(r"\\date\{[^}]*\}", "", html)
 
-    # Sections
-    html = re.sub(r"\\section\{([^}]+)\}", r'<h1 class="latex-section">\1</h1>', html)
+    # Sections with line numbers
+    used_positions: dict[str, set[int]] = {
+        "section": set(),
+        "subsection": set(),
+        "subsubsection": set(),
+    }
+
+    def section_replace(
+        match: re.Match[str], tag: str, css_class: str, section_type: str
+    ) -> str:
+        content = match.group(1)
+        pattern = rf"\\{section_type}\{{{re.escape(content)}\}}"
+        line_num = 0
+        for m in re.finditer(pattern, original_source):
+            if m.start() not in used_positions[section_type]:
+                line_num = _get_line_number(original_source, m.start())
+                used_positions[section_type].add(m.start())
+                break
+        return f'<{tag} class="{css_class}" data-line="{line_num}">{content}</{tag}>'
+
     html = re.sub(
-        r"\\subsection\{([^}]+)\}", r'<h2 class="latex-subsection">\1</h2>', html
+        r"\\section\{([^}]+)\}",
+        lambda m: section_replace(m, "h1", "latex-section", "section"),
+        html,
+    )
+    html = re.sub(
+        r"\\subsection\{([^}]+)\}",
+        lambda m: section_replace(m, "h2", "latex-subsection", "subsection"),
+        html,
     )
     html = re.sub(
         r"\\subsubsection\{([^}]+)\}",
-        r'<h3 class="latex-subsubsection">\1</h3>',
+        lambda m: section_replace(m, "h3", "latex-subsubsection", "subsubsection"),
         html,
     )
 
-    # Theorem environments
+    # Theorem environments with line numbers
     env_types = [
         "theorem",
         "definition",
@@ -148,6 +196,8 @@ def _convert_structure(html: str) -> str:
         "remark",
         "example",
     ]
+    env_used_positions: dict[str, set[int]] = {env: set() for env in env_types}
+
     for env_type in env_types:
         pattern = (
             rf"\\begin\{{{env_type}\}}(?:\[([^\]]+)\])?([\s\S]*?)\\end\{{{env_type}\}}"
@@ -156,12 +206,26 @@ def _convert_structure(html: str) -> str:
         def env_replace(match: re.Match[str], env: str = env_type) -> str:
             opt_title = match.group(1)
             content = match.group(2).strip()
+            # Find line number in original source
+            if opt_title:
+                search_pattern = rf"\\begin\{{{env}\}}\[{re.escape(opt_title)}\]"
+            else:
+                search_pattern = rf"\\begin\{{{env}\}}"
+            line_num = 0
+            for m in re.finditer(search_pattern, original_source):
+                if m.start() not in env_used_positions[env]:
+                    line_num = _get_line_number(original_source, m.start())
+                    env_used_positions[env].add(m.start())
+                    break
             heading = f'<div class="env-heading">{env.capitalize()}'
             if opt_title:
                 heading += f" ({opt_title})"
             heading += "</div>"
             env_content = f'<div class="env-content">{content}</div>'
-            return f'<div class="latex-env {env}">{heading}{env_content}</div>'
+            return (
+                f'<div class="latex-env {env}" data-line="{line_num}">'
+                f"{heading}{env_content}</div>"
+            )
 
         html = re.sub(pattern, env_replace, html)
 

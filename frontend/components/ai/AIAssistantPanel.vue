@@ -12,6 +12,9 @@
 
       <div v-for="(msg, i) in messages" :key="i" class="message" :class="msg.role">
         <div class="message-content" v-html="renderMath(msg.content)" />
+        <button class="copy-button" @click="copyMessage(msg.content)" title="コピー">
+          {{ copiedIndex === i ? '✓' : '⧉' }}
+        </button>
       </div>
 
       <div v-if="loading" class="message assistant loading-message">
@@ -62,6 +65,7 @@ const inputText = ref('')
 const loading = ref(false)
 const context = ref<Context | null>(null)
 const messagesRef = ref<HTMLElement | null>(null)
+const copiedIndex = ref<number | null>(null)
 
 const { renderMath } = useMathRender()
 
@@ -135,6 +139,15 @@ const scrollToBottom = () => {
   })
 }
 
+const copyMessage = async (content: string) => {
+  await navigator.clipboard.writeText(content)
+  const index = messages.value.findIndex((m) => m.content === content)
+  copiedIndex.value = index
+  setTimeout(() => {
+    copiedIndex.value = null
+  }, 1500)
+}
+
 defineExpose({
   addAssistantMessage,
   setLoading,
@@ -201,11 +214,36 @@ defineExpose({
 }
 
 .message {
+  position: relative;
   margin-bottom: 12px;
   padding: 10px 12px;
   border-radius: 8px;
   font-size: 13px;
   line-height: 1.5;
+}
+
+.copy-button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 2px 6px;
+  background: #3e3e42;
+  border: none;
+  border-radius: 3px;
+  color: #858585;
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.message:hover .copy-button {
+  opacity: 1;
+}
+
+.copy-button:hover {
+  background: #4e4e52;
+  color: #ffffff;
 }
 
 .message.user {

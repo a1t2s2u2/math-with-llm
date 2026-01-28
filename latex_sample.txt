@@ -21,10 +21,10 @@
 \section{定義}
 
 \begin{definition}[$\sigma$-代数]
-集合 $X$ の部分集合族 $\calF\subset 2^X$ が $X$ 上の $\sigma$-代数であるとは，
+集合 $X$ の部分集合族 $\calF\subset 2^X$ が $X$ 上の $\sigma$-代数であるとは、
 \begin{enumerate}
-  \item $X\in \calF$，
-  \item $A\in \calF \Rightarrow X\setminus A\in \calF$，
+  \item $X\in \calF$、
+  \item $A\in \calF \Rightarrow X\setminus A\in \calF$、
   \item 任意の列 $(A_n)_{n\in\mathbb{N}}\subset\calF$ に対し
         $\displaystyle \bigcup_{n=1}^{\infty}A_n\in\calF$
 \end{enumerate}
@@ -33,9 +33,9 @@
 \end{definition}
 
 \begin{definition}[測度]
-可測空間 $(X,\calF)$ 上の写像 $\mu:\calF\to[0,\infty]$ が測度であるとは，
+可測空間 $(X,\calF)$ 上の写像 $\mu:\calF\to[0,\infty]$ が測度であるとは、
 \begin{enumerate}
-  \item $\mu(\varnothing)=0$，
+  \item $\mu(\varnothing)=0$、
   \item （可算加法性）互いに素な可測集合列 $(A_n)_{n\in\mathbb{N}}\subset\calF$
         に対して
         \[
@@ -48,7 +48,7 @@
 
 \begin{definition}[可測関数]
 $(X,\calF)$ を可測空間とする。
-関数 $f:X\to\R$ が（$\calF$-）可測であるとは，
+関数 $f:X\to\R$ が（$\calF$-）可測であるとは、
 任意の実数 $a\in\R$ に対して
 \[
   \{x\in X : f(x) > a\}\in\calF
@@ -64,7 +64,7 @@ $(X,\calF)$ を可測空間とする。
 \[
   A_1\subset A_2\subset \cdots
 \]
-を満たすとき，$A=\bigcup_{n=1}^\infty A_n$ とおけば
+を満たすとき、$A=\bigcup_{n=1}^\infty A_n$ とおけば
 \[
   \mu(A)=\lim_{n\to\infty}\mu(A_n)
 \]
@@ -72,8 +72,8 @@ $(X,\calF)$ を可測空間とする。
 \end{theorem}
 
 \begin{proof}
-$B_1:=A_1$，$B_n:=A_n\setminus A_{n-1}\ (n\ge2)$ と定める。
-すると $(B_n)$ は互いに素で，また
+$B_1:=A_1$、$B_n:=A_n\setminus A_{n-1}\ (n\ge2)$ と定める。
+すると $(B_n)$ は互いに素で、また
 \[
   A_n=\bigcup_{k=1}^n B_k,\qquad
   A=\bigcup_{k=1}^\infty B_k
@@ -93,7 +93,7 @@ $\mu(A_n)\to \sum_{k=1}^\infty \mu(B_k)=\mu(A)$ が得られる。
 \[
   A_1\supset A_2\supset \cdots
 \]
-を満たし，さらに $\mu(A_1)<\infty$ を仮定する。
+を満たし、さらに $\mu(A_1)<\infty$ を仮定する。
 $A=\bigcap_{n=1}^\infty A_n$ とおけば
 \[
   \mu(A)=\lim_{n\to\infty}\mu(A_n)
@@ -102,7 +102,7 @@ $A=\bigcap_{n=1}^\infty A_n$ とおけば
 \end{theorem}
 
 \begin{proof}
-$C_n:=A_1\setminus A_n$ とおくと $(C_n)$ は増大列で，
+$C_n:=A_1\setminus A_n$ とおくと $(C_n)$ は増大列で、
 \[
   \bigcup_{n=1}^\infty C_n = A_1\setminus \bigcap_{n=1}^\infty A_n
   =A_1\setminus A
@@ -115,11 +115,11 @@ $C_n:=A_1\setminus A_n$ とおくと $(C_n)$ は増大列で，
 \[
   \mu(C_n)=\mu(A_1\setminus A_n)=\mu(A_1)-\mu(A_n)
 \]
-が使えるので，
+が使えるので、
 \[
   \mu(A_1)-\mu(A)=\lim_{n\to\infty}\bigl(\mu(A_1)-\mu(A_n)\bigr)
 \]
-となり，両辺から $\mu(A_1)$ を消して
+となり、両辺から $\mu(A_1)$ を消して
 $\mu(A)=\lim_{n\to\infty}\mu(A_n)$ を得る。
 \end{proof}
 

@@ -74,9 +74,23 @@ const contextLabel = computed(() => {
 const canSend = computed(() => inputText.value.trim() && !loading.value)
 
 const handleKeydown = (e: KeyboardEvent) => {
-  if (e.key === 'Enter' && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
-    e.preventDefault()
-    sendMessage()
+  if (e.key === 'Enter') {
+    if (e.metaKey || e.ctrlKey) {
+      // Cmd/Ctrl+Enter: 改行を挿入
+      e.preventDefault()
+      const textarea = e.target as HTMLTextAreaElement
+      const start = textarea.selectionStart
+      const end = textarea.selectionEnd
+      inputText.value = inputText.value.substring(0, start) + '\n' + inputText.value.substring(end)
+      nextTick(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + 1
+      })
+    } else if (!e.shiftKey) {
+      // Enter（修飾キーなし）: 送信
+      e.preventDefault()
+      sendMessage()
+    }
+    // Shift+Enter: デフォルト動作（改行）
   }
 }
 

@@ -1,4 +1,12 @@
-import type { Note, ParseResult, SkeletonCard, LeanGeneration, LeanCheckResult } from '~/types/api'
+import type {
+  Note,
+  ParseResult,
+  SkeletonCard,
+  LeanGeneration,
+  LeanCheckResult,
+  FileNode,
+  FileContent
+} from '~/types/api'
 
 const API_BASE = '/api'
 
@@ -69,4 +77,72 @@ export async function checkLean(leanCode: string, imports: string[]): Promise<Le
   })
   if (!response.ok) throw new Error('Failed to check Lean')
   return response.json()
+}
+
+// File API
+
+export async function getFileTree(): Promise<FileNode[]> {
+  const response = await fetch(`${API_BASE}/files/tree`)
+  if (!response.ok) throw new Error('Failed to get file tree')
+  return response.json()
+}
+
+export async function getFile(path: string): Promise<FileContent> {
+  const response = await fetch(`${API_BASE}/files/${encodeURIComponent(path)}`)
+  if (!response.ok) throw new Error('Failed to get file')
+  return response.json()
+}
+
+export async function updateFile(path: string, content: string): Promise<FileContent> {
+  const response = await fetch(`${API_BASE}/files/${encodeURIComponent(path)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content })
+  })
+  if (!response.ok) throw new Error('Failed to update file')
+  return response.json()
+}
+
+export async function createFile(path: string, content: string = ''): Promise<FileContent> {
+  const response = await fetch(`${API_BASE}/files`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path, content })
+  })
+  if (!response.ok) throw new Error('Failed to create file')
+  return response.json()
+}
+
+export async function deleteFile(path: string): Promise<void> {
+  const response = await fetch(`${API_BASE}/files/${encodeURIComponent(path)}`, {
+    method: 'DELETE'
+  })
+  if (!response.ok) throw new Error('Failed to delete file')
+}
+
+export async function renameFile(oldPath: string, newPath: string): Promise<FileContent> {
+  const response = await fetch(`${API_BASE}/files/rename`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ old_path: oldPath, new_path: newPath })
+  })
+  if (!response.ok) throw new Error('Failed to rename file')
+  return response.json()
+}
+
+export async function createFolder(path: string): Promise<FileNode> {
+  const response = await fetch(`${API_BASE}/files/folders`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path })
+  })
+  if (!response.ok) throw new Error('Failed to create folder')
+  return response.json()
+}
+
+export async function deleteFolder(path: string): Promise<void> {
+  const response = await fetch(`${API_BASE}/files/folders/${encodeURIComponent(path)}`, {
+    method: 'DELETE'
+  })
+  if (!response.ok) throw new Error('Failed to delete folder')
 }

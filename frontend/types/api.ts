@@ -68,3 +68,20 @@ export interface Diagnostic {
   severity: string
   message: string
 }
+
+export interface FileNode {
+  name: string
+  type: 'file' | 'directory'
+  path: string
+  children?: FileNode[]
+}
+
+export interface FileContent {
+  path: string
+  name: string
+  content: string
+  rendered_html: string
+  blocks: Block[]
+  symbols: Symbol[]
+  todos: Todo[]
+}

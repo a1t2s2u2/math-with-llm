@@ -29,6 +29,7 @@ defineProps<{
 const emit = defineEmits<{
   jump: [position: number]
   selectBlock: [block: Block]
+  deselectBlock: []
 }>()
 
 const selectedId = ref<string | null>(null)
@@ -36,9 +37,16 @@ const selectedId = ref<string | null>(null)
 const { renderMath } = useMathRender()
 
 const handleClick = (block: Block) => {
-  selectedId.value = block.id
-  emit('jump', block.range[0])
-  emit('selectBlock', block)
+  if (selectedId.value === block.id) {
+    // 同じブロックをクリック → 選択解除
+    selectedId.value = null
+    emit('deselectBlock')
+  } else {
+    // 別のブロックをクリック → 選択
+    selectedId.value = block.id
+    emit('jump', block.range[0])
+    emit('selectBlock', block)
+  }
 }
 
 const formatType = (type: string) => {

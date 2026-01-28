@@ -49,6 +49,7 @@
                       :blocks="blocks"
                       @jump="handleJump"
                       @select-block="handleSelectBlock"
+                      @deselect-block="handleDeselectBlock"
                     />
                     <DefinitionLedger
                       v-if="activeTab === 'definitions'"
@@ -256,6 +257,11 @@ const handleSelectBlock = (block: Block) => {
     label,
     content: block.latex_fragment
   })
+}
+
+const handleDeselectBlock = () => {
+  if (!aiPanelRef.value) return
+  aiPanelRef.value.clearContext()
 }
 
 interface AIContext {

@@ -28,6 +28,10 @@ def parse_latex(source: str) -> ParseResult:
     )
 
 
+# proof が参照できるブロックタイプ（定理系）
+PROVABLE_BLOCK_TYPES = {"definition", "lemma", "theorem", "proposition", "corollary"}
+
+
 def _extract_blocks(source: str) -> list[Block]:
     blocks = []
 
@@ -44,6 +48,10 @@ def _extract_blocks(source: str) -> list[Block]:
         block_id = label if label else generate_block_id()
         title = _extract_title(optional_arg, content)
 
+        # proof の場合、オプション引数がなければ直前の定理系ブロックのタイトルを参照
+        if block_type == "proof" and not optional_arg:
+            title = _get_proof_title(blocks)
+
         blocks.append(
             Block(
                 type=BlockType(block_type),
@@ -56,6 +64,16 @@ def _extract_blocks(source: str) -> list[Block]:
         )
 
     return blocks
+
+
+def _get_proof_title(preceding_blocks: list[Block]) -> str | None:
+    """直前の定理系ブロックのタイトルを取得して「〇〇 の証明」形式で返す"""
+    for block in reversed(preceding_blocks):
+        if block.type.value in PROVABLE_BLOCK_TYPES:
+            if block.title:
+                return f"{block.title} の証明"
+            return None
+    return None
 
 
 def _extract_title(optional_arg: str | None, content: str) -> str | None:

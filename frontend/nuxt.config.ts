@@ -16,6 +16,13 @@ export default defineNuxtConfig({
           rewrite: (path: string) => path.replace(/^\/api/, '')
         }
       }
+    },
+    optimizeDeps: {
+      esbuildOptions: {
+        loader: {
+          '.keep': 'empty'
+        }
+      }
     }
   },
 

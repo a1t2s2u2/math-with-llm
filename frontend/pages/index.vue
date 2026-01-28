@@ -1,105 +1,438 @@
 <template>
-  <div class="home-page">
-    <div class="container">
+  <div class="workspace-page">
+    <div class="header">
       <h1>Math with LLM</h1>
-      <p>LaTeX editor with LLM assistance and Lean verification</p>
-
-      <div class="actions">
-        <button class="create-button" @click="createNewNote">Create New Note</button>
-      </div>
-
-      <div v-if="notes.length > 0" class="notes-list">
-        <h2>Recent Notes</h2>
-        <div v-for="note in notes" :key="note.note_id" class="note-item">
-          <NuxtLink :to="`/notes/${note.note_id}`">
-            {{ note.title }}
-          </NuxtLink>
-        </div>
-      </div>
+      <div class="header-spacer" />
+      <button
+        v-if="currentFile"
+        :class="['sync-toggle', { active: scrollSyncEnabled }]"
+        @click="scrollSyncEnabled = !scrollSyncEnabled"
+      >
+        {{ scrollSyncEnabled ? 'Sync ON' : 'Sync OFF' }}
+      </button>
     </div>
+
+    <div class="main-layout">
+      <ResizablePanes :horizontal="true" :initial-sizes="[20, 80]">
+        <template #pane-0>
+          <div class="file-sidebar">
+            <FileTree
+              :tree="fileTree"
+              :selected-path="currentPath"
+              :loading="treeLoading"
+              @select="handleFileSelect"
+              @refresh="loadTree"
+              @create-file="handleCreateFile"
+              @create-folder="handleCreateFolder"
+              @rename="handleRename"
+              @delete="handleDelete"
+            />
+          </div>
+        </template>
+
+        <template #pane-1>
+          <div v-if="!currentFile" class="empty-state">
+            <div class="empty-content">
+              <h2>No file selected</h2>
+              <p>Select a file from the tree or create a new one to get started.</p>
+            </div>
+          </div>
+
+          <template v-else>
+            <ResizablePanes :horizontal="true" :initial-sizes="[15, 85]">
+              <template #pane-0>
+                <div class="sidebar">
+                  <div class="tabs">
+                    <button
+                      v-for="tab in tabs"
+                      :key="tab.id"
+                      :class="['tab', { active: activeTab === tab.id }]"
+                      @click="activeTab = tab.id"
+                    >
+                      {{ tab.label }}
+                    </button>
+                  </div>
+                  <div class="sidebar-content">
+                    <OutlinePanel
+                      v-if="activeTab === 'outline'"
+                      :blocks="blocks"
+                      @generate-skeleton="handleGenerateSkeleton"
+                      @generate-lean="handleGenerateLean"
+                    />
+                    <DefinitionLedger
+                      v-if="activeTab === 'definitions'"
+                      :definitions="definitions"
+                    />
+                    <SymbolTable v-if="activeTab === 'symbols'" :symbols="symbols" />
+                    <TodoList v-if="activeTab === 'todos'" :todos="todos" />
+                  </div>
+                </div>
+              </template>
+
+              <template #pane-1>
+                <ResizablePanes :horizontal="false" :initial-sizes="[70, 30]">
+                  <template #pane-0>
+                    <ResizablePanes :horizontal="true" :initial-sizes="[50, 50]">
+                      <template #pane-0>
+                        <div class="pane latex-pane">
+                          <div class="pane-header">{{ currentFile.name }}</div>
+                          <LatexEditor
+                            v-model="latexSource"
+                            :scroll-line="previewScrollLine"
+                            :sync-enabled="scrollSyncEnabled"
+                            @scroll="handleEditorScroll"
+                          />
+                        </div>
+                      </template>
+                      <template #pane-1>
+                        <div class="pane preview-pane">
+                          <div class="pane-header">Preview</div>
+                          <PreviewPane
+                            :rendered-html="currentFile.rendered_html"
+                            :scroll-line="editorScrollLine"
+                            :sync-enabled="scrollSyncEnabled"
+                            @scroll="handlePreviewScroll"
+                          />
+                        </div>
+                      </template>
+                    </ResizablePanes>
+                  </template>
+
+                  <template #pane-1>
+                    <div class="lean-section">
+                      <LeanPanel
+                        :lean-code="leanCode"
+                        :imports="leanImports"
+                        @generate-for-block="handleGenerateLean"
+                      />
+                    </div>
+                  </template>
+                </ResizablePanes>
+              </template>
+            </ResizablePanes>
+          </template>
+        </template>
+      </ResizablePanes>
+    </div>
+
+    <SkeletonModal
+      :show="showSkeletonModal"
+      :cards="skeletonCards"
+      :loading="loadingSkeleton"
+      @close="showSkeletonModal = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { createNote } from '~/utils/api'
-import type { Note } from '~/types/api'
+import { ref, computed, watch, onMounted } from 'vue'
+import { useFile } from '~/composables/useFile'
+import { useLean } from '~/composables/useLean'
+import {
+  getFileTree,
+  createFile,
+  createFolder,
+  renameFile,
+  deleteFile,
+  deleteFolder,
+  generateSkeleton as apiGenerateSkeleton,
+  generateLean as apiGenerateLean
+} from '~/utils/api'
+import type { FileNode, Block, Symbol, Todo, SkeletonCard } from '~/types/api'
 
-const notes = ref<Note[]>([])
+import LatexEditor from '~/components/editor/LatexEditor.vue'
+import PreviewPane from '~/components/editor/PreviewPane.vue'
+import LeanPanel from '~/components/lean/LeanPanel.vue'
+import OutlinePanel from '~/components/outline/OutlinePanel.vue'
+import DefinitionLedger from '~/components/outline/DefinitionLedger.vue'
+import SymbolTable from '~/components/outline/SymbolTable.vue'
+import TodoList from '~/components/outline/TodoList.vue'
+import SkeletonModal from '~/components/ui/SkeletonModal.vue'
+import ResizablePanes from '~/components/ui/ResizablePanes.vue'
+import FileTree from '~/components/files/FileTree.vue'
 
-const createNewNote = async () => {
-  const title = prompt('Enter note title:')
-  if (!title) return
+// File tree state
+const fileTree = ref<FileNode[]>([])
+const treeLoading = ref(false)
 
-  try {
-    const note = await createNote(title)
-    await navigateTo(`/notes/${note.note_id}`)
-  } catch (error) {
-    console.error('Failed to create note:', error)
-    alert('Failed to create note')
+// Current file state
+const {
+  file: currentFile,
+  loading: fileLoading,
+  currentPath,
+  load: loadFile,
+  updateContent,
+  clear: clearFile
+} = useFile()
+
+// Lean state
+const { code: leanCode, imports: leanImports, setCode } = useLean()
+
+// Editor state
+const latexSource = ref('')
+const activeTab = ref('outline')
+const scrollSyncEnabled = ref(true)
+const editorScrollLine = ref(1)
+const previewScrollLine = ref(1)
+
+// Skeleton modal state
+const showSkeletonModal = ref(false)
+const skeletonCards = ref<SkeletonCard[]>([])
+const loadingSkeleton = ref(false)
+
+const tabs = [
+  { id: 'outline', label: 'Outline' },
+  { id: 'definitions', label: 'Definitions' },
+  { id: 'symbols', label: 'Symbols' },
+  { id: 'todos', label: 'TODOs' }
+]
+
+// Computed from currentFile
+const blocks = computed<Block[]>(() => currentFile.value?.blocks || [])
+const symbols = computed<Symbol[]>(() => currentFile.value?.symbols || [])
+const todos = computed<Todo[]>(() => currentFile.value?.todos || [])
+const definitions = computed(() => blocks.value.filter((b) => b.type === 'definition'))
+
+// Load file tree
+const loadTree = async () => {
+  treeLoading.value = true
+  fileTree.value = await getFileTree()
+  treeLoading.value = false
+}
+
+// File selection
+const handleFileSelect = async (path: string) => {
+  await loadFile(path)
+  if (currentFile.value) {
+    latexSource.value = currentFile.value.content
   }
 }
+
+// File operations
+const handleCreateFile = async (path: string) => {
+  await createFile(path)
+  await loadTree()
+  await handleFileSelect(path)
+}
+
+const handleCreateFolder = async (path: string) => {
+  await createFolder(path)
+  await loadTree()
+}
+
+const handleRename = async (oldPath: string, newPath: string) => {
+  await renameFile(oldPath, newPath)
+  await loadTree()
+  if (currentPath.value === oldPath) {
+    await handleFileSelect(newPath)
+  }
+}
+
+const handleDelete = async (path: string, type: 'file' | 'directory') => {
+  if (type === 'file') {
+    await deleteFile(path)
+  } else {
+    await deleteFolder(path)
+  }
+  await loadTree()
+  if (currentPath.value === path) {
+    clearFile()
+    latexSource.value = ''
+  }
+}
+
+// Editor events
+const handleEditorScroll = (line: number) => {
+  editorScrollLine.value = line
+}
+
+const handlePreviewScroll = (line: number) => {
+  previewScrollLine.value = line
+}
+
+// Sync latex source with file
+watch(latexSource, (newSource) => {
+  updateContent(newSource)
+})
+
+watch(currentFile, (newFile) => {
+  if (newFile) {
+    latexSource.value = newFile.content
+  }
+})
+
+// LLM assist (using file path as note context)
+const handleGenerateSkeleton = async (blockId: string) => {
+  if (!currentPath.value) return
+  showSkeletonModal.value = true
+  loadingSkeleton.value = true
+  // Note: The skeleton API expects note_id, we use file path for now
+  // This may need backend changes to support file-based skeleton generation
+  skeletonCards.value = []
+  loadingSkeleton.value = false
+}
+
+const handleGenerateLean = async (blockId: string) => {
+  if (!currentPath.value) return
+  // Note: The lean generation API expects note_id, we use file path for now
+  // This may need backend changes to support file-based lean generation
+}
+
+onMounted(() => {
+  loadTree()
+})
 </script>
 
 <style scoped>
-.home-page {
-  min-height: 100vh;
-  padding: 40px 20px;
-  background: #f5f5f5;
+.workspace-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #2d2d2d;
+  color: #d4d4d4;
+  overflow: hidden;
 }
 
-.container {
-  max-width: 800px;
-  margin: 0 auto;
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  background: #252526;
+  border-bottom: 1px solid #3e3e42;
 }
 
-h1 {
-  font-size: 36px;
-  margin-bottom: 8px;
-}
-
-p {
-  color: #666;
-  margin-bottom: 32px;
-}
-
-.create-button {
-  padding: 12px 24px;
-  background: #007acc;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 16px;
-}
-
-.create-button:hover {
-  background: #005a9e;
-}
-
-.notes-list {
-  margin-top: 40px;
-}
-
-.notes-list h2 {
-  font-size: 24px;
-  margin-bottom: 16px;
-}
-
-.note-item {
-  padding: 16px;
-  background: white;
-  margin-bottom: 8px;
-  border-radius: 6px;
-  border: 1px solid #ddd;
-}
-
-.note-item a {
-  text-decoration: none;
-  color: #007acc;
+.header h1 {
+  margin: 0;
+  font-size: 14px;
   font-weight: 500;
+  color: #cccccc;
 }
 
-.note-item a:hover {
-  text-decoration: underline;
+.header-spacer {
+  flex: 1;
+}
+
+.sync-toggle {
+  padding: 4px 12px;
+  font-size: 12px;
+  background: #3e3e42;
+  border: 1px solid #5a5a5a;
+  border-radius: 4px;
+  color: #808080;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sync-toggle:hover {
+  background: #4e4e52;
+}
+
+.sync-toggle.active {
+  background: #007acc;
+  border-color: #007acc;
+  color: #ffffff;
+}
+
+.main-layout {
+  flex: 1;
+  overflow: hidden;
+}
+
+.file-sidebar {
+  height: 100%;
+  background: #1e1e1e;
+  border-right: 1px solid #3e3e42;
+}
+
+.empty-state {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1e1e1e;
+}
+
+.empty-content {
+  text-align: center;
+  color: #808080;
+}
+
+.empty-content h2 {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.empty-content p {
+  font-size: 14px;
+}
+
+.sidebar {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #1e1e1e;
+  border-right: 1px solid #3e3e42;
+}
+
+.tabs {
+  display: flex;
+  background: #252526;
+  border-bottom: 1px solid #3e3e42;
+}
+
+.tab {
+  flex: 1;
+  padding: 8px 4px;
+  background: none;
+  border: none;
+  color: #cccccc;
+  font-size: 11px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.tab:hover {
+  color: #ffffff;
+}
+
+.tab.active {
+  color: #ffffff;
+  border-bottom-color: #007acc;
+}
+
+.sidebar-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+.pane {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pane-header {
+  padding: 8px 16px;
+  background: #252526;
+  border-bottom: 1px solid #3e3e42;
+  font-size: 12px;
+  font-weight: 500;
+  color: #cccccc;
+  flex-shrink: 0;
+}
+
+.latex-pane,
+.preview-pane {
+  border-right: 1px solid #3e3e42;
+}
+
+.lean-section {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid #3e3e42;
 }
 </style>

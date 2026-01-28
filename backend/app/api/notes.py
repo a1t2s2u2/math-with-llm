@@ -31,7 +31,6 @@ def update_note_endpoint(note_id: str, note_update: NoteUpdate) -> Note:
 
     parse_result = parser.parse_latex(note_update.latex_source)
     note.blocks = parse_result.blocks
-    note.symbols = parse_result.symbols
     note.todos = parse_result.todos
 
     render_result = renderer.render_latex_to_html(note_update.latex_source)

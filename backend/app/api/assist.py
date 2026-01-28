@@ -32,8 +32,7 @@ def generate_skeleton_endpoint(request: SkeletonRequest) -> SkeletonResponse:
     if block is None:
         raise HTTPException(status_code=404, detail="Block not found")
 
-    vars_context = "\n".join([f"{s.name}" for s in note.symbols])
-    context = f"Variables: {vars_context}\n\nNote: {note.title}"
+    context = f"Note: {note.title}"
 
     return llm.generate_skeleton(block, context)
 
@@ -48,10 +47,9 @@ def generate_lean_endpoint(request: LeanGenerateRequest) -> LeanGeneration:
     if block is None:
         raise HTTPException(status_code=404, detail="Block not found")
 
-    vars_context = "\n".join([f"{s.name}" for s in note.symbols])
     context = f"Note: {note.title}"
 
-    return llm.generate_lean(block, vars_context, context)
+    return llm.generate_lean(block, "", context)
 
 
 @router.post("/lean/fix", response_model=PatchResult)

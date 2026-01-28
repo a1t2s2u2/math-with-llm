@@ -56,7 +56,6 @@
                       :definitions="definitions"
                       @jump="handleJump"
                     />
-                    <SymbolTable v-if="activeTab === 'symbols'" :symbols="symbols" />
                     <TodoList v-if="activeTab === 'todos'" :todos="todos" />
                   </div>
                 </div>
@@ -139,14 +138,13 @@ import {
   deleteFile,
   deleteFolder
 } from '~/utils/api'
-import type { FileNode, Block, Symbol, Todo, SkeletonCard } from '~/types/api'
+import type { FileNode, Block, Todo, SkeletonCard } from '~/types/api'
 
 import LatexEditor from '~/components/editor/LatexEditor.vue'
 import PreviewPane from '~/components/editor/PreviewPane.vue'
 import LeanPanel from '~/components/lean/LeanPanel.vue'
 import OutlinePanel from '~/components/outline/OutlinePanel.vue'
 import DefinitionLedger from '~/components/outline/DefinitionLedger.vue'
-import SymbolTable from '~/components/outline/SymbolTable.vue'
 import TodoList from '~/components/outline/TodoList.vue'
 import SkeletonModal from '~/components/ui/SkeletonModal.vue'
 import ResizablePanes from '~/components/ui/ResizablePanes.vue'
@@ -184,13 +182,11 @@ const loadingSkeleton = ref(false)
 const tabs = [
   { id: 'outline', label: 'Outline' },
   { id: 'definitions', label: 'Defs' },
-  { id: 'symbols', label: 'Symbols' },
   { id: 'todos', label: 'TODOs' }
 ]
 
 // Computed from currentFile
 const blocks = computed<Block[]>(() => currentFile.value?.blocks || [])
-const symbols = computed<Symbol[]>(() => currentFile.value?.symbols || [])
 const todos = computed<Todo[]>(() => currentFile.value?.todos || [])
 const definitions = computed(() => blocks.value.filter((b) => b.type === 'definition'))
 

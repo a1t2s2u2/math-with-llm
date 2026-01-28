@@ -1,7 +1,7 @@
 import re
 
 from app.models.block import ParseResult
-from app.models.note import Block, BlockType, Symbol, Todo
+from app.models.note import Block, BlockType, Todo
 from app.utils.id_generator import generate_block_id
 
 BLOCK_TYPES = [
@@ -18,12 +18,10 @@ BLOCK_TYPES = [
 
 def parse_latex(source: str) -> ParseResult:
     blocks = _extract_blocks(source)
-    symbols = _extract_symbols(source)
     todos = _extract_todos(source)
 
     return ParseResult(
         blocks=blocks,
-        symbols=symbols,
         todos=todos,
     )
 
@@ -99,29 +97,6 @@ def _extract_title(optional_arg: str | None, content: str) -> str | None:
 def _extract_label(content: str) -> str | None:
     match = re.search(r"\\label\{([^}]+)\}", content)
     return match.group(1) if match else None
-
-
-def _extract_symbols(source: str) -> list[Symbol]:
-    symbols = []
-
-    vars_pattern = r"\\vars\{([^}]+)\}"
-    for match in re.finditer(vars_pattern, source):
-        vars_content = match.group(1)
-        pos = match.start()
-
-        var_declarations = vars_content.split(",")
-        for var_decl in var_declarations:
-            var_decl = var_decl.strip()
-            if ":" in var_decl:
-                vars_part = var_decl.split(":")[0].strip()
-                var_names = vars_part.split()
-                for var_name in var_names:
-                    symbols.append(Symbol(name=var_name, first_occurrence_pos=pos))
-            else:
-                var_name = var_decl
-                symbols.append(Symbol(name=var_name, first_occurrence_pos=pos))
-
-    return symbols
 
 
 def _extract_todos(source: str) -> list[Todo]:

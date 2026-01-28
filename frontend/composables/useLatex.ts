@@ -3,7 +3,6 @@ import type { Note, Block } from '~/types/api'
 
 export function useLatex(note: Ref<Note | null>) {
   const blocks = computed(() => note.value?.blocks || [])
-  const symbols = computed(() => note.value?.symbols || [])
   const todos = computed(() => note.value?.todos || [])
 
   const getBlockById = (blockId: string): Block | undefined => {
@@ -14,7 +13,6 @@ export function useLatex(note: Ref<Note | null>) {
 
   return {
     blocks,
-    symbols,
     todos,
     definitions,
     getBlockById

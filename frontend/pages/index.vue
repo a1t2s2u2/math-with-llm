@@ -78,13 +78,15 @@
                 <ResizablePanes :horizontal="true" :initial-sizes="[50, 50]">
                   <template #pane-0>
                     <div class="pane latex-pane">
-                      <div class="pane-header">{{ currentFile.name }}</div>
+                      <div class="pane-header">{{ currentFile.name }}{{ isDirty ? ' *' : '' }}</div>
                       <LatexEditor
                         ref="editorRef"
-                        v-model="latexSource"
+                        :model-value="localContent"
                         :scroll-line="previewScrollLine"
                         :sync-enabled="scrollSyncEnabled"
+                        @update:model-value="setLocalContent"
                         @scroll="handleEditorScroll"
+                        @save="handleSave"
                       />
                     </div>
                   </template>
@@ -127,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useFile } from '~/composables/useFile'
 import { useLean } from '~/composables/useLean'
 import {
@@ -158,8 +160,11 @@ const treeLoading = ref(false)
 const {
   file: currentFile,
   currentPath,
+  localContent,
+  isDirty,
   load: loadFile,
-  updateContent,
+  setLocalContent,
+  save: saveFile,
   clear: clearFile
 } = useFile()
 
@@ -167,7 +172,6 @@ const {
 const { code: leanCode, imports: leanImports } = useLean()
 
 // Editor state
-const latexSource = ref('')
 const activeTab = ref('outline')
 const scrollSyncEnabled = ref(true)
 const editorScrollLine = ref(1)
@@ -200,9 +204,6 @@ const loadTree = async () => {
 // File selection
 const handleFileSelect = async (path: string) => {
   await loadFile(path)
-  if (currentFile.value) {
-    latexSource.value = currentFile.value.content
-  }
 }
 
 // File operations
@@ -234,7 +235,6 @@ const handleDelete = async (path: string, type: 'file' | 'directory') => {
   await loadTree()
   if (currentPath.value === path) {
     clearFile()
-    latexSource.value = ''
   }
 }
 
@@ -251,16 +251,10 @@ const handleJump = (position: number) => {
   editorRef.value?.scrollToPosition(position)
 }
 
-// Sync latex source with file
-watch(latexSource, (newSource) => {
-  updateContent(newSource)
-})
-
-watch(currentFile, (newFile) => {
-  if (newFile) {
-    latexSource.value = newFile.content
-  }
-})
+// Save handler
+const handleSave = async () => {
+  await saveFile()
+}
 
 // LLM assist
 const handleGenerateSkeleton = async (_blockId: string) => {

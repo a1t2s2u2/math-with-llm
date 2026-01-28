@@ -31,6 +31,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: string]
   scroll: [lineNumber: number]
+  save: []
 }>()
 
 const localSource = ref(props.modelValue)
@@ -70,6 +71,11 @@ const scrollToLine = (lineNumber: number) => {
 
 const onEditorMount = (editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {
   editorRef.value = editor
+
+  // Register save command (Cmd+S / Ctrl+S)
+  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+    emit('save')
+  })
 
   // Emit current visible line number on scroll
   editor.onDidScrollChange(() => {

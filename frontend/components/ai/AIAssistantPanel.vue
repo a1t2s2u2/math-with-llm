@@ -230,6 +230,17 @@ defineExpose({
   font-size: 1em;
 }
 
+.message-content :deep(.katex-display) {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0;
+  margin: 8px 0;
+}
+
+.message-content :deep(.katex-display > .katex) {
+  white-space: nowrap;
+}
+
 .loading-message {
   display: flex;
   align-items: center;

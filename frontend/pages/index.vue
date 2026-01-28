@@ -105,12 +105,8 @@
               </template>
 
               <template #pane-1>
-                <div class="lean-section">
-                  <LeanPanel
-                    :lean-code="leanCode"
-                    :imports="leanImports"
-                    @generate-for-block="handleGenerateLean"
-                  />
+                <div class="ai-section">
+                  <AIAssistantPanel ref="aiPanelRef" />
                 </div>
               </template>
             </ResizablePanes>
@@ -118,20 +114,12 @@
         </template>
       </ResizablePanes>
     </div>
-
-    <SkeletonModal
-      :show="showSkeletonModal"
-      :cards="skeletonCards"
-      :loading="loadingSkeleton"
-      @close="showSkeletonModal = false"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useFile } from '~/composables/useFile'
-import { useLean } from '~/composables/useLean'
 import {
   getFileTree,
   createFile,
@@ -139,18 +127,16 @@ import {
   renameFile,
   deleteFile,
   deleteFolder,
-  generateFileSkeletonApi,
-  generateFileLeanApi
+  generateFileSkeletonApi
 } from '~/utils/api'
-import type { FileNode, Block, Todo, SkeletonCard } from '~/types/api'
+import type { FileNode, Block, Todo } from '~/types/api'
 
 import LatexEditor from '~/components/editor/LatexEditor.vue'
 import PreviewPane from '~/components/editor/PreviewPane.vue'
-import LeanPanel from '~/components/lean/LeanPanel.vue'
+import AIAssistantPanel from '~/components/ai/AIAssistantPanel.vue'
 import OutlinePanel from '~/components/outline/OutlinePanel.vue'
 import DefinitionLedger from '~/components/outline/DefinitionLedger.vue'
 import TodoList from '~/components/outline/TodoList.vue'
-import SkeletonModal from '~/components/ui/SkeletonModal.vue'
 import ResizablePanes from '~/components/ui/ResizablePanes.vue'
 import FileTree from '~/components/files/FileTree.vue'
 
@@ -170,20 +156,13 @@ const {
   clear: clearFile
 } = useFile()
 
-// Lean state
-const { code: leanCode, imports: leanImports } = useLean()
-
 // Editor state
 const activeTab = ref('outline')
 const scrollSyncEnabled = ref(true)
 const editorScrollLine = ref(1)
 const previewScrollLine = ref(1)
 const editorRef = ref<InstanceType<typeof LatexEditor> | null>(null)
-
-// Skeleton modal state
-const showSkeletonModal = ref(false)
-const skeletonCards = ref<SkeletonCard[]>([])
-const loadingSkeleton = ref(false)
+const aiPanelRef = ref<InstanceType<typeof AIAssistantPanel> | null>(null)
 
 const tabs = [
   { id: 'outline', label: 'Outline' },
@@ -260,20 +239,20 @@ const handleSave = async () => {
 
 // LLM assist
 const handleGenerateSkeleton = async (blockId: string) => {
-  if (!currentPath.value) return
-  showSkeletonModal.value = true
-  loadingSkeleton.value = true
-  skeletonCards.value = []
-  const result = await generateFileSkeletonApi(currentPath.value, blockId)
-  skeletonCards.value = result.cards
-  loadingSkeleton.value = false
+  if (!currentPath.value || !aiPanelRef.value) return
+  aiPanelRef.value.setLoading(true)
+  try {
+    const result = await generateFileSkeletonApi(currentPath.value, blockId)
+    aiPanelRef.value.addStrategyMessage(result.cards)
+  } catch (e) {
+    console.error('Failed to generate skeleton:', e)
+  } finally {
+    aiPanelRef.value.setLoading(false)
+  }
 }
 
-const handleGenerateLean = async (blockId: string) => {
-  if (!currentPath.value) return
-  const result = await generateFileLeanApi(currentPath.value, blockId)
-  // TODO: setCode(result.lean_code, result.imports)
-  console.log('Generated Lean:', result)
+const handleGenerateLean = async (_blockId: string) => {
+  // TODO: Lean生成機能は将来実装
 }
 
 onMounted(() => {
@@ -428,7 +407,7 @@ onMounted(() => {
   border-right: 1px solid #3e3e42;
 }
 
-.lean-section {
+.ai-section {
   height: 100%;
   display: flex;
   flex-direction: column;

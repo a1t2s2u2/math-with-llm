@@ -2,7 +2,7 @@ import re
 
 from app.models.block import ParseResult
 from app.models.note import Block, BlockType, Todo
-from app.utils.id_generator import generate_block_id
+from app.utils.id_generator import generate_block_id_from_content
 
 BLOCK_TYPES = [
     "definition",
@@ -43,7 +43,10 @@ def _extract_blocks(source: str) -> list[Block]:
         start, end = match.span()
 
         label = _extract_label(content)
-        block_id = label if label else generate_block_id()
+        if label:
+            block_id = label
+        else:
+            block_id = generate_block_id_from_content(block_type, start, content)
         title = _extract_title(optional_arg, content)
 
         # proof の場合、オプション引数がなければ直前の定理系ブロックのタイトルを参照

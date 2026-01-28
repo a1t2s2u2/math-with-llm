@@ -13,7 +13,7 @@
     </div>
 
     <div class="main-layout">
-      <ResizablePanes :horizontal="true" :initial-sizes="[20, 80]">
+      <ResizablePanes :horizontal="true" :initial-sizes="[15, 60, 25]">
         <template #pane-0>
           <div class="sidebar">
             <ResizablePanes :horizontal="false" :initial-sizes="[50, 50]">
@@ -72,45 +72,39 @@
             </div>
           </div>
 
-          <template v-else>
-            <ResizablePanes :horizontal="false" :initial-sizes="[70, 30]">
-              <template #pane-0>
-                <ResizablePanes :horizontal="true" :initial-sizes="[50, 50]">
-                  <template #pane-0>
-                    <div class="pane latex-pane">
-                      <div class="pane-header">{{ currentFile.name }}{{ isDirty ? ' *' : '' }}</div>
-                      <LatexEditor
-                        ref="editorRef"
-                        :model-value="localContent"
-                        :scroll-line="previewScrollLine"
-                        :sync-enabled="scrollSyncEnabled"
-                        @update:model-value="setLocalContent"
-                        @scroll="handleEditorScroll"
-                        @save="handleSave"
-                      />
-                    </div>
-                  </template>
-                  <template #pane-1>
-                    <div class="pane preview-pane">
-                      <div class="pane-header">Preview</div>
-                      <PreviewPane
-                        :rendered-html="currentFile.rendered_html"
-                        :scroll-line="editorScrollLine"
-                        :sync-enabled="scrollSyncEnabled"
-                        @scroll="handlePreviewScroll"
-                      />
-                    </div>
-                  </template>
-                </ResizablePanes>
-              </template>
+          <ResizablePanes v-else :horizontal="true" :initial-sizes="[50, 50]">
+            <template #pane-0>
+              <div class="pane latex-pane">
+                <div class="pane-header">{{ currentFile.name }}{{ isDirty ? ' *' : '' }}</div>
+                <LatexEditor
+                  ref="editorRef"
+                  :model-value="localContent"
+                  :scroll-line="previewScrollLine"
+                  :sync-enabled="scrollSyncEnabled"
+                  @update:model-value="setLocalContent"
+                  @scroll="handleEditorScroll"
+                  @save="handleSave"
+                />
+              </div>
+            </template>
+            <template #pane-1>
+              <div class="pane preview-pane">
+                <div class="pane-header">Preview</div>
+                <PreviewPane
+                  :rendered-html="currentFile.rendered_html"
+                  :scroll-line="editorScrollLine"
+                  :sync-enabled="scrollSyncEnabled"
+                  @scroll="handlePreviewScroll"
+                />
+              </div>
+            </template>
+          </ResizablePanes>
+        </template>
 
-              <template #pane-1>
-                <div class="ai-section">
-                  <AIAssistantPanel ref="aiPanelRef" @send="handleAIChat" />
-                </div>
-              </template>
-            </ResizablePanes>
-          </template>
+        <template #pane-2>
+          <div class="ai-section">
+            <AIAssistantPanel ref="aiPanelRef" @send="handleAIChat" />
+          </div>
         </template>
       </ResizablePanes>
     </div>

@@ -38,7 +38,7 @@
           </div>
           <div class="pane preview-pane">
             <div class="pane-header">Preview</div>
-            <PreviewPane :source="latexSource" />
+            <PreviewPane :rendered-html="note?.rendered_html || ''" />
           </div>
         </div>
 

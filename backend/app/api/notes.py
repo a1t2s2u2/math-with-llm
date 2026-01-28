@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
 from app.models.note import Note, NoteCreate, NoteUpdate
-from app.services import parser, storage
+from app.services import parser, renderer, storage
 from app.utils.id_generator import generate_note_id
 
 router = APIRouter(prefix="/notes", tags=["notes"])
@@ -33,5 +33,10 @@ def update_note_endpoint(note_id: str, note_update: NoteUpdate) -> Note:
     note.blocks = parse_result.blocks
     note.symbols = parse_result.symbols
     note.todos = parse_result.todos
+
+    render_result = renderer.render_latex_to_html(note_update.latex_source)
+    note.rendered_html = render_result.html
+    if render_result.errors:
+        print(f"Rendering errors for note {note_id}: {render_result.errors}")
 
     return storage.update_note(note)

@@ -2,6 +2,7 @@ export interface Note {
   note_id: string
   title: string
   latex_source: string
+  rendered_html: string
   blocks: Block[]
   symbols: Symbol[]
   todos: Todo[]

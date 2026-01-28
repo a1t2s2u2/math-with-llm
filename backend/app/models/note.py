@@ -44,6 +44,7 @@ class Note(BaseModel):
     note_id: str
     title: str
     latex_source: str = ""
+    rendered_html: str = ""
     blocks: list[Block] = Field(default_factory=list)
     symbols: list[Symbol] = Field(default_factory=list)
     todos: list[Todo] = Field(default_factory=list)

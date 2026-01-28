@@ -39,6 +39,6 @@
     "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind",
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
-  "postCreateCommand": "uv sync && cd frontend && npm install",
+  "postCreateCommand": "uv sync && cd frontend && npm install && npm install -g @anthropic-ai/claude-code",
   "postStartCommand": "uv run pre-commit install"
 }

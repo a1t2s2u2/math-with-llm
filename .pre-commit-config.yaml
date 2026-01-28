@@ -30,3 +30,25 @@ repos:
         language: system
         pass_filenames: false
         files: ^(pyproject\.toml|uv\.lock)$
+
+  # Frontend のコード品質チェックとフォーマット
+  - repo: local
+    hooks:
+      - id: frontend-prettier
+        name: prettier (frontend)
+        entry: bash -c 'cd frontend && npm run format:check'
+        language: system
+        pass_filenames: false
+        files: ^frontend/.*\.(ts|vue|json|css)$
+      - id: frontend-eslint
+        name: eslint (frontend)
+        entry: bash -c 'cd frontend && npm run lint'
+        language: system
+        pass_filenames: false
+        files: ^frontend/.*\.(ts|vue)$
+      - id: frontend-type-check
+        name: vue-tsc type check (frontend)
+        entry: bash -c 'cd frontend && npm run type-check'
+        language: system
+        pass_filenames: false
+        files: ^frontend/.*\.(ts|vue)$

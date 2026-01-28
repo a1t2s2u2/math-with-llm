@@ -32,6 +32,12 @@ class LeanFixRequest(BaseModel):
     diagnostics: list[dict]
 
 
+class ChatRequest(BaseModel):
+    message: str
+    context_type: str | None = None  # 'block' or 'selection'
+    context_content: str | None = None
+
+
 @router.post("/skeleton", response_model=SkeletonResponse)
 def generate_skeleton_endpoint(request: SkeletonRequest) -> SkeletonResponse:
     note = storage.get_note(request.note_id)
@@ -97,3 +103,13 @@ def generate_file_lean_endpoint(request: FileLeanGenerateRequest) -> LeanGenerat
 @router.post("/lean/fix", response_model=PatchResult)
 def generate_fix_endpoint(request: LeanFixRequest) -> PatchResult:
     return llm.generate_fix_patch(request.lean_code, request.diagnostics)
+
+
+class ChatResponse(BaseModel):
+    response: str
+
+
+@router.post("/chat", response_model=ChatResponse)
+def chat_endpoint(request: ChatRequest) -> ChatResponse:
+    response = llm.chat(request.message, request.context_type, request.context_content)
+    return ChatResponse(response=response)

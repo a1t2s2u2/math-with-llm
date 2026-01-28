@@ -105,6 +105,24 @@ export async function generateFileLeanApi(
   return response.json()
 }
 
+export async function chatApi(
+  message: string,
+  contextType: string | null,
+  contextContent: string | null
+): Promise<{ response: string }> {
+  const response = await fetch(`${API_BASE}/assist/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message,
+      context_type: contextType,
+      context_content: contextContent
+    })
+  })
+  if (!response.ok) throw new Error('Failed to chat')
+  return response.json()
+}
+
 // File API
 
 export async function getFileTree(): Promise<FileNode[]> {

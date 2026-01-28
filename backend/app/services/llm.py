@@ -103,6 +103,34 @@ Output as JSON:
     return LeanGeneration(**result)
 
 
+def chat(message: str, context_type: str | None, context_content: str | None) -> str:
+    context_text = ""
+    if context_type and context_content:
+        if context_type == "block":
+            context_text = f"\n\n参照しているブロック:\n{context_content}"
+        elif context_type == "selection":
+            context_text = f"\n\n選択されたテキスト:\n{context_content}"
+
+    prompt = f"""{message}{context_text}"""
+
+    response = client.chat.completions.create(
+        model="gpt-5-mini",
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "あなたは数学の専門家です。LaTeX形式の数式を含む質問に答えてください。"
+                    "回答にはLaTeX数式を使用できます（$...$ または $$...$$）。"
+                    "簡潔かつ正確に回答してください。"
+                ),
+            },
+            {"role": "user", "content": prompt},
+        ],
+    )
+
+    return response.choices[0].message.content or ""
+
+
 def generate_fix_patch(lean_code: str, diagnostics: list[dict]) -> PatchResult:
     diagnostics_str = "\n".join(
         [

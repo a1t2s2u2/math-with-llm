@@ -6,34 +6,19 @@
         v-for="block in blocks"
         :key="block.id"
         class="block-item"
-        :class="`block-${block.type}`"
-        @click="$emit('jump', block.range[0])"
+        :class="[`block-${block.type}`, { selected: selectedId === block.id }]"
+        @click="handleClick(block)"
       >
         <span class="block-type">{{ formatType(block.type) }}</span>
         <span v-if="block.title" class="block-title" v-html="renderMath(block.title)" />
         <span v-if="block.label" class="block-label">{{ block.label }}</span>
-        <div class="block-actions">
-          <button
-            class="action-button"
-            title="証明戦略を生成"
-            @click.stop="$emit('generateSkeleton', block.id)"
-          >
-            💡
-          </button>
-          <button
-            class="action-button"
-            title="Leanコードを生成"
-            @click.stop="$emit('generateLean', block.id)"
-          >
-            ⚡
-          </button>
-        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { Block } from '~/types/api'
 import { useMathRender } from '~/composables/useMathRender'
 
@@ -41,13 +26,20 @@ defineProps<{
   blocks: Block[]
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   jump: [position: number]
-  generateSkeleton: [blockId: string]
-  generateLean: [blockId: string]
+  selectBlock: [block: Block]
 }>()
 
+const selectedId = ref<string | null>(null)
+
 const { renderMath } = useMathRender()
+
+const handleClick = (block: Block) => {
+  selectedId.value = block.id
+  emit('jump', block.range[0])
+  emit('selectBlock', block)
+}
 
 const formatType = (type: string) => {
   const typeMap: Record<string, string> = {
@@ -97,6 +89,10 @@ const formatType = (type: string) => {
 
 .block-item:hover {
   background: #2d2d2d;
+}
+
+.block-item.selected {
+  background: #094771;
 }
 
 .block-definition {
@@ -167,32 +163,5 @@ const formatType = (type: string) => {
 
 .block-title :deep(.katex) {
   font-size: 1em;
-}
-
-.block-actions {
-  flex-shrink: 0;
-  display: flex;
-  gap: 4px;
-  margin-left: auto;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.block-item:hover .block-actions {
-  opacity: 1;
-}
-
-.action-button {
-  padding: 2px 6px;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 12px;
-  background: #3e3e3e;
-  transition: background 0.15s;
-}
-
-.action-button:hover {
-  background: #4e4e4e;
 }
 </style>

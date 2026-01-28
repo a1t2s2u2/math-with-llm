@@ -48,8 +48,7 @@
                       v-if="activeTab === 'outline'"
                       :blocks="blocks"
                       @jump="handleJump"
-                      @generate-skeleton="handleGenerateSkeleton"
-                      @generate-lean="handleGenerateLean"
+                      @select-block="handleSelectBlock"
                     />
                     <DefinitionLedger
                       v-if="activeTab === 'definitions'"
@@ -106,7 +105,7 @@
 
               <template #pane-1>
                 <div class="ai-section">
-                  <AIAssistantPanel ref="aiPanelRef" />
+                  <AIAssistantPanel ref="aiPanelRef" @send="handleAIChat" />
                 </div>
               </template>
             </ResizablePanes>
@@ -127,7 +126,7 @@ import {
   renameFile,
   deleteFile,
   deleteFolder,
-  generateFileSkeletonApi
+  chatApi
 } from '~/utils/api'
 import type { FileNode, Block, Todo } from '~/types/api'
 
@@ -237,22 +236,46 @@ const handleSave = async () => {
   await saveFile()
 }
 
-// LLM assist
-const handleGenerateSkeleton = async (blockId: string) => {
-  if (!currentPath.value || !aiPanelRef.value) return
+// AI assist
+const handleSelectBlock = (block: Block) => {
+  if (!aiPanelRef.value) return
+  const typeLabel =
+    {
+      definition: '定義',
+      theorem: '定理',
+      lemma: '補題',
+      proposition: '命題',
+      corollary: '系',
+      proof: '証明',
+      remark: '注意',
+      example: '例'
+    }[block.type] || block.type
+  const label = block.title ? `${typeLabel}: ${block.title}` : typeLabel
+  aiPanelRef.value.setContext({
+    type: 'block',
+    label,
+    content: block.latex_fragment
+  })
+}
+
+interface AIContext {
+  type: 'block' | 'selection'
+  label: string
+  content: string
+}
+
+const handleAIChat = async (message: string, context: AIContext | null) => {
+  if (!aiPanelRef.value) return
   aiPanelRef.value.setLoading(true)
   try {
-    const result = await generateFileSkeletonApi(currentPath.value, blockId)
-    aiPanelRef.value.addStrategyMessage(result.cards)
+    const result = await chatApi(message, context?.type || null, context?.content || null)
+    aiPanelRef.value.addAssistantMessage(result.response)
   } catch (e) {
-    console.error('Failed to generate skeleton:', e)
+    console.error('Failed to chat:', e)
+    aiPanelRef.value.addAssistantMessage('エラーが発生しました。もう一度お試しください。')
   } finally {
     aiPanelRef.value.setLoading(false)
   }
-}
-
-const handleGenerateLean = async (_blockId: string) => {
-  // TODO: Lean生成機能は将来実装
 }
 
 onMounted(() => {

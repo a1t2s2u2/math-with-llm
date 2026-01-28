@@ -9,11 +9,9 @@
         :class="`block-${block.type}`"
         @click="$emit('jump', block.range[0])"
       >
-        <div class="block-header">
-          <span class="block-type">{{ formatType(block.type) }}</span>
-          <span v-if="block.label" class="block-label">{{ block.label }}</span>
-        </div>
-        <div v-if="block.title" class="block-title" v-html="renderMath(block.title)" />
+        <span class="block-type">{{ formatType(block.type) }}</span>
+        <span v-if="block.title" class="block-title" v-html="renderMath(block.title)" />
+        <span v-if="block.label" class="block-label">{{ block.label }}</span>
         <div class="block-actions">
           <button
             class="action-button"
@@ -58,7 +56,7 @@ const formatType = (type: string) => {
     lemma: 'Lem',
     proposition: 'Prop',
     corollary: 'Cor',
-    proof: 'Prf',
+    proof: 'Proof',
     remark: 'Rem',
     example: 'Ex'
   }
@@ -87,6 +85,9 @@ const formatType = (type: string) => {
 }
 
 .block-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 6px 8px;
   border-radius: 4px;
   cursor: pointer;
@@ -118,17 +119,10 @@ const formatType = (type: string) => {
   border-left-color: #6c757d;
 }
 
-.block-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 2px;
-}
-
 .block-type {
+  flex-shrink: 0;
   font-size: 10px;
   font-weight: 600;
-  text-transform: uppercase;
   padding: 1px 4px;
   border-radius: 2px;
   background: #3e3e3e;
@@ -154,12 +148,15 @@ const formatType = (type: string) => {
 }
 
 .block-label {
+  flex-shrink: 0;
   font-size: 11px;
   color: #808080;
   font-family: monospace;
 }
 
 .block-title {
+  flex: 1;
+  min-width: 0;
   font-size: 12px;
   color: #d4d4d4;
   line-height: 1.4;
@@ -173,9 +170,10 @@ const formatType = (type: string) => {
 }
 
 .block-actions {
+  flex-shrink: 0;
   display: flex;
   gap: 4px;
-  margin-top: 4px;
+  margin-left: auto;
   opacity: 0;
   transition: opacity 0.15s;
 }

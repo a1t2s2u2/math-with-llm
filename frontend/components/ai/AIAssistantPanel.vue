@@ -176,10 +176,12 @@ defineExpose({
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 16px;
+  height: 33px;
+  padding: 0 16px;
   background: #252526;
   border-bottom: 1px solid #3e3e42;
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .panel-header h3 {
@@ -190,8 +192,9 @@ defineExpose({
 }
 
 .clear-button {
-  padding: 4px 8px;
+  padding: 2px 8px;
   font-size: 11px;
+  line-height: 1;
   background: #3e3e42;
   color: #cccccc;
   border: none;

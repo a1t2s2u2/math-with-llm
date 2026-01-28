@@ -13,7 +13,7 @@
           <span class="block-type">{{ formatType(block.type) }}</span>
           <span v-if="block.label" class="block-label">{{ block.label }}</span>
         </div>
-        <div v-if="block.title" class="block-title">{{ block.title }}</div>
+        <div v-if="block.title" class="block-title" v-html="renderMath(block.title)" />
         <div class="block-actions">
           <button
             class="action-button"
@@ -37,6 +37,7 @@
 
 <script setup lang="ts">
 import type { Block } from '~/types/api'
+import { useMathRender } from '~/composables/useMathRender'
 
 defineProps<{
   blocks: Block[]
@@ -47,6 +48,8 @@ defineEmits<{
   generateSkeleton: [blockId: string]
   generateLean: [blockId: string]
 }>()
+
+const { renderMath } = useMathRender()
 
 const formatType = (type: string) => {
   const typeMap: Record<string, string> = {
@@ -163,6 +166,10 @@ const formatType = (type: string) => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.block-title :deep(.katex) {
+  font-size: 1em;
 }
 
 .block-actions {

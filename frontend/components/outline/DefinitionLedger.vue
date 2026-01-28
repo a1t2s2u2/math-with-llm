@@ -12,7 +12,7 @@
           <span class="def-type">Def</span>
           <span v-if="def.label" class="def-label">{{ def.label }}</span>
         </div>
-        <div v-if="def.title" class="def-title">{{ def.title }}</div>
+        <div v-if="def.title" class="def-title" v-html="renderMath(def.title)" />
       </div>
     </div>
   </div>
@@ -20,6 +20,7 @@
 
 <script setup lang="ts">
 import type { Block } from '~/types/api'
+import { useMathRender } from '~/composables/useMathRender'
 
 defineProps<{
   definitions: Block[]
@@ -28,6 +29,8 @@ defineProps<{
 defineEmits<{
   jump: [position: number]
 }>()
+
+const { renderMath } = useMathRender()
 </script>
 
 <style scoped>
@@ -92,5 +95,9 @@ defineEmits<{
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.def-title :deep(.katex) {
+  font-size: 1em;
 }
 </style>

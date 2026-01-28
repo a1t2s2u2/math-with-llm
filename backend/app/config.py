@@ -8,6 +8,7 @@ class Settings(BaseSettings):
 
     openai_api_key: str
     data_dir: Path = Path("./data")
+    workspace_root: Path = Path("./workspace")
     cors_origins: list[str] = ["http://localhost:3000"]
 
 

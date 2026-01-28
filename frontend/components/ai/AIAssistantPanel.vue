@@ -29,7 +29,7 @@
     <div class="input-area">
       <textarea
         v-model="inputText"
-        placeholder="質問を入力... (Cmd+Enterで送信)"
+        placeholder="質問を入力... (Enterで送信)"
         @keydown="handleKeydown"
         :disabled="loading"
       />
@@ -74,7 +74,7 @@ const contextLabel = computed(() => {
 const canSend = computed(() => inputText.value.trim() && !loading.value)
 
 const handleKeydown = (e: KeyboardEvent) => {
-  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+  if (e.key === 'Enter' && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
     e.preventDefault()
     sendMessage()
   }

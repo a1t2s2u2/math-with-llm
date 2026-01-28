@@ -138,7 +138,9 @@ import {
   createFolder,
   renameFile,
   deleteFile,
-  deleteFolder
+  deleteFolder,
+  generateFileSkeletonApi,
+  generateFileLeanApi
 } from '~/utils/api'
 import type { FileNode, Block, Todo, SkeletonCard } from '~/types/api'
 
@@ -257,16 +259,21 @@ const handleSave = async () => {
 }
 
 // LLM assist
-const handleGenerateSkeleton = async (_blockId: string) => {
+const handleGenerateSkeleton = async (blockId: string) => {
   if (!currentPath.value) return
   showSkeletonModal.value = true
   loadingSkeleton.value = true
   skeletonCards.value = []
+  const result = await generateFileSkeletonApi(currentPath.value, blockId)
+  skeletonCards.value = result.cards
   loadingSkeleton.value = false
 }
 
-const handleGenerateLean = async (_blockId: string) => {
+const handleGenerateLean = async (blockId: string) => {
   if (!currentPath.value) return
+  const result = await generateFileLeanApi(currentPath.value, blockId)
+  // TODO: setCode(result.lean_code, result.imports)
+  console.log('Generated Lean:', result)
 }
 
 onMounted(() => {

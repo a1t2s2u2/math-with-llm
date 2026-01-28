@@ -32,20 +32,23 @@ def _extract_blocks(source: str) -> list[Block]:
     blocks = []
 
     block_types_pattern = "|".join(BLOCK_TYPES)
-    pattern = rf"\\begin{{({block_types_pattern})}}(.*?)\\end{{\1}}"
+    pattern = rf"\\begin{{({block_types_pattern})}}(\[[^\]]*\])?(.*?)\\end{{\1}}"
 
     for match in re.finditer(pattern, source, re.DOTALL):
         block_type = match.group(1)
-        content = match.group(2)
+        optional_arg = match.group(2)
+        content = match.group(3)
         start, end = match.span()
 
         label = _extract_label(content)
         block_id = label if label else generate_block_id()
+        title = _extract_title(optional_arg, content)
 
         blocks.append(
             Block(
                 type=BlockType(block_type),
                 label=label,
+                title=title,
                 id=block_id,
                 range=(start, end),
                 latex_fragment=match.group(0),
@@ -53,6 +56,26 @@ def _extract_blocks(source: str) -> list[Block]:
         )
 
     return blocks
+
+
+def _extract_title(optional_arg: str | None, content: str) -> str | None:
+    # First try optional argument: \begin{definition}[Title here]
+    if optional_arg:
+        return optional_arg[1:-1].strip()  # Remove [ and ]
+
+    # Otherwise extract first meaningful line from content
+    content = content.strip()
+    # Remove \label{...} from content
+    content = re.sub(r"\\label\{[^}]*\}", "", content).strip()
+    if not content:
+        return None
+
+    # Get first line and clean it up
+    first_line = content.split("\n")[0].strip()
+    # Limit length
+    if len(first_line) > 60:
+        first_line = first_line[:57] + "..."
+    return first_line if first_line else None
 
 
 def _extract_label(content: str) -> str | None:

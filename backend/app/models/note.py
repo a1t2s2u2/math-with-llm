@@ -17,6 +17,7 @@ class BlockType(str, Enum):
 class Block(BaseModel):
     type: BlockType
     label: str | None = None
+    title: str | None = None
     id: str
     range: tuple[int, int]
     latex_fragment: str

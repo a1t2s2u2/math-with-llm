@@ -49,6 +49,7 @@ Thumbs.db
 .env
 .env.local
 backend/data/*.json
+backend/workspace/
 
 # Node.js
 node_modules/

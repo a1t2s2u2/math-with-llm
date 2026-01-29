@@ -1,13 +1,3 @@
-export interface Note {
-  note_id: string
-  title: string
-  latex_source: string
-  rendered_html: string
-  blocks: Block[]
-  todos: Todo[]
-  lean_artifacts: Record<string, LeanArtifact>
-}
-
 export interface Block {
   type: string
   label: string | null

@@ -34,21 +34,3 @@ class LeanArtifact(BaseModel):
     diagnostics: list[dict] = Field(default_factory=list)
     logs: str | None = None
     patches: list[str] = Field(default_factory=list)
-
-
-class Note(BaseModel):
-    note_id: str
-    title: str
-    latex_source: str = ""
-    rendered_html: str = ""
-    blocks: list[Block] = Field(default_factory=list)
-    todos: list[Todo] = Field(default_factory=list)
-    lean_artifacts: dict[str, LeanArtifact] = Field(default_factory=dict)
-
-
-class NoteCreate(BaseModel):
-    title: str
-
-
-class NoteUpdate(BaseModel):
-    latex_source: str

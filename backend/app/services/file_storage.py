@@ -1,34 +1,32 @@
 from pathlib import Path
-from typing import Literal
-
-from pydantic import BaseModel
 
 from app.config import settings
-from app.models.note import Block, Todo
+from app.models.file import FileContent, FileNode
 from app.services.parser import parse_latex
 from app.services.renderer import render_latex_to_html
 
-
-class FileNode(BaseModel):
-    name: str
-    type: Literal["file", "directory"]
-    path: str
-    children: list["FileNode"] | None = None
-
-
-class FileContent(BaseModel):
-    path: str
-    name: str
-    content: str
-    rendered_html: str
-    blocks: list[Block]
-    todos: list[Todo]
+_workspace_root: Path | None = None
 
 
 def _get_workspace_root() -> Path:
-    root = settings.workspace_root
+    root = _workspace_root if _workspace_root is not None else settings.workspace_root
     root.mkdir(parents=True, exist_ok=True)
     return root
+
+
+def set_workspace_root(path: str) -> list[FileNode]:
+    """Set workspace root and return file tree."""
+    global _workspace_root  # noqa: PLW0603
+    resolved = Path(path).resolve()
+    if not resolved.is_dir():
+        raise NotADirectoryError(f"Not a directory: {path}")
+    _workspace_root = resolved
+    return get_tree()
+
+
+def get_workspace_path() -> str:
+    """Return the absolute path of the current workspace root."""
+    return str(_get_workspace_root().resolve())
 
 
 def _validate_path(path: str) -> Path:

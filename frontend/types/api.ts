@@ -1,13 +1,3 @@
-export interface Note {
-  note_id: string
-  title: string
-  latex_source: string
-  rendered_html: string
-  blocks: Block[]
-  todos: Todo[]
-  lean_artifacts: Record<string, LeanArtifact>
-}
-
 export interface Block {
   type: string
   label: string | null
@@ -20,14 +10,6 @@ export interface Block {
 export interface Todo {
   content: string
   line_number: number
-}
-
-export interface LeanArtifact {
-  block_id: string
-  lean_code: string | null
-  diagnostics: any[]
-  logs: string | null
-  patches: string[]
 }
 
 export interface ParseResult {

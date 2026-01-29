@@ -1,28 +1,20 @@
+from typing import Literal
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from app.models.llm import LeanGeneration, PatchResult, SkeletonResponse
-from app.services import file_storage, llm, storage
+from app.services import file_storage, llm
 
 router = APIRouter(prefix="/assist", tags=["assist"])
 
 
 class SkeletonRequest(BaseModel):
-    note_id: str
-    block_id: str
-
-
-class FileSkeletonRequest(BaseModel):
     file_path: str
     block_id: str
 
 
 class LeanGenerateRequest(BaseModel):
-    note_id: str
-    block_id: str
-
-
-class FileLeanGenerateRequest(BaseModel):
     file_path: str
     block_id: str
 
@@ -34,31 +26,13 @@ class LeanFixRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-    context_type: str | None = None  # 'block' or 'selection'
+    context_type: Literal["block", "selection"] | None = None
     context_content: str | None = None
 
 
 @router.post("/skeleton", response_model=SkeletonResponse)
 def generate_skeleton_endpoint(request: SkeletonRequest) -> SkeletonResponse:
-    note = storage.get_note(request.note_id)
-    if note is None:
-        raise HTTPException(status_code=404, detail="Note not found")
-
-    block = next((b for b in note.blocks if b.id == request.block_id), None)
-    if block is None:
-        raise HTTPException(status_code=404, detail="Block not found")
-
-    context = f"Note: {note.title}"
-
-    return llm.generate_skeleton(block, context)
-
-
-@router.post("/file/skeleton", response_model=SkeletonResponse)
-def generate_file_skeleton_endpoint(request: FileSkeletonRequest) -> SkeletonResponse:
-    try:
-        file_content = file_storage.read_file(request.file_path)
-    except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="File not found") from None
+    file_content = file_storage.read_file(request.file_path)
 
     block = next((b for b in file_content.blocks if b.id == request.block_id), None)
     if block is None:
@@ -71,25 +45,7 @@ def generate_file_skeleton_endpoint(request: FileSkeletonRequest) -> SkeletonRes
 
 @router.post("/lean/generate", response_model=LeanGeneration)
 def generate_lean_endpoint(request: LeanGenerateRequest) -> LeanGeneration:
-    note = storage.get_note(request.note_id)
-    if note is None:
-        raise HTTPException(status_code=404, detail="Note not found")
-
-    block = next((b for b in note.blocks if b.id == request.block_id), None)
-    if block is None:
-        raise HTTPException(status_code=404, detail="Block not found")
-
-    context = f"Note: {note.title}"
-
-    return llm.generate_lean(block, "", context)
-
-
-@router.post("/file/lean/generate", response_model=LeanGeneration)
-def generate_file_lean_endpoint(request: FileLeanGenerateRequest) -> LeanGeneration:
-    try:
-        file_content = file_storage.read_file(request.file_path)
-    except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="File not found") from None
+    file_content = file_storage.read_file(request.file_path)
 
     block = next((b for b in file_content.blocks if b.id == request.block_id), None)
     if block is None:
@@ -97,7 +53,7 @@ def generate_file_lean_endpoint(request: FileLeanGenerateRequest) -> LeanGenerat
 
     context = f"File: {file_content.name}"
 
-    return llm.generate_lean(block, "", context)
+    return llm.generate_lean(block, context)
 
 
 @router.post("/lean/fix", response_model=PatchResult)

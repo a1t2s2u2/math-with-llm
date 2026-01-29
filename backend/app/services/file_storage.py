@@ -35,14 +35,11 @@ def browse_directory(path: str | None) -> dict:
     if not target.is_dir():
         raise NotADirectoryError(f"Not a directory: {path}")
     dirs: list[str] = []
-    try:
-        for item in sorted(target.iterdir(), key=lambda x: x.name.lower()):
-            if item.name.startswith("."):
-                continue
-            if item.is_dir():
-                dirs.append(item.name)
-    except PermissionError:
-        pass
+    for item in sorted(target.iterdir(), key=lambda x: x.name.lower()):
+        if item.name.startswith("."):
+            continue
+        if item.is_dir():
+            dirs.append(item.name)
     return {"current": str(target), "dirs": dirs}
 
 

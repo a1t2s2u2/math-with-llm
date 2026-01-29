@@ -1,28 +1,9 @@
 from pathlib import Path
-from typing import Literal
-
-from pydantic import BaseModel
 
 from app.config import settings
-from app.models.note import Block, Todo
+from app.models.file import FileContent, FileNode
 from app.services.parser import parse_latex
 from app.services.renderer import render_latex_to_html
-
-
-class FileNode(BaseModel):
-    name: str
-    type: Literal["file", "directory"]
-    path: str
-    children: list["FileNode"] | None = None
-
-
-class FileContent(BaseModel):
-    path: str
-    name: str
-    content: str
-    rendered_html: str
-    blocks: list[Block]
-    todos: list[Todo]
 
 
 def _get_workspace_root() -> Path:

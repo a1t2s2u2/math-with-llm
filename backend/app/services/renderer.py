@@ -25,27 +25,22 @@ def render_latex_to_html(source: str) -> RenderResult:
     html = source
     original_source = source
 
-    try:
-        # Step 1: Extract and expand custom commands BEFORE math conversion
-        custom_commands = _extract_custom_commands(html)
-        for cmd_name, cmd_def in custom_commands.items():
-            escaped_def = cmd_def.replace("\\", r"\\")
-            html = re.sub(rf"\\{re.escape(cmd_name)}\b", escaped_def, html)
+    # Step 1: Extract and expand custom commands BEFORE math conversion
+    custom_commands = _extract_custom_commands(html)
+    for cmd_name, cmd_def in custom_commands.items():
+        escaped_def = cmd_def.replace("\\", r"\\")
+        html = re.sub(rf"\\{re.escape(cmd_name)}\b", escaped_def, html)
 
-        # Step 2: Convert display math \[...\] with line numbers
-        html = _convert_display_math(html, errors, original_source)
+    # Step 2: Convert display math \[...\] with line numbers
+    html = _convert_display_math(html, errors, original_source)
 
-        # Step 3: Convert inline math $...$
-        html = _convert_inline_math(html, errors)
+    # Step 3: Convert inline math $...$
+    html = _convert_inline_math(html, errors)
 
-        # Step 4: Convert LaTeX structure to HTML with line numbers
-        html = _convert_structure(html, original_source)
+    # Step 4: Convert LaTeX structure to HTML with line numbers
+    html = _convert_structure(html, original_source)
 
-        return RenderResult(html=html, errors=errors)
-
-    except Exception as e:
-        errors.append(f"Rendering failed: {str(e)}")
-        return RenderResult(html=f"<p>{source}</p>", errors=errors)
+    return RenderResult(html=html, errors=errors)
 
 
 def _convert_display_math(html: str, errors: list[str], original_source: str) -> str:

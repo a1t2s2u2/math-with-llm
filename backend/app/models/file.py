@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from app.models.note import Block, Todo
+from app.models.block import Block, Todo
 
 
 class FileNode(BaseModel):

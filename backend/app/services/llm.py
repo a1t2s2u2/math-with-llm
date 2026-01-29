@@ -3,8 +3,8 @@ import json
 from openai import OpenAI
 
 from app.config import settings
+from app.models.block import Block
 from app.models.llm import LeanGeneration, PatchResult, SkeletonCard, SkeletonResponse
-from app.models.note import Block
 
 client = OpenAI(api_key=settings.openai_api_key)
 
@@ -41,7 +41,7 @@ def generate_skeleton(block: Block, context: str = "") -> SkeletonResponse:
 戦略と確認すべき点のみを提案してください。"""
 
     response = client.chat.completions.create(
-        model="gpt-5-mini",
+        model=settings.llm_model,
         messages=[
             {
                 "role": "system",
@@ -59,16 +59,11 @@ def generate_skeleton(block: Block, context: str = "") -> SkeletonResponse:
     )
 
 
-def generate_lean(
-    block: Block, vars_context: str = "", context: str = ""
-) -> LeanGeneration:
+def generate_lean(block: Block, context: str = "") -> LeanGeneration:
     prompt = f"""Convert the following LaTeX mathematical statement to Lean 4 code.
 
 Statement:
 {block.latex_fragment}
-
-Variables:
-{vars_context}
 
 Context:
 {context}
@@ -87,7 +82,7 @@ Output as JSON:
 }}"""
 
     response = client.chat.completions.create(
-        model="gpt-5-mini",
+        model=settings.llm_model,
         messages=[
             {
                 "role": "system",
@@ -114,7 +109,7 @@ def chat(message: str, context_type: str | None, context_content: str | None) ->
     prompt = f"""{message}{context_text}"""
 
     response = client.chat.completions.create(
-        model="gpt-5-mini",
+        model=settings.llm_model,
         messages=[
             {
                 "role": "system",
@@ -163,7 +158,7 @@ Output as JSON:
 }}"""
 
     response = client.chat.completions.create(
-        model="gpt-5-mini",
+        model=settings.llm_model,
         messages=[
             {
                 "role": "system",

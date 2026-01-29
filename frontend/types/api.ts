@@ -12,14 +12,6 @@ export interface Todo {
   line_number: number
 }
 
-export interface LeanArtifact {
-  block_id: string
-  lean_code: string | null
-  diagnostics: any[]
-  logs: string | null
-  patches: string[]
-}
-
 export interface ParseResult {
   blocks: Block[]
   todos: Todo[]

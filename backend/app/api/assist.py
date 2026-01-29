@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -24,7 +26,7 @@ class LeanFixRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-    context_type: str | None = None
+    context_type: Literal["block", "selection"] | None = None
     context_content: str | None = None
 
 
@@ -51,7 +53,7 @@ def generate_lean_endpoint(request: LeanGenerateRequest) -> LeanGeneration:
 
     context = f"File: {file_content.name}"
 
-    return llm.generate_lean(block, "", context)
+    return llm.generate_lean(block, context)
 
 
 @router.post("/lean/fix", response_model=PatchResult)

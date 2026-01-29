@@ -7,8 +7,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     openai_api_key: str
-    data_dir: Path = Path("./data")
     workspace_root: Path = Path("./workspace")
+    llm_model: str = "gpt-5-mini"
     cors_origins: list[str] = ["http://localhost:3000"]
 
 

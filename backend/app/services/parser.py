@@ -1,7 +1,6 @@
 import re
 
-from app.models.block import ParseResult
-from app.models.note import Block, BlockType, Todo
+from app.models.block import Block, BlockType, ParseResult, Todo
 from app.utils.id_generator import generate_block_id_from_content
 
 BLOCK_TYPES = [

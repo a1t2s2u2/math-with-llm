@@ -34,7 +34,6 @@
                 @generate-lean="handleGenerateLean"
               />
               <DefinitionLedger v-if="activeTab === 'definitions'" :definitions="definitions" />
-              <SymbolTable v-if="activeTab === 'symbols'" :symbols="symbols" />
               <TodoList v-if="activeTab === 'todos'" :todos="todos" />
             </div>
           </div>
@@ -103,7 +102,6 @@ import PreviewPane from '~/components/editor/PreviewPane.vue'
 import LeanPanel from '~/components/lean/LeanPanel.vue'
 import OutlinePanel from '~/components/outline/OutlinePanel.vue'
 import DefinitionLedger from '~/components/outline/DefinitionLedger.vue'
-import SymbolTable from '~/components/outline/SymbolTable.vue'
 import TodoList from '~/components/outline/TodoList.vue'
 import SkeletonModal from '~/components/ui/SkeletonModal.vue'
 import ResizablePanes from '~/components/ui/ResizablePanes.vue'
@@ -112,7 +110,7 @@ const route = useRoute()
 const noteId = route.params.id as string
 
 const { note, load, updateSource } = useNote(noteId)
-const { blocks, symbols, todos, definitions } = useLatex(note)
+const { blocks, todos, definitions } = useLatex(note)
 const { code: leanCode, imports: leanImports, setCode } = useLean()
 const { skeletonCards, loadingSkeleton, requestSkeleton, requestLean } = useAssist(noteId)
 
@@ -134,7 +132,6 @@ const handlePreviewScroll = (line: number) => {
 const tabs = [
   { id: 'outline', label: 'Outline' },
   { id: 'definitions', label: 'Definitions' },
-  { id: 'symbols', label: 'Symbols' },
   { id: 'todos', label: 'TODOs' }
 ]
 

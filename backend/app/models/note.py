@@ -17,14 +17,10 @@ class BlockType(str, Enum):
 class Block(BaseModel):
     type: BlockType
     label: str | None = None
+    title: str | None = None
     id: str
     range: tuple[int, int]
     latex_fragment: str
-
-
-class Symbol(BaseModel):
-    name: str
-    first_occurrence_pos: int
 
 
 class Todo(BaseModel):
@@ -46,7 +42,6 @@ class Note(BaseModel):
     latex_source: str = ""
     rendered_html: str = ""
     blocks: list[Block] = Field(default_factory=list)
-    symbols: list[Symbol] = Field(default_factory=list)
     todos: list[Todo] = Field(default_factory=list)
     lean_artifacts: dict[str, LeanArtifact] = Field(default_factory=dict)
 

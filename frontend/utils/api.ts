@@ -79,6 +79,50 @@ export async function checkLean(leanCode: string, imports: string[]): Promise<Le
   return response.json()
 }
 
+export async function generateFileSkeletonApi(
+  filePath: string,
+  blockId: string
+): Promise<{ cards: SkeletonCard[] }> {
+  const response = await fetch(`${API_BASE}/assist/file/skeleton`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ file_path: filePath, block_id: blockId })
+  })
+  if (!response.ok) throw new Error('Failed to generate skeleton')
+  return response.json()
+}
+
+export async function generateFileLeanApi(
+  filePath: string,
+  blockId: string
+): Promise<LeanGeneration> {
+  const response = await fetch(`${API_BASE}/assist/file/lean/generate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ file_path: filePath, block_id: blockId })
+  })
+  if (!response.ok) throw new Error('Failed to generate Lean')
+  return response.json()
+}
+
+export async function chatApi(
+  message: string,
+  contextType: string | null,
+  contextContent: string | null
+): Promise<{ response: string }> {
+  const response = await fetch(`${API_BASE}/assist/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message,
+      context_type: contextType,
+      context_content: contextContent
+    })
+  })
+  if (!response.ok) throw new Error('Failed to chat')
+  return response.json()
+}
+
 // File API
 
 export async function getFileTree(): Promise<FileNode[]> {

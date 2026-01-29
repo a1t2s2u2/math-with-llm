@@ -244,4 +244,15 @@ watch(
 .preview-content :deep(.inline-math) {
   display: inline;
 }
+
+/* KaTeX overflow handling */
+.preview-content :deep(.katex-display) {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0;
+}
+
+.preview-content :deep(.katex-display > .katex) {
+  white-space: nowrap;
+}
 </style>

@@ -4,7 +4,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from app.config import settings
-from app.models.note import Block, Symbol, Todo
+from app.models.note import Block, Todo
 from app.services.parser import parse_latex
 from app.services.renderer import render_latex_to_html
 
@@ -22,7 +22,6 @@ class FileContent(BaseModel):
     content: str
     rendered_html: str
     blocks: list[Block]
-    symbols: list[Symbol]
     todos: list[Todo]
 
 
@@ -96,7 +95,6 @@ def read_file(path: str) -> FileContent:
         content=content,
         rendered_html=render_result.html,
         blocks=parse_result.blocks,
-        symbols=parse_result.symbols,
         todos=parse_result.todos,
     )
 

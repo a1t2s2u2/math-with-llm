@@ -1,0 +1,50 @@
+\documentclass{article}
+\usepackage{amsmath}
+
+\begin{document}
+
+\section{二次方程式}
+
+\begin{theorem}[解の公式]
+二次方程式 $ax^2 + bx + c = 0$ の解は
+\[
+  x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+\]
+である。
+\end{theorem}
+
+\begin{proof}
+$ax^2 + bx + c = 0$ の両辺を $a$ で割ると
+\[
+  x^2 + \frac{b}{a}x + \frac{c}{a} = 0
+\]
+平方完成すると
+\[
+  \left(x + \frac{b}{2a}\right)^2 - \frac{b^2}{4a^2} + \frac{c}{a} = 0
+\]
+整理して
+\[
+  \left(x + \frac{b}{2a}\right)^2 = \frac{b^2 - 4ac}{4a^2}
+\]
+両辺の平方根をとると
+\[
+  x + \frac{b}{2a} = \pm \frac{\sqrt{b^2 - 4ac}}{2a}
+\]
+したがって
+\[
+  x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+\]
+\end{proof}
+
+\section{三角関数}
+
+\begin{theorem}[加法定理]
+\[
+  \sin(\alpha + \beta) = \sin\alpha\cos\beta + \cos\alpha\sin\beta
+\]
+\[
+  \cos(\alpha + \beta) = \cos\alpha\cos\beta - \sin\alpha\sin\beta
+\]
+\end{theorem}
+
+\end{document}

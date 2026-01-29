@@ -31,6 +31,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: string]
   scroll: [lineNumber: number]
+  save: []
 }>()
 
 const localSource = ref(props.modelValue)
@@ -70,6 +71,11 @@ const scrollToLine = (lineNumber: number) => {
 
 const onEditorMount = (editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {
   editorRef.value = editor
+
+  // Register save command (Cmd+S / Ctrl+S)
+  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+    emit('save')
+  })
 
   // Emit current visible line number on scroll
   editor.onDidScrollChange(() => {
@@ -152,6 +158,23 @@ watch(
     }
   }
 )
+
+// Expose method to scroll to a specific character position
+const scrollToPosition = (charPos: number) => {
+  if (!editorRef.value) return
+  const model = editorRef.value.getModel()
+  if (!model) return
+  const position = model.getPositionAt(charPos)
+  isScrollingProgrammatically.value = true
+  editorRef.value.revealLineInCenter(position.lineNumber)
+  editorRef.value.setPosition(position)
+  editorRef.value.focus()
+  setTimeout(() => {
+    isScrollingProgrammatically.value = false
+  }, 50)
+}
+
+defineExpose({ scrollToPosition })
 </script>
 
 <style scoped>

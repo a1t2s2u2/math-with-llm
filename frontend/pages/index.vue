@@ -13,7 +13,7 @@
     </div>
 
     <div class="main-layout">
-      <ResizablePanes :horizontal="true" :initial-sizes="[20, 80]">
+      <ResizablePanes :horizontal="true" :initial-sizes="[15, 60, 25]">
         <template #pane-0>
           <div class="sidebar">
             <ResizablePanes :horizontal="false" :initial-sizes="[50, 50]">
@@ -47,14 +47,15 @@
                     <OutlinePanel
                       v-if="activeTab === 'outline'"
                       :blocks="blocks"
-                      @generate-skeleton="handleGenerateSkeleton"
-                      @generate-lean="handleGenerateLean"
+                      @jump="handleJump"
+                      @select-block="handleSelectBlock"
+                      @deselect-block="handleDeselectBlock"
                     />
                     <DefinitionLedger
                       v-if="activeTab === 'definitions'"
                       :definitions="definitions"
+                      @jump="handleJump"
                     />
-                    <SymbolTable v-if="activeTab === 'symbols'" :symbols="symbols" />
                     <TodoList v-if="activeTab === 'todos'" :todos="todos" />
                   </div>
                 </div>
@@ -71,81 +72,65 @@
             </div>
           </div>
 
-          <template v-else>
-            <ResizablePanes :horizontal="false" :initial-sizes="[70, 30]">
-              <template #pane-0>
-                <ResizablePanes :horizontal="true" :initial-sizes="[50, 50]">
-                  <template #pane-0>
-                    <div class="pane latex-pane">
-                      <div class="pane-header">{{ currentFile.name }}</div>
-                      <LatexEditor
-                        v-model="latexSource"
-                        :scroll-line="previewScrollLine"
-                        :sync-enabled="scrollSyncEnabled"
-                        @scroll="handleEditorScroll"
-                      />
-                    </div>
-                  </template>
-                  <template #pane-1>
-                    <div class="pane preview-pane">
-                      <div class="pane-header">Preview</div>
-                      <PreviewPane
-                        :rendered-html="currentFile.rendered_html"
-                        :scroll-line="editorScrollLine"
-                        :sync-enabled="scrollSyncEnabled"
-                        @scroll="handlePreviewScroll"
-                      />
-                    </div>
-                  </template>
-                </ResizablePanes>
-              </template>
+          <ResizablePanes v-else :horizontal="true" :initial-sizes="[50, 50]">
+            <template #pane-0>
+              <div class="pane latex-pane">
+                <div class="pane-header">{{ currentFile.name }}{{ isDirty ? ' *' : '' }}</div>
+                <LatexEditor
+                  ref="editorRef"
+                  :model-value="localContent"
+                  :scroll-line="previewScrollLine"
+                  :sync-enabled="scrollSyncEnabled"
+                  @update:model-value="setLocalContent"
+                  @scroll="handleEditorScroll"
+                  @save="handleSave"
+                />
+              </div>
+            </template>
+            <template #pane-1>
+              <div class="pane preview-pane">
+                <div class="pane-header">Preview</div>
+                <PreviewPane
+                  :rendered-html="currentFile.rendered_html"
+                  :scroll-line="editorScrollLine"
+                  :sync-enabled="scrollSyncEnabled"
+                  @scroll="handlePreviewScroll"
+                />
+              </div>
+            </template>
+          </ResizablePanes>
+        </template>
 
-              <template #pane-1>
-                <div class="lean-section">
-                  <LeanPanel
-                    :lean-code="leanCode"
-                    :imports="leanImports"
-                    @generate-for-block="handleGenerateLean"
-                  />
-                </div>
-              </template>
-            </ResizablePanes>
-          </template>
+        <template #pane-2>
+          <div class="ai-section">
+            <AIAssistantPanel ref="aiPanelRef" @send="handleAIChat" />
+          </div>
         </template>
       </ResizablePanes>
     </div>
-
-    <SkeletonModal
-      :show="showSkeletonModal"
-      :cards="skeletonCards"
-      :loading="loadingSkeleton"
-      @close="showSkeletonModal = false"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useFile } from '~/composables/useFile'
-import { useLean } from '~/composables/useLean'
 import {
   getFileTree,
   createFile,
   createFolder,
   renameFile,
   deleteFile,
-  deleteFolder
+  deleteFolder,
+  chatApi
 } from '~/utils/api'
-import type { FileNode, Block, Symbol, Todo, SkeletonCard } from '~/types/api'
+import type { FileNode, Block, Todo } from '~/types/api'
 
 import LatexEditor from '~/components/editor/LatexEditor.vue'
 import PreviewPane from '~/components/editor/PreviewPane.vue'
-import LeanPanel from '~/components/lean/LeanPanel.vue'
+import AIAssistantPanel from '~/components/ai/AIAssistantPanel.vue'
 import OutlinePanel from '~/components/outline/OutlinePanel.vue'
 import DefinitionLedger from '~/components/outline/DefinitionLedger.vue'
-import SymbolTable from '~/components/outline/SymbolTable.vue'
 import TodoList from '~/components/outline/TodoList.vue'
-import SkeletonModal from '~/components/ui/SkeletonModal.vue'
 import ResizablePanes from '~/components/ui/ResizablePanes.vue'
 import FileTree from '~/components/files/FileTree.vue'
 
@@ -157,36 +142,30 @@ const treeLoading = ref(false)
 const {
   file: currentFile,
   currentPath,
+  localContent,
+  isDirty,
   load: loadFile,
-  updateContent,
+  setLocalContent,
+  save: saveFile,
   clear: clearFile
 } = useFile()
 
-// Lean state
-const { code: leanCode, imports: leanImports } = useLean()
-
 // Editor state
-const latexSource = ref('')
 const activeTab = ref('outline')
 const scrollSyncEnabled = ref(true)
 const editorScrollLine = ref(1)
 const previewScrollLine = ref(1)
-
-// Skeleton modal state
-const showSkeletonModal = ref(false)
-const skeletonCards = ref<SkeletonCard[]>([])
-const loadingSkeleton = ref(false)
+const editorRef = ref<InstanceType<typeof LatexEditor> | null>(null)
+const aiPanelRef = ref<InstanceType<typeof AIAssistantPanel> | null>(null)
 
 const tabs = [
   { id: 'outline', label: 'Outline' },
   { id: 'definitions', label: 'Defs' },
-  { id: 'symbols', label: 'Symbols' },
   { id: 'todos', label: 'TODOs' }
 ]
 
 // Computed from currentFile
 const blocks = computed<Block[]>(() => currentFile.value?.blocks || [])
-const symbols = computed<Symbol[]>(() => currentFile.value?.symbols || [])
 const todos = computed<Todo[]>(() => currentFile.value?.todos || [])
 const definitions = computed(() => blocks.value.filter((b) => b.type === 'definition'))
 
@@ -200,9 +179,6 @@ const loadTree = async () => {
 // File selection
 const handleFileSelect = async (path: string) => {
   await loadFile(path)
-  if (currentFile.value) {
-    latexSource.value = currentFile.value.content
-  }
 }
 
 // File operations
@@ -234,7 +210,6 @@ const handleDelete = async (path: string, type: 'file' | 'directory') => {
   await loadTree()
   if (currentPath.value === path) {
     clearFile()
-    latexSource.value = ''
   }
 }
 
@@ -247,28 +222,60 @@ const handlePreviewScroll = (line: number) => {
   previewScrollLine.value = line
 }
 
-// Sync latex source with file
-watch(latexSource, (newSource) => {
-  updateContent(newSource)
-})
-
-watch(currentFile, (newFile) => {
-  if (newFile) {
-    latexSource.value = newFile.content
-  }
-})
-
-// LLM assist
-const handleGenerateSkeleton = async (_blockId: string) => {
-  if (!currentPath.value) return
-  showSkeletonModal.value = true
-  loadingSkeleton.value = true
-  skeletonCards.value = []
-  loadingSkeleton.value = false
+const handleJump = (position: number) => {
+  editorRef.value?.scrollToPosition(position)
 }
 
-const handleGenerateLean = async (_blockId: string) => {
-  if (!currentPath.value) return
+// Save handler
+const handleSave = async () => {
+  await saveFile()
+}
+
+// AI assist
+const handleSelectBlock = (block: Block) => {
+  if (!aiPanelRef.value) return
+  const typeLabel =
+    {
+      definition: '定義',
+      theorem: '定理',
+      lemma: '補題',
+      proposition: '命題',
+      corollary: '系',
+      proof: '証明',
+      remark: '注意',
+      example: '例'
+    }[block.type] || block.type
+  const label = block.title ? `${typeLabel}: ${block.title}` : typeLabel
+  aiPanelRef.value.setContext({
+    type: 'block',
+    label,
+    content: block.latex_fragment
+  })
+}
+
+const handleDeselectBlock = () => {
+  if (!aiPanelRef.value) return
+  aiPanelRef.value.clearContext()
+}
+
+interface AIContext {
+  type: 'block' | 'selection'
+  label: string
+  content: string
+}
+
+const handleAIChat = async (message: string, context: AIContext | null) => {
+  if (!aiPanelRef.value) return
+  aiPanelRef.value.setLoading(true)
+  try {
+    const result = await chatApi(message, context?.type || null, context?.content || null)
+    aiPanelRef.value.addAssistantMessage(result.response)
+  } catch (e) {
+    console.error('Failed to chat:', e)
+    aiPanelRef.value.addAssistantMessage('エラーが発生しました。もう一度お試しください。')
+  } finally {
+    aiPanelRef.value.setLoading(false)
+  }
 }
 
 onMounted(() => {
@@ -423,10 +430,9 @@ onMounted(() => {
   border-right: 1px solid #3e3e42;
 }
 
-.lean-section {
+.ai-section {
   height: 100%;
   display: flex;
   flex-direction: column;
-  border-top: 1px solid #3e3e42;
 }
 </style>

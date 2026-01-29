@@ -4,7 +4,6 @@ export interface Note {
   latex_source: string
   rendered_html: string
   blocks: Block[]
-  symbols: Symbol[]
   todos: Todo[]
   lean_artifacts: Record<string, LeanArtifact>
 }
@@ -12,14 +11,10 @@ export interface Note {
 export interface Block {
   type: string
   label: string | null
+  title: string | null
   id: string
   range: [number, number]
   latex_fragment: string
-}
-
-export interface Symbol {
-  name: string
-  first_occurrence_pos: number
 }
 
 export interface Todo {
@@ -37,7 +32,6 @@ export interface LeanArtifact {
 
 export interface ParseResult {
   blocks: Block[]
-  symbols: Symbol[]
   todos: Todo[]
   renderer_errors: string[]
 }
@@ -82,6 +76,5 @@ export interface FileContent {
   content: string
   rendered_html: string
   blocks: Block[]
-  symbols: Symbol[]
   todos: Todo[]
 }

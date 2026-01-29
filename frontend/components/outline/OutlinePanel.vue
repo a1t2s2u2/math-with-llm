@@ -1,158 +1,175 @@
 <template>
   <div class="outline-panel">
-    <h3>Outline</h3>
     <div v-if="blocks.length === 0" class="empty">No blocks found</div>
     <div v-else class="block-list">
       <div
         v-for="block in blocks"
         :key="block.id"
         class="block-item"
-        :class="`block-${block.type}`"
+        :class="[`block-${block.type}`, { selected: selectedId === block.id }]"
+        @click="handleClick(block)"
       >
-        <div class="block-info" @click="$emit('jump', block.range[0])">
-          <span class="block-type">{{ block.type }}</span>
-          <span class="block-label">{{ block.label || block.id }}</span>
-        </div>
-        <div class="block-actions">
-          <button
-            class="action-button strategy-button"
-            title="証明戦略を生成"
-            @click="$emit('generateSkeleton', block.id)"
-          >
-            💡
-          </button>
-          <button
-            class="action-button lean-button"
-            title="Leanコードを生成"
-            @click="$emit('generateLean', block.id)"
-          >
-            ⚡
-          </button>
-        </div>
+        <span class="block-type">{{ formatType(block.type) }}</span>
+        <span v-if="block.title" class="block-title" v-html="renderMath(block.title)" />
+        <span v-if="block.label" class="block-label">{{ block.label }}</span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { Block } from '~/types/api'
+import { useMathRender } from '~/composables/useMathRender'
 
 defineProps<{
   blocks: Block[]
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   jump: [position: number]
-  generateSkeleton: [blockId: string]
-  generateLean: [blockId: string]
+  selectBlock: [block: Block]
+  deselectBlock: []
 }>()
+
+const selectedId = ref<string | null>(null)
+
+const { renderMath } = useMathRender()
+
+const handleClick = (block: Block) => {
+  if (selectedId.value === block.id) {
+    // 同じブロックをクリック → 選択解除
+    selectedId.value = null
+    emit('deselectBlock')
+  } else {
+    // 別のブロックをクリック → 選択
+    selectedId.value = block.id
+    emit('jump', block.range[0])
+    emit('selectBlock', block)
+  }
+}
+
+const formatType = (type: string) => {
+  const typeMap: Record<string, string> = {
+    definition: 'Def',
+    theorem: 'Thm',
+    lemma: 'Lem',
+    proposition: 'Prop',
+    corollary: 'Cor',
+    proof: 'Proof',
+    remark: 'Rem',
+    example: 'Ex'
+  }
+  return typeMap[type] || type
+}
 </script>
 
 <style scoped>
 .outline-panel {
-  padding: 16px;
+  padding: 8px;
   background: #1e1e1e;
-  border-right: 1px solid #3e3e3e;
   height: 100%;
   overflow-y: auto;
 }
 
-h3 {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  color: #d4d4d4;
-}
-
 .empty {
   color: #858585;
-  font-size: 13px;
+  font-size: 12px;
+  padding: 8px;
 }
 
 .block-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .block-item {
-  padding: 8px 12px;
-  border-radius: 4px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  transition: background 0.2s;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-left: 3px solid transparent;
 }
 
 .block-item:hover {
   background: #2d2d2d;
 }
 
-.block-info {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex: 1;
-  cursor: pointer;
+.block-item.selected {
+  background: #094771;
 }
 
-.block-actions {
-  display: flex;
-  gap: 4px;
+.block-definition {
+  border-left-color: #0d6efd;
 }
 
-.action-button {
-  padding: 4px 8px;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 14px;
-  background: #3e3e3e;
-  transition: background 0.2s;
+.block-theorem,
+.block-lemma,
+.block-proposition,
+.block-corollary {
+  border-left-color: #198754;
 }
 
-.action-button:hover {
-  background: #4e4e4e;
+.block-proof {
+  border-left-color: #ffc107;
 }
 
-.strategy-button:hover {
-  background: #0d6efd;
-}
-
-.lean-button:hover {
-  background: #198754;
+.block-remark,
+.block-example {
+  border-left-color: #6c757d;
 }
 
 .block-type {
-  font-size: 11px;
+  flex-shrink: 0;
+  font-size: 10px;
   font-weight: 600;
-  text-transform: uppercase;
-  padding: 2px 6px;
-  border-radius: 3px;
-  background: #6c757d;
-  color: white;
+  padding: 1px 4px;
+  border-radius: 2px;
+  background: #3e3e3e;
+  color: #cccccc;
 }
 
 .block-definition .block-type {
-  background: #0d6efd;
+  background: #0d6efd33;
+  color: #6cb2f7;
 }
 
 .block-theorem .block-type,
-.block-lemma .block-type {
-  background: #198754;
+.block-lemma .block-type,
+.block-proposition .block-type,
+.block-corollary .block-type {
+  background: #19875433;
+  color: #6fcf97;
 }
 
 .block-proof .block-type {
-  background: #ffc107;
-  color: #000;
+  background: #ffc10733;
+  color: #ffd966;
 }
 
 .block-label {
-  font-size: 13px;
+  flex-shrink: 0;
+  font-size: 11px;
+  color: #808080;
+  font-family: monospace;
+}
+
+.block-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
   color: #d4d4d4;
-  white-space: nowrap;
+  line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.block-title :deep(.katex) {
+  font-size: 1em;
 }
 </style>

@@ -10,43 +10,43 @@ client = OpenAI(api_key=settings.openai_api_key)
 
 
 def generate_skeleton(block: Block, context: str = "") -> SkeletonResponse:
-    prompt = f"""You are a mathematical proof assistant.
-Analyze the following mathematical statement and provide proof strategy candidates.
+    prompt = f"""あなたは数学の証明アシスタントです。
+以下の数学的命題を分析し、証明戦略の候補を提示してください。
 
-Statement:
+命題:
 {block.latex_fragment}
 
-Context:
+コンテキスト:
 {context}
 
-Provide 2-3 proof strategy candidates. For each strategy:
-1. Name the strategy (e.g., "Direct proof", "Proof by contradiction", "Induction")
-2. Describe the approach briefly
-3. List required lemmas or theorems that might be needed
-4. List assumptions or conditions to verify
+2〜3個の証明戦略候補を提示してください。各戦略について:
+1. 戦略名（例：「直接証明」「背理法」「数学的帰納法」）
+2. アプローチの簡潔な説明
+3. 必要になりそうな補題や定理
+4. 確認すべき仮定や条件
 
-Output as JSON with this structure:
+以下のJSON形式で出力してください:
 {{
   "cards": [
     {{
-      "strategy": "Strategy name",
-      "description": "Brief description",
-      "required_lemmas": ["lemma1", "lemma2"],
-      "assumptions_to_check": ["assumption1", "assumption2"]
+      "strategy": "戦略名",
+      "description": "簡潔な説明",
+      "required_lemmas": ["補題1", "補題2"],
+      "assumptions_to_check": ["確認事項1", "確認事項2"]
     }}
   ]
 }}
 
-IMPORTANT: Do NOT provide definitive proofs.
-Only suggest strategies and what to check."""
+重要: 完全な証明は提供しないでください。
+戦略と確認すべき点のみを提案してください。"""
 
     response = client.chat.completions.create(
         model="gpt-5-mini",
         messages=[
             {
                 "role": "system",
-                "content": "You are a mathematical proof assistant that "
-                "suggests strategies, not solutions.",
+                "content": "あなたは数学の証明アシスタントです。"
+                "解答ではなく戦略を提案してください。",
             },
             {"role": "user", "content": prompt},
         ],
@@ -101,6 +101,36 @@ Output as JSON:
 
     result = json.loads(response.choices[0].message.content)
     return LeanGeneration(**result)
+
+
+def chat(message: str, context_type: str | None, context_content: str | None) -> str:
+    context_text = ""
+    if context_type and context_content:
+        if context_type == "block":
+            context_text = f"\n\n参照しているブロック:\n{context_content}"
+        elif context_type == "selection":
+            context_text = f"\n\n選択されたテキスト:\n{context_content}"
+
+    prompt = f"""{message}{context_text}"""
+
+    response = client.chat.completions.create(
+        model="gpt-5-mini",
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "あなたは数学の専門家です。"
+                    "数式は必ずLaTeX形式で記述してください。"
+                    "インライン数式は $...$ で囲み、"
+                    "ディスプレイ数式は $$...$$ で囲んでください。"
+                    "簡潔かつ正確に回答してください。"
+                ),
+            },
+            {"role": "user", "content": prompt},
+        ],
+    )
+
+    return response.choices[0].message.content or ""
 
 
 def generate_fix_patch(lean_code: str, diagnostics: list[dict]) -> PatchResult:

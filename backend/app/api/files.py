@@ -43,7 +43,7 @@ def browse_workspace(path: str | None = None) -> dict:
     except NotADirectoryError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     except PermissionError as e:
-        raise HTTPException(status_code=403, detail=str(e)) from e
+        raise HTTPException(status_code=403, detail="Permission denied") from e
 
 
 @router.put("/workspace", response_model=list[FileNode])

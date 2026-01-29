@@ -27,7 +27,7 @@
             v-for="dir in dirs"
             :key="dir"
             class="dir-item"
-            @click="navigateTo(`${currentPath}/${dir}`)"
+            @click="navigateTo(currentPath === '/' ? `/${dir}` : `${currentPath}/${dir}`)"
           >
             <span class="dir-icon">📁</span>
             <span class="dir-name">{{ dir }}</span>
@@ -64,11 +64,14 @@ const loading = ref(false)
 
 const browse = async (path?: string) => {
   loading.value = true
-  const result = await browseDirectory(path)
-  currentPath.value = result.current
-  pathInput.value = result.current
-  dirs.value = result.dirs
-  loading.value = false
+  try {
+    const result = await browseDirectory(path)
+    currentPath.value = result.current
+    pathInput.value = result.current
+    dirs.value = result.dirs
+  } finally {
+    loading.value = false
+  }
 }
 
 const navigateTo = (path: string) => {

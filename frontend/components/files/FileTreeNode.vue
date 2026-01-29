@@ -8,7 +8,7 @@
         'drag-over': isDragOver
       }"
       :style="{ paddingLeft: `${depth * 16 + 8}px` }"
-      draggable="true"
+      :draggable="node.type === 'file'"
       @click="handleClick"
       @contextmenu.prevent="handleContextMenu"
       @dragstart="handleDragStart"
@@ -80,8 +80,9 @@ const handleDragStart = (event: DragEvent) => {
 }
 
 const handleDragOver = (event: DragEvent) => {
+  if (!event.dataTransfer) return
   if (props.node.type === 'directory') {
-    event.dataTransfer!.dropEffect = 'move'
+    event.dataTransfer.dropEffect = 'move'
     isDragOver.value = true
   }
 }

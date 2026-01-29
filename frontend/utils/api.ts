@@ -72,6 +72,11 @@ export function getWorkspace(): Promise<{ path: string }> {
   return request('/files/workspace')
 }
 
+export function browseDirectory(path?: string): Promise<{ current: string; dirs: string[] }> {
+  const params = path ? `?path=${encodeURIComponent(path)}` : ''
+  return request(`/files/workspace/browse${params}`)
+}
+
 export function changeWorkspace(path: string): Promise<FileNode[]> {
   return request('/files/workspace', {
     method: 'PUT',

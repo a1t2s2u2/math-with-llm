@@ -29,6 +29,23 @@ def get_workspace_path() -> str:
     return str(_get_workspace_root().resolve())
 
 
+def browse_directory(path: str | None) -> dict:
+    """List subdirectories in the given path for folder browsing."""
+    target = Path(path).resolve() if path else Path.home()
+    if not target.is_dir():
+        raise NotADirectoryError(f"Not a directory: {path}")
+    dirs: list[str] = []
+    try:
+        for item in sorted(target.iterdir(), key=lambda x: x.name.lower()):
+            if item.name.startswith("."):
+                continue
+            if item.is_dir():
+                dirs.append(item.name)
+    except PermissionError:
+        pass
+    return {"current": str(target), "dirs": dirs}
+
+
 def _validate_path(path: str) -> Path:
     """Validate and resolve path within workspace root."""
     root = _get_workspace_root()

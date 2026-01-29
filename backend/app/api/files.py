@@ -35,6 +35,15 @@ def get_workspace() -> dict[str, str]:
     return {"path": file_storage.get_workspace_path()}
 
 
+@router.get("/workspace/browse")
+def browse_workspace(path: str | None = None) -> dict:
+    """Browse directories for workspace selection."""
+    try:
+        return file_storage.browse_directory(path)
+    except NotADirectoryError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
 @router.put("/workspace", response_model=list[FileNode])
 def change_workspace(req: WorkspaceRequest) -> list[FileNode]:
     """Change workspace root directory."""

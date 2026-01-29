@@ -22,12 +22,14 @@
                   :tree="fileTree"
                   :selected-path="currentPath"
                   :loading="treeLoading"
+                  :workspace-path="workspacePath"
                   @select="handleFileSelect"
                   @refresh="loadTree"
                   @create-file="handleCreateFile"
                   @create-folder="handleCreateFolder"
                   @rename="handleRename"
                   @delete="handleDelete"
+                  @change-workspace="handleChangeWorkspace"
                 />
               </template>
 
@@ -116,6 +118,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useFile } from '~/composables/useFile'
 import {
   getFileTree,
+  getWorkspace,
+  changeWorkspace,
   createFile,
   createFolder,
   renameFile,
@@ -137,6 +141,7 @@ import FileTree from '~/components/files/FileTree.vue'
 // File tree state
 const fileTree = ref<FileNode[]>([])
 const treeLoading = ref(false)
+const workspacePath = ref('')
 
 // Current file state
 const {
@@ -174,6 +179,20 @@ const loadTree = async () => {
   treeLoading.value = true
   fileTree.value = await getFileTree()
   treeLoading.value = false
+}
+
+// Workspace change
+const handleChangeWorkspace = async (path: string) => {
+  try {
+    treeLoading.value = true
+    clearFile()
+    fileTree.value = await changeWorkspace(path)
+    workspacePath.value = path
+  } catch {
+    alert(`Failed to open workspace: ${path}`)
+  } finally {
+    treeLoading.value = false
+  }
 }
 
 // File selection
@@ -278,8 +297,10 @@ const handleAIChat = async (message: string, context: AIContext | null) => {
   }
 }
 
-onMounted(() => {
-  loadTree()
+onMounted(async () => {
+  const ws = await getWorkspace()
+  workspacePath.value = ws.path
+  await loadTree()
 })
 </script>
 

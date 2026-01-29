@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from app.models.file import FileContent, FileNode
@@ -23,6 +23,25 @@ class RenameRequest(BaseModel):
 
 class CreateFolderRequest(BaseModel):
     path: str
+
+
+class WorkspaceRequest(BaseModel):
+    path: str
+
+
+@router.get("/workspace")
+def get_workspace() -> dict[str, str]:
+    """Get current workspace root path."""
+    return {"path": file_storage.get_workspace_path()}
+
+
+@router.put("/workspace", response_model=list[FileNode])
+def change_workspace(req: WorkspaceRequest) -> list[FileNode]:
+    """Change workspace root directory."""
+    try:
+        return file_storage.set_workspace_root(req.path)
+    except NotADirectoryError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/tree", response_model=list[FileNode])

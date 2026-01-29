@@ -66,6 +66,19 @@ export function chatApi(
   })
 }
 
+// Workspace API
+
+export function getWorkspace(): Promise<{ path: string }> {
+  return request('/files/workspace')
+}
+
+export function changeWorkspace(path: string): Promise<FileNode[]> {
+  return request('/files/workspace', {
+    method: 'PUT',
+    body: JSON.stringify({ path })
+  })
+}
+
 // File API
 
 export function getFileTree(): Promise<FileNode[]> {

@@ -9,21 +9,17 @@
       </div>
     </div>
     <div class="workspace-path-bar">
-      <input
-        v-if="editingWorkspace"
-        ref="workspaceInputRef"
-        v-model="workspaceInput"
-        class="workspace-input"
-        type="text"
-        placeholder="/path/to/workspace"
-        @keyup.enter="submitWorkspace"
-        @keyup.escape="cancelWorkspaceEdit"
-        @blur="cancelWorkspaceEdit"
-      />
-      <span v-else class="workspace-label" @click="startWorkspaceEdit">
+      <span class="workspace-label" @click="showFolderBrowser = true">
         {{ workspacePath || '...' }}
       </span>
     </div>
+
+    <FolderBrowserModal
+      v-if="showFolderBrowser"
+      :initial-path="workspacePath"
+      @select="handleFolderSelect"
+      @cancel="showFolderBrowser = false"
+    />
 
     <div v-if="showNewFileInput" class="new-item-input">
       <input
@@ -60,6 +56,7 @@
         :selected-path="selectedPath"
         @select="$emit('select', $event)"
         @context-menu="handleContextMenu"
+        @move="(oldPath, newPath) => $emit('move', oldPath, newPath)"
       />
     </div>
 
@@ -78,6 +75,7 @@
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import type { FileNode } from '~/types/api'
 import FileTreeNode from './FileTreeNode.vue'
+import FolderBrowserModal from './FolderBrowserModal.vue'
 
 defineProps<{
   tree: FileNode[]
@@ -94,6 +92,7 @@ const emit = defineEmits<{
   rename: [oldPath: string, newPath: string]
   delete: [path: string, type: 'file' | 'directory']
   changeWorkspace: [path: string]
+  move: [oldPath: string, newPath: string]
 }>()
 
 const showNewFileInput = ref(false)
@@ -105,26 +104,11 @@ const newFolderInputRef = ref<HTMLInputElement | null>(null)
 
 const contextMenu = ref<{ node: FileNode; x: number; y: number } | null>(null)
 
-const editingWorkspace = ref(false)
-const workspaceInput = ref('')
-const workspaceInputRef = ref<HTMLInputElement | null>(null)
+const showFolderBrowser = ref(false)
 
-const startWorkspaceEdit = async () => {
-  editingWorkspace.value = true
-  workspaceInput.value = ''
-  await nextTick()
-  workspaceInputRef.value?.focus()
-}
-
-const submitWorkspace = () => {
-  if (workspaceInput.value.trim()) {
-    emit('changeWorkspace', workspaceInput.value.trim())
-  }
-  editingWorkspace.value = false
-}
-
-const cancelWorkspaceEdit = () => {
-  editingWorkspace.value = false
+const handleFolderSelect = (path: string) => {
+  showFolderBrowser.value = false
+  emit('changeWorkspace', path)
 }
 
 const createNewFile = () => {
@@ -239,17 +223,6 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
 
 .workspace-label:hover {
   color: #cccccc;
-}
-
-.workspace-input {
-  width: 100%;
-  padding: 2px 6px;
-  background: #3c3c3c;
-  border: 1px solid #007acc;
-  border-radius: 3px;
-  color: #d4d4d4;
-  font-size: 11px;
-  outline: none;
 }
 
 .title {

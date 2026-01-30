@@ -55,6 +55,16 @@ def change_workspace(req: WorkspaceRequest) -> list[FileNode]:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
+@router.post("/workspace/pick")
+def pick_workspace() -> dict:
+    """Open native folder picker and set workspace."""
+    path = file_storage.pick_directory()
+    if not path:
+        return {"tree": None}
+    tree = file_storage.set_workspace_root(path)
+    return {"tree": tree, "path": path}
+
+
 @router.get("/tree", response_model=list[FileNode])
 def get_tree() -> list[FileNode]:
     """Get directory tree of workspace."""

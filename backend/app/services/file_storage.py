@@ -1,3 +1,4 @@
+import subprocess
 from pathlib import Path
 
 from app.config import settings
@@ -27,6 +28,16 @@ def set_workspace_root(path: str) -> list[FileNode]:
 def get_workspace_path() -> str:
     """Return the absolute path of the current workspace root."""
     return str(_get_workspace_root().resolve())
+
+
+def pick_directory() -> str:
+    """Open native folder selection dialog and return selected path."""
+    result = subprocess.run(
+        ["osascript", "-e", 'POSIX path of (choose folder with prompt "Open Folder")'],
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip().rstrip("/")
 
 
 def browse_directory(path: str | None) -> dict:

@@ -1,0 +1,103 @@
+<template>
+  <div class="diff-view">
+    <div class="diff-header">
+      <span class="diff-path">{{ path }}</span>
+      <span class="diff-label">{{ staged ? '(Staged)' : '(Working Tree)' }}</span>
+      <button class="close-btn" @click="$emit('close')">&times;</button>
+    </div>
+    <div class="diff-editor">
+      <VueMonacoDiffEditor
+        :original="oldContent"
+        :modified="newContent"
+        :options="editorOptions"
+        language="latex"
+        theme="vs-dark"
+      />
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, watch } from 'vue'
+import { VueMonacoDiffEditor } from '@guolao/vue-monaco-editor'
+import { getGitDiff } from '~/utils/api'
+
+const props = defineProps<{
+  path: string
+  staged: boolean
+}>()
+
+defineEmits<{
+  close: []
+}>()
+
+const oldContent = ref('')
+const newContent = ref('')
+
+const editorOptions = {
+  readOnly: true,
+  fontSize: 13,
+  fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+  minimap: { enabled: false },
+  renderSideBySide: true,
+  scrollBeyondLastLine: false
+}
+
+const loadDiff = async () => {
+  const diff = await getGitDiff(props.path, props.staged)
+  oldContent.value = diff.old_content
+  newContent.value = diff.new_content
+}
+
+watch(() => [props.path, props.staged], loadDiff, { immediate: true })
+</script>
+
+<style scoped>
+.diff-view {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.diff-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #252526;
+  border-bottom: 1px solid #3e3e42;
+  flex-shrink: 0;
+}
+
+.diff-path {
+  font-size: 12px;
+  font-weight: 500;
+  color: #cccccc;
+}
+
+.diff-label {
+  font-size: 11px;
+  color: #808080;
+}
+
+.close-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #808080;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  color: #ffffff;
+}
+
+.diff-editor {
+  flex: 1;
+  overflow: hidden;
+}
+</style>

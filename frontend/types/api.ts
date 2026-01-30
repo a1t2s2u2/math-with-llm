@@ -60,3 +60,29 @@ export interface FileContent {
   blocks: Block[]
   todos: Todo[]
 }
+
+// Git types
+
+export interface GitFileStatus {
+  path: string
+  status: string
+  staged: boolean
+}
+
+export interface GitStatus {
+  is_repo: boolean
+  branch: string
+  staged: GitFileStatus[]
+  unstaged: GitFileStatus[]
+}
+
+export interface GitDiff {
+  path: string
+  old_content: string
+  new_content: string
+}
+
+export interface GitCommitResult {
+  hash: string
+  message: string
+}

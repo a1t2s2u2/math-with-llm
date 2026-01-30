@@ -4,7 +4,10 @@ import type {
   LeanGeneration,
   LeanCheckResult,
   FileNode,
-  FileContent
+  FileContent,
+  GitStatus,
+  GitDiff,
+  GitCommitResult
 } from '~/types/api'
 
 const API_BASE = '/api'
@@ -131,5 +134,51 @@ export function createFolder(path: string): Promise<FileNode> {
 export async function deleteFolder(path: string): Promise<void> {
   await request(`/files/folders/${encodeURIComponent(path)}`, {
     method: 'DELETE'
+  })
+}
+
+// Git API
+
+export function getGitStatus(): Promise<GitStatus> {
+  return request('/git/status')
+}
+
+export function getGitOriginal(path: string): Promise<{ content: string }> {
+  return request(`/git/original?path=${encodeURIComponent(path)}`)
+}
+
+export function getGitDiff(path: string, staged: boolean = false): Promise<GitDiff> {
+  return request(`/git/diff?path=${encodeURIComponent(path)}&staged=${staged}`)
+}
+
+export function initGitRepo(): Promise<{ status: string }> {
+  return request('/git/init', { method: 'POST' })
+}
+
+export function stageFiles(paths: string[]): Promise<{ status: string }> {
+  return request('/git/stage', {
+    method: 'POST',
+    body: JSON.stringify({ paths })
+  })
+}
+
+export function unstageFiles(paths: string[]): Promise<{ status: string }> {
+  return request('/git/unstage', {
+    method: 'POST',
+    body: JSON.stringify({ paths })
+  })
+}
+
+export function discardFiles(paths: string[]): Promise<{ status: string }> {
+  return request('/git/discard', {
+    method: 'POST',
+    body: JSON.stringify({ paths })
+  })
+}
+
+export function gitCommit(message: string): Promise<GitCommitResult> {
+  return request('/git/commit', {
+    method: 'POST',
+    body: JSON.stringify({ message })
   })
 }

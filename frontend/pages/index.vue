@@ -60,6 +60,12 @@
                       @jump="handleJump"
                     />
                     <TodoList v-if="activeTab === 'todos'" :todos="todos" />
+                    <GitPanel
+                      v-if="activeTab === 'git'"
+                      ref="gitPanelRef"
+                      @show-diff="diffView = $event"
+                      @file-discarded="handleFileDiscarded"
+                    />
                   </div>
                 </div>
               </template>
@@ -68,7 +74,14 @@
         </template>
 
         <template #pane-1>
-          <div v-if="!currentFile" class="empty-state">
+          <GitDiffView
+            v-if="diffView"
+            :path="diffView.path"
+            :staged="diffView.staged"
+            @close="diffView = null"
+          />
+
+          <div v-else-if="!currentFile" class="empty-state">
             <div class="empty-content">
               <h2>No file selected</h2>
               <p>Select a file from the tree or create a new one to get started.</p>
@@ -82,6 +95,7 @@
                 <LatexEditor
                   ref="editorRef"
                   :model-value="localContent"
+                  :original-content="originalContent"
                   :scroll-line="previewScrollLine"
                   :sync-enabled="scrollSyncEnabled"
                   @update:model-value="setLocalContent"
@@ -126,7 +140,9 @@ import {
   renameFile,
   deleteFile,
   deleteFolder,
-  chatApi
+  chatApi,
+  getGitOriginal,
+  getGitStatus
 } from '~/utils/api'
 import type { FileNode, Block, Todo } from '~/types/api'
 
@@ -138,6 +154,8 @@ import DefinitionLedger from '~/components/outline/DefinitionLedger.vue'
 import TodoList from '~/components/outline/TodoList.vue'
 import ResizablePanes from '~/components/ui/ResizablePanes.vue'
 import FileTree from '~/components/files/FileTree.vue'
+import GitPanel from '~/components/git/GitPanel.vue'
+import GitDiffView from '~/components/git/GitDiffView.vue'
 
 // File tree state
 const fileTree = ref<FileNode[]>([])
@@ -164,10 +182,15 @@ const previewScrollLine = ref(1)
 const editorRef = ref<InstanceType<typeof LatexEditor> | null>(null)
 const aiPanelRef = ref<InstanceType<typeof AIAssistantPanel> | null>(null)
 
+const gitPanelRef = ref<InstanceType<typeof GitPanel> | null>(null)
+const diffView = ref<{ path: string; staged: boolean } | null>(null)
+const originalContent = ref<string | null>(null)
+
 const tabs = [
   { id: 'outline', label: 'Outline' },
   { id: 'definitions', label: 'Defs' },
-  { id: 'todos', label: 'TODOs' }
+  { id: 'todos', label: 'TODOs' },
+  { id: 'git', label: 'Git' }
 ]
 
 // Computed from currentFile
@@ -199,6 +222,17 @@ const handleChangeWorkspace = async (path: string) => {
 // File selection
 const handleFileSelect = async (path: string) => {
   await loadFile(path)
+  await fetchOriginalContent(path)
+}
+
+const fetchOriginalContent = async (path: string) => {
+  const status = await getGitStatus()
+  if (!status.is_repo) {
+    originalContent.value = null
+    return
+  }
+  const result = await getGitOriginal(path)
+  originalContent.value = result.content
 }
 
 // File operations
@@ -241,6 +275,14 @@ const handleDelete = async (path: string, type: 'file' | 'directory') => {
   }
 }
 
+// Git discard handler
+const handleFileDiscarded = async (path: string) => {
+  if (currentPath.value === path) {
+    await loadFile(path)
+    await fetchOriginalContent(path)
+  }
+}
+
 // Editor events
 const handleEditorScroll = (line: number) => {
   editorScrollLine.value = line
@@ -257,6 +299,7 @@ const handleJump = (position: number) => {
 // Save handler
 const handleSave = async () => {
   await saveFile()
+  gitPanelRef.value?.refresh()
 }
 
 // AI assist

@@ -54,12 +54,6 @@
                       @select-block="handleSelectBlock"
                       @deselect-block="handleDeselectBlock"
                     />
-                    <DefinitionLedger
-                      v-if="activeTab === 'definitions'"
-                      :definitions="definitions"
-                      @jump="handleJump"
-                    />
-                    <TodoList v-if="activeTab === 'todos'" :todos="todos" />
                     <GitPanel
                       v-if="activeTab === 'git'"
                       ref="gitPanelRef"
@@ -144,14 +138,12 @@ import {
   getGitOriginal,
   getGitStatus
 } from '~/utils/api'
-import type { FileNode, Block, Todo } from '~/types/api'
+import type { FileNode, Block } from '~/types/api'
 
 import LatexEditor from '~/components/editor/LatexEditor.vue'
 import PreviewPane from '~/components/editor/PreviewPane.vue'
 import AIAssistantPanel from '~/components/ai/AIAssistantPanel.vue'
 import OutlinePanel from '~/components/outline/OutlinePanel.vue'
-import DefinitionLedger from '~/components/outline/DefinitionLedger.vue'
-import TodoList from '~/components/outline/TodoList.vue'
 import ResizablePanes from '~/components/ui/ResizablePanes.vue'
 import FileTree from '~/components/files/FileTree.vue'
 import GitPanel from '~/components/git/GitPanel.vue'
@@ -188,15 +180,11 @@ const originalContent = ref<string | null>(null)
 
 const tabs = [
   { id: 'outline', label: 'Outline' },
-  { id: 'definitions', label: 'Defs' },
-  { id: 'todos', label: 'TODOs' },
   { id: 'git', label: 'Git' }
 ]
 
 // Computed from currentFile
 const blocks = computed<Block[]>(() => currentFile.value?.blocks || [])
-const todos = computed<Todo[]>(() => currentFile.value?.todos || [])
-const definitions = computed(() => blocks.value.filter((b) => b.type === 'definition'))
 
 // Load file tree
 const loadTree = async () => {

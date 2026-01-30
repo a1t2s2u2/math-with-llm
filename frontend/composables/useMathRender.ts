@@ -4,55 +4,38 @@ export function useMathRender() {
   const renderMath = (text: string): string => {
     if (!text) return ''
 
+    const placeholders: Map<string, string> = new Map()
+    let counter = 0
     let result = text
 
-    // Replace display math \[...\]
-    result = result.replace(/\\\[([\s\S]+?)\\\]/g, (_, math) => {
+    const replaceWith = (math: string, displayMode: boolean): string => {
+      const id = `\x00MATH_${counter++}\x00`
       try {
-        return katex.renderToString(math.trim(), {
-          throwOnError: false,
-          displayMode: true
-        })
+        placeholders.set(
+          id,
+          katex.renderToString(math.trim(), {
+            throwOnError: false,
+            displayMode
+          })
+        )
       } catch {
-        return `\\[${math}\\]`
+        placeholders.set(id, displayMode ? `$$${math}$$` : `$${math}$`)
       }
-    })
+      return id
+    }
 
-    // Replace display math $$...$$
-    result = result.replace(/\$\$([\s\S]+?)\$\$/g, (_, math) => {
-      try {
-        return katex.renderToString(math.trim(), {
-          throwOnError: false,
-          displayMode: true
-        })
-      } catch {
-        return `$$${math}$$`
-      }
-    })
+    // Display math first (longer delimiters first)
+    result = result.replace(/\\\[([\s\S]+?)\\\]/g, (_, m) => replaceWith(m, true))
+    result = result.replace(/\$\$([\s\S]+?)\$\$/g, (_, m) => replaceWith(m, true))
 
-    // Replace inline math \(...\)
-    result = result.replace(/\\\(([\s\S]+?)\\\)/g, (_, math) => {
-      try {
-        return katex.renderToString(math.trim(), {
-          throwOnError: false,
-          displayMode: false
-        })
-      } catch {
-        return `\\(${math}\\)`
-      }
-    })
+    // Inline math
+    result = result.replace(/\\\(([\s\S]+?)\\\)/g, (_, m) => replaceWith(m, false))
+    result = result.replace(/\$([^$]+?)\$/g, (_, m) => replaceWith(m, false))
 
-    // Replace inline math $...$ (but not $$)
-    result = result.replace(/\$([^$\n]+?)\$/g, (_, math) => {
-      try {
-        return katex.renderToString(math, {
-          throwOnError: false,
-          displayMode: false
-        })
-      } catch {
-        return `$${math}$`
-      }
-    })
+    // Restore placeholders
+    for (const [id, html] of placeholders) {
+      result = result.replace(id, html)
+    }
 
     return result
   }

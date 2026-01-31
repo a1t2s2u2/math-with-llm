@@ -6,22 +6,22 @@ from app.models.file import FileContent, FileNode
 from app.services.parser import parse_latex
 from app.services.renderer import render_latex_to_html
 
-_workspace_root: Path | None = None
+_state: dict[str, Path | None] = {"workspace_root": None}
 
 
 def _get_workspace_root() -> Path:
-    root = _workspace_root if _workspace_root is not None else settings.workspace_root
+    ws = _state["workspace_root"]
+    root = ws if ws is not None else settings.workspace_root
     root.mkdir(parents=True, exist_ok=True)
     return root
 
 
 def set_workspace_root(path: str) -> list[FileNode]:
     """Set workspace root and return file tree."""
-    global _workspace_root  # noqa: PLW0603
     resolved = Path(path).resolve()
     if not resolved.is_dir():
         raise NotADirectoryError(f"Not a directory: {path}")
-    _workspace_root = resolved
+    _state["workspace_root"] = resolved
     return get_tree()
 
 

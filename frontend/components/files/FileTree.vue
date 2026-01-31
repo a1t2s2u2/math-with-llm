@@ -161,7 +161,7 @@ const handleDelete = () => {
   closeContextMenu()
 }
 
-// Focus input when shown
+// 表示時にinputにフォーカス
 const focusNewFileInput = async () => {
   await nextTick()
   newFileInputRef.value?.focus()
@@ -172,11 +172,11 @@ const focusNewFolderInput = async () => {
   newFolderInputRef.value?.focus()
 }
 
-// Watch for showNewFileInput/showNewFolderInput changes
+// showNewFileInput/showNewFolderInputの変更を監視
 watch(showNewFileInput, (val) => val && focusNewFileInput())
 watch(showNewFolderInput, (val) => val && focusNewFolderInput())
 
-// Close context menu on click outside
+// 外部クリックでコンテキストメニューを閉じる
 const handleGlobalClick = () => closeContextMenu()
 onMounted(() => document.addEventListener('click', handleGlobalClick))
 onUnmounted(() => document.removeEventListener('click', handleGlobalClick))

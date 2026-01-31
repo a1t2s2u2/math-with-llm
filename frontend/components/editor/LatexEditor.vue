@@ -62,7 +62,7 @@ const onInput = (value: string | undefined) => {
   }
 }
 
-// Scroll to specific line
+// 指定行へスクロール
 const scrollToLine = (lineNumber: number) => {
   if (!editorRef.value) return
   isScrollingProgrammatically.value = true
@@ -76,12 +76,12 @@ const onEditorMount = (editor: Monaco.editor.IStandaloneCodeEditor, monaco: type
   editorRef.value = editor
   monacoInstance.value = monaco
 
-  // Register save command (Cmd+S / Ctrl+S)
+  // 保存コマンド登録 (Cmd+S / Ctrl+S)
   editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
     emit('save')
   })
 
-  // Emit current visible line number on scroll
+  // スクロール時に表示中の行番号をemit
   editor.onDidScrollChange(() => {
     if (isScrollingProgrammatically.value || !props.syncEnabled) return
     const visibleRanges = editor.getVisibleRanges()
@@ -91,32 +91,32 @@ const onEditorMount = (editor: Monaco.editor.IStandaloneCodeEditor, monaco: type
     }
   })
 
-  // Register LaTeX language if not already registered
+  // LaTeX言語が未登録なら登録
   if (!monaco.languages.getLanguages().some((lang) => lang.id === 'latex')) {
     monaco.languages.register({ id: 'latex' })
 
     monaco.languages.setMonarchTokensProvider('latex', {
       tokenizer: {
         root: [
-          // Comments
+          // コメント
           [/%.*$/, 'comment'],
 
-          // Math mode (display)
+          // 数式モード（ディスプレイ）
           [/\$\$/, { token: 'string', next: '@mathDisplay' }],
           [/\\\[/, { token: 'string', next: '@mathDisplayBracket' }],
 
-          // Math mode (inline)
+          // 数式モード（インライン）
           [/\$/, { token: 'string', next: '@mathInline' }],
           [/\\\(/, { token: 'string', next: '@mathInlineParen' }],
 
-          // Environments
+          // 環境
           [/\\begin\{([^}]+)\}/, 'keyword'],
           [/\\end\{([^}]+)\}/, 'keyword'],
 
-          // Commands
+          // コマンド
           [/\\[a-zA-Z@]+\*?/, 'keyword'],
 
-          // Braces
+          // 括弧
           [/[{}]/, 'delimiter.bracket'],
           [/\[|\]/, 'delimiter.square']
         ],
@@ -163,7 +163,7 @@ watch(
   }
 )
 
-// Git gutter decorations
+// Gitガターデコレーション
 let decorationIds: string[] = []
 
 function computeGutterDecorations(monaco: typeof Monaco) {
@@ -240,7 +240,7 @@ watch([() => props.originalContent, () => localSource.value], () => {
   if (monacoInstance.value) computeGutterDecorations(monacoInstance.value)
 })
 
-// Expose method to scroll to a specific character position
+// 指定文字位置へスクロールするメソッドを公開
 const scrollToPosition = (charPos: number) => {
   if (!editorRef.value) return
   const model = editorRef.value.getModel()

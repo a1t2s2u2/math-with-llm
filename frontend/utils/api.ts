@@ -70,7 +70,7 @@ export function chatApi(
   })
 }
 
-// Workspace API
+// ワークスペースAPI
 
 export function getWorkspace(): Promise<{ path: string }> {
   return request('/files/workspace')
@@ -92,7 +92,7 @@ export function changeWorkspace(path: string): Promise<FileNode[]> {
   })
 }
 
-// File API
+// ファイルAPI
 
 export function getFileTree(): Promise<FileNode[]> {
   return request('/files/tree')

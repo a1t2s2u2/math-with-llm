@@ -87,7 +87,7 @@ const canSend = computed(() => inputText.value.trim() && !loading.value)
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.key === 'Enter') {
     if (e.metaKey || e.ctrlKey) {
-      // Cmd/Ctrl+Enter: 改行を挿入
+      // Cmd/Ctrl+Enter: 改行挿入
       e.preventDefault()
       const textarea = e.target as HTMLTextAreaElement
       const start = textarea.selectionStart

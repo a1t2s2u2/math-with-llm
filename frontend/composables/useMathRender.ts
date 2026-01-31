@@ -24,15 +24,15 @@ export function useMathRender() {
       return id
     }
 
-    // Display math first (longer delimiters first)
+    // ディスプレイ数式を先に変換（長いデリミタ優先）
     result = result.replace(/\\\[([\s\S]+?)\\\]/g, (_, m) => replaceWith(m, true))
     result = result.replace(/\$\$([\s\S]+?)\$\$/g, (_, m) => replaceWith(m, true))
 
-    // Inline math
+    // インライン数式
     result = result.replace(/\\\(([\s\S]+?)\\\)/g, (_, m) => replaceWith(m, false))
     result = result.replace(/\$([^$]+?)\$/g, (_, m) => replaceWith(m, false))
 
-    // Restore placeholders
+    // プレースホルダを復元
     for (const [id, html] of placeholders) {
       result = result.replace(id, html)
     }

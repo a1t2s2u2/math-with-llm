@@ -20,7 +20,7 @@ const emit = defineEmits<{
 const wrapperRef = ref<HTMLElement | null>(null)
 const isScrollingProgrammatically = ref(false)
 
-// Find element with closest data-line attribute and scroll to it
+// 最も近いdata-line属性を持つ要素を探してスクロール
 const scrollToLine = (targetLine: number) => {
   if (!wrapperRef.value) return
 
@@ -46,14 +46,14 @@ const scrollToLine = (targetLine: number) => {
     const wrapper = wrapperRef.value
     const elementTop = (closestElement as HTMLElement).offsetTop
     wrapper.scrollTop = Math.max(0, elementTop - 16)
-    // Reset flag after scroll completes
+    // スクロール完了後にフラグをリセット
     setTimeout(() => {
       isScrollingProgrammatically.value = false
     }, 50)
   }
 }
 
-// Get line number from current scroll position
+// 現在のスクロール位置から行番号を取得
 const getLineFromScrollPosition = (): number => {
   if (!wrapperRef.value) return 1
 
@@ -79,7 +79,7 @@ const getLineFromScrollPosition = (): number => {
   return closestLine
 }
 
-// Handle scroll event from user
+// ユーザーのスクロールイベントを処理
 const onScroll = () => {
   if (isScrollingProgrammatically.value || !props.syncEnabled) return
   const line = getLineFromScrollPosition()
@@ -105,7 +105,7 @@ watch(
   }
 )
 
-// Re-apply scroll position when HTML changes
+// HTML変更時にスクロール位置を再適用
 watch(
   () => props.renderedHtml,
   async () => {

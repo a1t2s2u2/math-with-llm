@@ -149,12 +149,12 @@ import FileTree from '~/components/files/FileTree.vue'
 import GitPanel from '~/components/git/GitPanel.vue'
 import GitDiffView from '~/components/git/GitDiffView.vue'
 
-// File tree state
+// ファイルツリー状態
 const fileTree = ref<FileNode[]>([])
 const treeLoading = ref(false)
 const workspacePath = ref('')
 
-// Current file state
+// 現在のファイル状態
 const {
   file: currentFile,
   currentPath,
@@ -166,7 +166,7 @@ const {
   clear: clearFile
 } = useFile()
 
-// Editor state
+// エディタ状態
 const activeTab = ref('outline')
 const scrollSyncEnabled = ref(true)
 const editorScrollLine = ref(1)
@@ -183,17 +183,17 @@ const tabs = [
   { id: 'git', label: 'Git' }
 ]
 
-// Computed from currentFile
+// currentFileからの算出プロパティ
 const blocks = computed<Block[]>(() => currentFile.value?.blocks || [])
 
-// Load file tree
+// ファイルツリー読み込み
 const loadTree = async () => {
   treeLoading.value = true
   fileTree.value = await getFileTree()
   treeLoading.value = false
 }
 
-// Workspace change
+// ワークスペース変更
 const handleChangeWorkspace = async (path: string) => {
   try {
     treeLoading.value = true
@@ -207,7 +207,7 @@ const handleChangeWorkspace = async (path: string) => {
   }
 }
 
-// File selection
+// ファイル選択
 const handleFileSelect = async (path: string) => {
   await loadFile(path)
   await fetchOriginalContent(path)
@@ -223,7 +223,7 @@ const fetchOriginalContent = async (path: string) => {
   originalContent.value = result.content
 }
 
-// File operations
+// ファイル操作
 const handleCreateFile = async (path: string) => {
   await createFile(path)
   await loadTree()
@@ -255,7 +255,7 @@ const handleDelete = async (path: string, type: 'file' | 'directory') => {
   }
 }
 
-// Git discard handler
+// Git破棄ハンドラ
 const handleFileDiscarded = async (path: string) => {
   if (currentPath.value === path) {
     await loadFile(path)
@@ -263,7 +263,7 @@ const handleFileDiscarded = async (path: string) => {
   }
 }
 
-// Editor events
+// エディタイベント
 const handleEditorScroll = (line: number) => {
   editorScrollLine.value = line
 }
@@ -276,13 +276,13 @@ const handleJump = (position: number) => {
   editorRef.value?.scrollToPosition(position)
 }
 
-// Save handler
+// 保存ハンドラ
 const handleSave = async () => {
   await saveFile()
   gitPanelRef.value?.refresh()
 }
 
-// AI assist
+// AIアシスト
 const handleSelectBlock = (block: Block) => {
   if (!aiPanelRef.value) return
   const typeLabel =

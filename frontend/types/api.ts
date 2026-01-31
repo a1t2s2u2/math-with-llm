@@ -61,7 +61,7 @@ export interface FileContent {
   todos: Todo[]
 }
 
-// Git types
+// Git型定義
 
 export interface GitFileStatus {
   path: string

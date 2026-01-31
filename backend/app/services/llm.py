@@ -10,6 +10,24 @@ from app.models.llm import LeanGeneration, PatchResult, SkeletonCard, SkeletonRe
 client = OpenAI(api_key=settings.openai_api_key)
 
 
+def _call_llm(
+    system: str,
+    prompt: str,
+    *,
+    json_mode: bool = False,
+) -> str:
+    """共通LLM呼び出しヘルパー"""
+    response = client.chat.completions.create(
+        model=settings.llm_model,
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": prompt},
+        ],
+        **({"response_format": {"type": "json_object"}} if json_mode else {}),
+    )
+    return response.choices[0].message.content or ""
+
+
 def generate_skeleton(block: Block, context: str = "") -> SkeletonResponse:
     prompt = f"""あなたは数学の証明アシスタントです。
 以下の数学的命題を分析し、証明戦略の候補を提示してください。
@@ -41,20 +59,13 @@ def generate_skeleton(block: Block, context: str = "") -> SkeletonResponse:
 重要: 完全な証明は提供しないでください。
 戦略と確認すべき点のみを提案してください。"""
 
-    response = client.chat.completions.create(
-        model=settings.llm_model,
-        messages=[
-            {
-                "role": "system",
-                "content": "あなたは数学の証明アシスタントです。"
-                "解答ではなく戦略を提案してください。",
-            },
-            {"role": "user", "content": prompt},
-        ],
-        response_format={"type": "json_object"},
+    result = json.loads(
+        _call_llm(
+            "あなたは数学の証明アシスタントです。解答ではなく戦略を提案してください。",
+            prompt,
+            json_mode=True,
+        )
     )
-
-    result = json.loads(response.choices[0].message.content)
     return SkeletonResponse(
         cards=[SkeletonCard(**card) for card in result.get("cards", [])]
     )
@@ -82,20 +93,14 @@ Output as JSON:
   "notes": "Any important notes about the conversion"
 }}"""
 
-    response = client.chat.completions.create(
-        model=settings.llm_model,
-        messages=[
-            {
-                "role": "system",
-                "content": "You are a Lean 4 code generator. "
-                "Generate skeleton code with 'sorry' placeholders.",
-            },
-            {"role": "user", "content": prompt},
-        ],
-        response_format={"type": "json_object"},
+    result = json.loads(
+        _call_llm(
+            "You are a Lean 4 code generator. "
+            "Generate skeleton code with 'sorry' placeholders.",
+            prompt,
+            json_mode=True,
+        )
     )
-
-    result = json.loads(response.choices[0].message.content)
     return LeanGeneration(**result)
 
 
@@ -111,26 +116,14 @@ def chat(
         elif context_type == "selection":
             context_text = f"\n\n選択されたテキスト:\n{context_content}"
 
-    prompt = f"""{message}{context_text}"""
-
-    response = client.chat.completions.create(
-        model=settings.llm_model,
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "あなたは数学の専門家です。"
-                    "数式は必ずLaTeX形式で記述してください。"
-                    "インライン数式は $...$ で囲み、"
-                    "ディスプレイ数式は $$...$$ で囲んでください。"
-                    "簡潔かつ正確に回答してください。"
-                ),
-            },
-            {"role": "user", "content": prompt},
-        ],
+    return _call_llm(
+        "あなたは数学の専門家です。"
+        "数式は必ずLaTeX形式で記述してください。"
+        "インライン数式は $...$ で囲み、"
+        "ディスプレイ数式は $$...$$ で囲んでください。"
+        "簡潔かつ正確に回答してください。",
+        f"{message}{context_text}",
     )
-
-    return response.choices[0].message.content or ""
 
 
 def generate_fix_patch(lean_code: str, diagnostics: list[dict]) -> PatchResult:
@@ -162,18 +155,11 @@ Output as JSON:
   "description": "Brief description of changes"
 }}"""
 
-    response = client.chat.completions.create(
-        model=settings.llm_model,
-        messages=[
-            {
-                "role": "system",
-                "content": "You are a Lean 4 code fixer. "
-                "Generate minimal diff patches.",
-            },
-            {"role": "user", "content": prompt},
-        ],
-        response_format={"type": "json_object"},
+    result = json.loads(
+        _call_llm(
+            "You are a Lean 4 code fixer. Generate minimal diff patches.",
+            prompt,
+            json_mode=True,
+        )
     )
-
-    result = json.loads(response.choices[0].message.content)
     return PatchResult(**result)

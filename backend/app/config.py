@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     workspace_root: Path = Path("/Users/a1t2s2u2/Repository/math-note")
     llm_model: str = "gpt-5-mini"
     lean_timeout: int = 10
+    git_timeout: int = 10
     cors_origins: list[str] = ["http://localhost:3000"]
 
 

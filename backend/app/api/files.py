@@ -31,13 +31,13 @@ class WorkspaceRequest(BaseModel):
 
 @router.get("/workspace")
 def get_workspace() -> dict[str, str]:
-    """Get current workspace root path."""
+    """現在のワークスペースルートパスを取得する。"""
     return {"path": file_storage.get_workspace_path()}
 
 
 @router.get("/workspace/browse")
 def browse_workspace(path: str | None = None) -> dict:
-    """Browse directories for workspace selection."""
+    """ワークスペース選択のためにディレクトリを参照する。"""
     try:
         return file_storage.browse_directory(path)
     except NotADirectoryError as e:
@@ -48,7 +48,7 @@ def browse_workspace(path: str | None = None) -> dict:
 
 @router.put("/workspace", response_model=list[FileNode])
 def change_workspace(req: WorkspaceRequest) -> list[FileNode]:
-    """Change workspace root directory."""
+    """ワークスペースルートディレクトリを変更する。"""
     try:
         return file_storage.set_workspace_root(req.path)
     except NotADirectoryError as e:
@@ -57,7 +57,7 @@ def change_workspace(req: WorkspaceRequest) -> list[FileNode]:
 
 @router.post("/workspace/pick")
 def pick_workspace() -> dict:
-    """Open native folder picker and set workspace."""
+    """ネイティブフォルダピッカーを開きワークスペースを設定する。"""
     path = file_storage.pick_directory()
     if not path:
         return {"tree": None}
@@ -67,49 +67,49 @@ def pick_workspace() -> dict:
 
 @router.get("/tree", response_model=list[FileNode])
 def get_tree() -> list[FileNode]:
-    """Get directory tree of workspace."""
+    """ワークスペースのディレクトリツリーを取得する。"""
     return file_storage.get_tree()
 
 
 @router.get("/{path:path}", response_model=FileContent)
 def get_file(path: str) -> FileContent:
-    """Get file content with parsed data."""
+    """ファイル内容をパースデータ付きで取得する。"""
     return file_storage.read_file(path)
 
 
 @router.put("/{path:path}", response_model=FileContent)
 def update_file(path: str, req: WriteFileRequest) -> FileContent:
-    """Update file content."""
+    """ファイル内容を更新する。"""
     return file_storage.write_file(path, req.content)
 
 
 @router.post("", response_model=FileContent)
 def create_file(req: CreateFileRequest) -> FileContent:
-    """Create new file."""
+    """新規ファイルを作成する。"""
     return file_storage.create_file(req.path, req.content)
 
 
 @router.delete("/{path:path}")
 def delete_file(path: str) -> dict[str, str]:
-    """Delete file."""
+    """ファイルを削除する。"""
     file_storage.delete_file(path)
     return {"status": "deleted"}
 
 
 @router.post("/rename", response_model=FileContent)
 def rename_file(req: RenameRequest) -> FileContent:
-    """Rename or move file."""
+    """ファイルをリネームまたは移動する。"""
     return file_storage.rename_file(req.old_path, req.new_path)
 
 
 @router.post("/folders", response_model=FileNode)
 def create_folder(req: CreateFolderRequest) -> FileNode:
-    """Create new folder."""
+    """新規フォルダを作成する。"""
     return file_storage.create_folder(req.path)
 
 
 @router.delete("/folders/{path:path}")
 def delete_folder(path: str) -> dict[str, str]:
-    """Delete empty folder."""
+    """空フォルダを削除する。"""
     file_storage.delete_folder(path)
     return {"status": "deleted"}

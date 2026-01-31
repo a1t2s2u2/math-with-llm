@@ -1,6 +1,7 @@
 import subprocess
 from pathlib import Path
 
+from app.config import settings
 from app.models.git import GitCommitResult, GitDiff, GitFileStatus, GitStatus
 from app.services.file_storage import get_workspace_path
 
@@ -20,7 +21,7 @@ def _run_git(*args: str) -> subprocess.CompletedProcess[str]:
         cwd=cwd,
         capture_output=True,
         text=True,
-        timeout=10,
+        timeout=settings.git_timeout,
     )
 
 

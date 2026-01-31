@@ -84,7 +84,7 @@ def _extract_title(optional_arg: str | None, content: str) -> str | None:
     first_line = content.split("\n")[0].strip()
     # 長さ制限
     if len(first_line) > _MAX_TITLE_LENGTH:
-        first_line = first_line[:57] + "..."
+        first_line = first_line[: _MAX_TITLE_LENGTH - 3] + "..."
     return first_line if first_line else None
 
 

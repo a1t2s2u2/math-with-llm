@@ -138,7 +138,7 @@ import {
   getGitOriginal,
   getGitStatus
 } from '~/utils/api'
-import type { FileNode, Block } from '~/types/api'
+import type { FileNode, Block, AIContext } from '~/types/api'
 import { BLOCK_TYPE_LABELS } from '~/utils/constants'
 
 import LatexEditor from '~/components/editor/LatexEditor.vue'
@@ -298,12 +298,6 @@ const handleSelectBlock = (block: Block) => {
 const handleDeselectBlock = () => {
   if (!aiPanelRef.value) return
   aiPanelRef.value.clearContext()
-}
-
-interface AIContext {
-  type: 'block' | 'selection'
-  label: string
-  content: string
 }
 
 const handleAIChat = async (message: string, context: AIContext | null) => {

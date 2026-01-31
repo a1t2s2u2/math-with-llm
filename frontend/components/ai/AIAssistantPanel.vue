@@ -51,26 +51,21 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
 import { useMathRender } from '~/composables/useMathRender'
+import type { AIContext } from '~/types/api'
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
 }
 
-interface Context {
-  type: 'block' | 'selection'
-  label: string
-  content: string
-}
-
 const emit = defineEmits<{
-  send: [message: string, context: Context | null]
+  send: [message: string, context: AIContext | null]
 }>()
 
 const messages = ref<Message[]>([])
 const inputText = ref('')
 const loading = ref(false)
-const context = ref<Context | null>(null)
+const context = ref<AIContext | null>(null)
 const messagesRef = ref<HTMLElement | null>(null)
 const copiedIndex = ref<number | null>(null)
 
@@ -125,7 +120,7 @@ const setLoading = (value: boolean) => {
   loading.value = value
 }
 
-const setContext = (ctx: Context) => {
+const setContext = (ctx: AIContext) => {
   context.value = ctx
 }
 

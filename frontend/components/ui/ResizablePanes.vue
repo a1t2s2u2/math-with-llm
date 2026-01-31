@@ -159,11 +159,11 @@ const stopResize = () => {
 }
 
 .divider:hover {
-  background: #007acc;
+  background: var(--color-primary);
 }
 
 .divider:active {
-  background: #005a9e;
+  background: var(--color-primary-hover);
 }
 
 .divider-handle {

@@ -21,6 +21,7 @@ import { ref, watch, shallowRef } from 'vue'
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
 import { debounce } from '~/utils/debounce'
 import { buildLCSIndices, matchBySimilarity } from '~/utils/gitDiff'
+import { registerLatexLanguage } from '~/utils/monacoLatex'
 import type * as Monaco from 'monaco-editor'
 
 const props = defineProps<{
@@ -92,57 +93,7 @@ const onEditorMount = (editor: Monaco.editor.IStandaloneCodeEditor, monaco: type
   })
 
   // LaTeX言語が未登録なら登録
-  if (!monaco.languages.getLanguages().some((lang) => lang.id === 'latex')) {
-    monaco.languages.register({ id: 'latex' })
-
-    monaco.languages.setMonarchTokensProvider('latex', {
-      tokenizer: {
-        root: [
-          // コメント
-          [/%.*$/, 'comment'],
-
-          // 数式モード（ディスプレイ）
-          [/\$\$/, { token: 'string', next: '@mathDisplay' }],
-          [/\\\[/, { token: 'string', next: '@mathDisplayBracket' }],
-
-          // 数式モード（インライン）
-          [/\$/, { token: 'string', next: '@mathInline' }],
-          [/\\\(/, { token: 'string', next: '@mathInlineParen' }],
-
-          // 環境
-          [/\\begin\{([^}]+)\}/, 'keyword'],
-          [/\\end\{([^}]+)\}/, 'keyword'],
-
-          // コマンド
-          [/\\[a-zA-Z@]+\*?/, 'keyword'],
-
-          // 括弧
-          [/[{}]/, 'delimiter.bracket'],
-          [/\[|\]/, 'delimiter.square']
-        ],
-        mathInline: [
-          [/\$/, { token: 'string', next: '@pop' }],
-          [/\\./, 'string'],
-          [/[^$\\]+/, 'string']
-        ],
-        mathInlineParen: [
-          [/\\\)/, { token: 'string', next: '@pop' }],
-          [/\\./, 'string'],
-          [/[^\\]+/, 'string']
-        ],
-        mathDisplay: [
-          [/\$\$/, { token: 'string', next: '@pop' }],
-          [/\\./, 'string'],
-          [/[^$\\]+/, 'string']
-        ],
-        mathDisplayBracket: [
-          [/\\\]/, { token: 'string', next: '@pop' }],
-          [/\\./, 'string'],
-          [/[^\\]+/, 'string']
-        ]
-      }
-    })
-  }
+  registerLatexLanguage(monaco)
 }
 
 watch(
@@ -271,27 +222,27 @@ defineExpose({ scrollToPosition })
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #1e1e1e;
-  color: #808080;
+  background: var(--color-bg-main);
+  color: var(--color-text-muted);
   font-family: 'Monaco', 'Courier New', monospace;
 }
 </style>
 
 <style>
 .git-added-line {
-  background: #2ea04370;
+  background: var(--color-git-added);
   width: 3px !important;
   margin-left: 3px;
 }
 
 .git-modified-line {
-  background: #0078d4;
+  background: var(--color-git-modified);
   width: 3px !important;
   margin-left: 3px;
 }
 
 .git-deleted-line {
-  background: #f85149;
+  background: var(--color-git-deleted);
   width: 3px !important;
   margin-left: 3px;
   height: 3px !important;

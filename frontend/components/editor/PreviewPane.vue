@@ -122,7 +122,7 @@ watch(
   height: 100%;
   overflow-y: auto;
   padding: 16px;
-  background: #1e1e1e;
+  background: var(--color-bg-main);
   min-height: 0;
 }
 
@@ -130,7 +130,7 @@ watch(
   line-height: 1.8;
   font-family: 'Times New Roman', serif;
   font-size: 16px;
-  color: #d4d4d4;
+  color: var(--color-text);
 }
 
 .preview-content p {
@@ -141,22 +141,22 @@ watch(
 .preview-content :deep(.latex-env) {
   margin: 16px 0;
   padding: 12px;
-  border-left: 3px solid #4ec9b0;
-  background: #2d2d2d;
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-bg-secondary);
   border-radius: 4px;
 }
 
 .preview-content :deep(.env-heading) {
   font-weight: bold;
   font-size: 14px;
-  color: #4ec9b0;
+  color: var(--color-accent);
   margin-bottom: 8px;
 }
 
 .preview-content :deep(.env-content) {
   font-size: 15px;
   line-height: 1.6;
-  color: #d4d4d4;
+  color: var(--color-text);
 }
 
 /* Proof environment */
@@ -174,7 +174,7 @@ watch(
 .preview-content :deep(.latex-list) {
   margin: 12px 0;
   padding-left: 24px;
-  color: #d4d4d4;
+  color: var(--color-text);
 }
 
 .preview-content :deep(.latex-list li) {
@@ -187,7 +187,7 @@ watch(
   font-size: 24px;
   font-weight: bold;
   margin: 24px 0 16px 0;
-  color: #4ec9b0;
+  color: var(--color-accent);
   border-bottom: 2px solid #3e3e3e;
   padding-bottom: 8px;
 }
@@ -196,14 +196,14 @@ watch(
   font-size: 20px;
   font-weight: bold;
   margin: 20px 0 12px 0;
-  color: #4ec9b0;
+  color: var(--color-accent);
 }
 
 .preview-content :deep(.latex-subsubsection) {
   font-size: 18px;
   font-weight: bold;
   margin: 16px 0 10px 0;
-  color: #4ec9b0;
+  color: var(--color-accent);
 }
 
 /* Document title block */
@@ -217,7 +217,7 @@ watch(
 .preview-content :deep(.latex-title) {
   font-size: 28px;
   font-weight: bold;
-  color: #4ec9b0;
+  color: var(--color-accent);
   margin-bottom: 16px;
   line-height: 1.3;
 }

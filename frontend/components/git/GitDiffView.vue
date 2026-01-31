@@ -65,27 +65,27 @@ watch(() => [props.path, props.staged], loadDiff, { immediate: true })
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  background: #252526;
-  border-bottom: 1px solid #3e3e42;
+  background: var(--color-bg-header);
+  border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
 
 .diff-path {
   font-size: 12px;
   font-weight: 500;
-  color: #cccccc;
+  color: var(--color-text-secondary);
 }
 
 .diff-label {
   font-size: 11px;
-  color: #808080;
+  color: var(--color-text-muted);
 }
 
 .close-btn {
   margin-left: auto;
   background: none;
   border: none;
-  color: #808080;
+  color: var(--color-text-muted);
   font-size: 18px;
   cursor: pointer;
   padding: 0 4px;

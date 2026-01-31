@@ -1,3 +1,24 @@
+:root {
+  --color-primary: #007acc;
+  --color-primary-hover: #005a9e;
+  --color-bg-main: #1e1e1e;
+  --color-bg-secondary: #2d2d2d;
+  --color-bg-header: #252526;
+  --color-bg-input: #3c3c3c;
+  --color-bg-hover: #4e4e52;
+  --color-border: #3e3e42;
+  --color-text: #d4d4d4;
+  --color-text-secondary: #cccccc;
+  --color-text-muted: #808080;
+  --color-text-dimmed: #858585;
+  --color-accent: #4ec9b0;
+  --color-selected: #094771;
+  --color-danger: #c42b1c;
+  --color-git-added: #2ea04370;
+  --color-git-modified: #0078d4;
+  --color-git-deleted: #f85149;
+}
+
 * {
   margin: 0;
   padding: 0;

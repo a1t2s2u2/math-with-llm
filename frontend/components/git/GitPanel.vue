@@ -159,7 +159,7 @@ defineExpose({ refresh })
   overflow-y: auto;
   padding: 8px;
   font-size: 12px;
-  color: #cccccc;
+  color: var(--color-text-secondary);
 }
 
 .init-section {
@@ -168,12 +168,12 @@ defineExpose({ refresh })
   align-items: center;
   gap: 12px;
   padding: 24px 8px;
-  color: #808080;
+  color: var(--color-text-muted);
 }
 
 .init-btn {
   padding: 6px 16px;
-  background: #007acc;
+  background: var(--color-primary);
   color: #fff;
   border: none;
   border-radius: 4px;
@@ -191,7 +191,7 @@ defineExpose({ refresh })
   gap: 6px;
   padding: 4px 0 8px;
   font-size: 12px;
-  color: #d4d4d4;
+  color: var(--color-text);
 }
 
 .branch-icon {
@@ -207,21 +207,21 @@ defineExpose({ refresh })
 .commit-input {
   flex: 1;
   padding: 4px 8px;
-  background: #3c3c3c;
+  background: var(--color-bg-input);
   border: 1px solid #5a5a5a;
   border-radius: 3px;
-  color: #cccccc;
+  color: var(--color-text-secondary);
   font-size: 12px;
   outline: none;
 }
 
 .commit-input:focus {
-  border-color: #007acc;
+  border-color: var(--color-primary);
 }
 
 .commit-btn {
   padding: 4px 12px;
-  background: #007acc;
+  background: var(--color-primary);
   color: #fff;
   border: none;
   border-radius: 3px;
@@ -316,7 +316,7 @@ defineExpose({ refresh })
   background: none;
   border: 1px solid transparent;
   border-radius: 3px;
-  color: #cccccc;
+  color: var(--color-text-secondary);
   cursor: pointer;
   font-size: 14px;
   font-weight: bold;
@@ -329,17 +329,17 @@ defineExpose({ refresh })
 }
 
 .action-btn:hover {
-  background: #3c3c3c;
+  background: var(--color-bg-input);
   border-color: #5a5a5a;
 }
 
 .action-btn.discard:hover {
-  color: #f85149;
+  color: var(--color-git-deleted);
 }
 
 .no-changes {
   padding: 24px 8px;
   text-align: center;
-  color: #808080;
+  color: var(--color-text-muted);
 }
 </style>

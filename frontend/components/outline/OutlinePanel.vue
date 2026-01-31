@@ -21,6 +21,7 @@
 import { ref } from 'vue'
 import type { Block } from '~/types/api'
 import { useMathRender } from '~/composables/useMathRender'
+import { BLOCK_TYPE_SHORT } from '~/utils/constants'
 
 defineProps<{
   blocks: Block[]
@@ -50,30 +51,20 @@ const handleClick = (block: Block) => {
 }
 
 const formatType = (type: string) => {
-  const typeMap: Record<string, string> = {
-    definition: 'Def',
-    theorem: 'Thm',
-    lemma: 'Lem',
-    proposition: 'Prop',
-    corollary: 'Cor',
-    proof: 'Proof',
-    remark: 'Rem',
-    example: 'Ex'
-  }
-  return typeMap[type] || type
+  return BLOCK_TYPE_SHORT[type] || type
 }
 </script>
 
 <style scoped>
 .outline-panel {
   padding: 8px;
-  background: #1e1e1e;
+  background: var(--color-bg-main);
   height: 100%;
   overflow-y: auto;
 }
 
 .empty {
-  color: #858585;
+  color: var(--color-text-dimmed);
   font-size: 12px;
   padding: 8px;
 }
@@ -96,11 +87,11 @@ const formatType = (type: string) => {
 }
 
 .block-item:hover {
-  background: #2d2d2d;
+  background: var(--color-bg-secondary);
 }
 
 .block-item.selected {
-  background: #094771;
+  background: var(--color-selected);
 }
 
 .block-definition {
@@ -130,7 +121,7 @@ const formatType = (type: string) => {
   padding: 1px 4px;
   border-radius: 2px;
   background: #3e3e3e;
-  color: #cccccc;
+  color: var(--color-text-secondary);
 }
 
 .block-definition .block-type {
@@ -154,7 +145,7 @@ const formatType = (type: string) => {
 .block-label {
   flex-shrink: 0;
   font-size: 11px;
-  color: #808080;
+  color: var(--color-text-muted);
   font-family: monospace;
 }
 
@@ -162,7 +153,7 @@ const formatType = (type: string) => {
   flex: 1;
   min-width: 0;
   font-size: 12px;
-  color: #d4d4d4;
+  color: var(--color-text);
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;

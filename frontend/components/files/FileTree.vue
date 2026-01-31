@@ -9,17 +9,10 @@
       </div>
     </div>
     <div class="workspace-path-bar">
-      <span class="workspace-label" @click="showFolderBrowser = true">
+      <span class="workspace-label" @click="handlePickWorkspace">
         {{ workspacePath || '...' }}
       </span>
     </div>
-
-    <FolderBrowserModal
-      v-if="showFolderBrowser"
-      :initial-path="workspacePath"
-      @select="handleFolderSelect"
-      @cancel="showFolderBrowser = false"
-    />
 
     <div v-if="showNewFileInput" class="new-item-input">
       <input
@@ -74,8 +67,8 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import type { FileNode } from '~/types/api'
+import { pickWorkspace } from '~/utils/api'
 import FileTreeNode from './FileTreeNode.vue'
-import FolderBrowserModal from './FolderBrowserModal.vue'
 
 defineProps<{
   tree: FileNode[]
@@ -104,11 +97,11 @@ const newFolderInputRef = ref<HTMLInputElement | null>(null)
 
 const contextMenu = ref<{ node: FileNode; x: number; y: number } | null>(null)
 
-const showFolderBrowser = ref(false)
-
-const handleFolderSelect = (path: string) => {
-  showFolderBrowser.value = false
-  emit('changeWorkspace', path)
+const handlePickWorkspace = async () => {
+  const result = await pickWorkspace()
+  if (result.tree && result.path) {
+    emit('changeWorkspace', result.path)
+  }
 }
 
 const createNewFile = () => {

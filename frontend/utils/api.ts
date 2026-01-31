@@ -80,6 +80,10 @@ export function browseDirectory(path?: string): Promise<{ current: string; dirs:
   return request(`/files/workspace/browse${params}`)
 }
 
+export function pickWorkspace(): Promise<{ tree: FileNode[] | null; path?: string }> {
+  return request('/files/workspace/pick', { method: 'POST' })
+}
+
 export function changeWorkspace(path: string): Promise<FileNode[]> {
   return request('/files/workspace', {
     method: 'PUT',

@@ -79,7 +79,7 @@
         v-model="inputText"
         placeholder="質問を入力... (Enterで送信)"
         @keydown="handleKeydown"
-        :disabled="loading"
+        :disabled="loading || streaming"
       />
       <button class="send-button" @click="sendMessage" :disabled="!canSend">送信</button>
     </div>
@@ -108,6 +108,7 @@ const loading = ref(false)
 const context = ref<AIContext | null>(null)
 const messagesRef = ref<HTMLElement | null>(null)
 const copiedIndex = ref<number | null>(null)
+const streaming = ref(false)
 const skeleton = ref<SkeletonCard[] | null>(null)
 const skeletonLoading = ref(false)
 
@@ -119,7 +120,7 @@ const contextLabel = computed(() => {
   return `選択: "${context.value.content.slice(0, 30)}${context.value.content.length > 30 ? '...' : ''}"`
 })
 
-const canSend = computed(() => inputText.value.trim() && !loading.value)
+const canSend = computed(() => inputText.value.trim() && !loading.value && !streaming.value)
 
 const isProvableBlock = computed(
   () =>
@@ -163,6 +164,25 @@ const sendMessage = () => {
 const addAssistantMessage = (content: string) => {
   messages.value.push({ role: 'assistant', content })
   scrollToBottom()
+}
+
+const startAssistantStream = (): number => {
+  streaming.value = true
+  messages.value.push({ role: 'assistant', content: '' })
+  scrollToBottom()
+  return messages.value.length - 1
+}
+
+const appendToLastAssistant = (chunk: string) => {
+  const last = messages.value[messages.value.length - 1]
+  if (last?.role === 'assistant') {
+    last.content += chunk
+    scrollToBottom()
+  }
+}
+
+const finishAssistantStream = () => {
+  streaming.value = false
 }
 
 const setLoading = (value: boolean) => {
@@ -216,6 +236,9 @@ const copyMessage = async (content: string) => {
 
 defineExpose({
   addAssistantMessage,
+  startAssistantStream,
+  appendToLastAssistant,
+  finishAssistantStream,
   setLoading,
   setContext,
   clearContext,

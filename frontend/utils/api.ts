@@ -36,6 +36,48 @@ export function chatApi(
   })
 }
 
+export async function chatStreamApi(
+  message: string,
+  contextType: string | null,
+  contextContent: string | null,
+  onChunk: (text: string) => void
+): Promise<void> {
+  const response = await fetch(`${API_BASE}/assist/chat/stream`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message,
+      context_type: contextType,
+      context_content: contextContent
+    })
+  })
+  if (!response.ok) {
+    const body = await response.text()
+    throw new Error(`API error ${response.status}: ${body}`)
+  }
+
+  const reader = response.body!.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+
+    buffer += decoder.decode(value, { stream: true })
+    const lines = buffer.split('\n')
+    buffer = lines.pop()!
+
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue
+      const data = line.slice(6)
+      if (data === '[DONE]') return
+      const parsed = JSON.parse(data)
+      onChunk(parsed.content)
+    }
+  }
+}
+
 // ワークスペースAPI
 
 export function getWorkspace(): Promise<{ path: string }> {

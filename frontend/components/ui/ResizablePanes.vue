@@ -177,7 +177,7 @@ const onResize = (event: MouseEvent) => {
   const rightIndex = leftIndex + 1
 
   // If a collapsed pane is being dragged open
-  if (collapsed.value.has(leftIndex) && isCollapsible(leftIndex) && deltaPercent < -5) {
+  if (collapsed.value.has(leftIndex) && isCollapsible(leftIndex) && deltaPercent > 5) {
     expandPane(leftIndex, newSizes)
     sizes.value = newSizes
     // Reset start state for continued drag
@@ -185,7 +185,7 @@ const onResize = (event: MouseEvent) => {
     startPos.value = currentPos
     return
   }
-  if (collapsed.value.has(rightIndex) && isCollapsible(rightIndex) && deltaPercent > 5) {
+  if (collapsed.value.has(rightIndex) && isCollapsible(rightIndex) && deltaPercent < -5) {
     expandPane(rightIndex, newSizes)
     sizes.value = newSizes
     startSizes.value = [...sizes.value]
@@ -193,8 +193,11 @@ const onResize = (event: MouseEvent) => {
     return
   }
 
-  let newLeftSize = startSizes.value[leftIndex] + deltaPercent
-  let newRightSize = startSizes.value[rightIndex] - deltaPercent
+  // Don't allow normal resize to affect collapsed panes
+  if (collapsed.value.has(leftIndex) || collapsed.value.has(rightIndex)) return
+
+  const newLeftSize = startSizes.value[leftIndex] + deltaPercent
+  const newRightSize = startSizes.value[rightIndex] - deltaPercent
 
   // Collapsible panes: snap to 0 at threshold
   if (isCollapsible(leftIndex) && newLeftSize <= 5 && newLeftSize < startSizes.value[leftIndex]) {

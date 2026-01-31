@@ -1,32 +1,24 @@
 import re
 
-from app.models.block import Block, BlockType, ParseResult, Todo
+from app.models.block import Block, BlockType, ParseResult
 from app.utils.id_generator import generate_block_id_from_content
 
-BLOCK_TYPES = [
-    "definition",
-    "lemma",
-    "theorem",
-    "proposition",
-    "corollary",
-    "proof",
-    "remark",
-    "example",
-]
+BLOCK_TYPES = [bt.value for bt in BlockType]
+
+_MAX_TITLE_LENGTH = 60
 
 
 def parse_latex(source: str) -> ParseResult:
     blocks = _extract_blocks(source)
-    todos = _extract_todos(source)
-
-    return ParseResult(
-        blocks=blocks,
-        todos=todos,
-    )
+    return ParseResult(blocks=blocks)
 
 
 # proof が参照できるブロックタイプ（定理系）
-PROVABLE_BLOCK_TYPES = {"definition", "lemma", "theorem", "proposition", "corollary"}
+PROVABLE_BLOCK_TYPES = {
+    bt.value
+    for bt in BlockType
+    if bt not in (BlockType.PROOF, BlockType.REMARK, BlockType.EXAMPLE)
+}
 
 
 def _extract_blocks(source: str) -> list[Block]:
@@ -91,7 +83,7 @@ def _extract_title(optional_arg: str | None, content: str) -> str | None:
     # 先頭行を取得
     first_line = content.split("\n")[0].strip()
     # 長さ制限
-    if len(first_line) > 60:
+    if len(first_line) > _MAX_TITLE_LENGTH:
         first_line = first_line[:57] + "..."
     return first_line if first_line else None
 
@@ -99,19 +91,3 @@ def _extract_title(optional_arg: str | None, content: str) -> str | None:
 def _extract_label(content: str) -> str | None:
     match = re.search(r"\\label\{([^}]+)\}", content)
     return match.group(1) if match else None
-
-
-def _extract_todos(source: str) -> list[Todo]:
-    todos = []
-
-    lines = source.split("\n")
-    for i, line in enumerate(lines, start=1):
-        if "\\todo{" in line:
-            match = re.search(r"\\todo\{([^}]+)\}", line)
-            if match:
-                todos.append(Todo(content=match.group(1), line_number=i))
-        elif "TODO:" in line:
-            content = line.split("TODO:", 1)[1].strip()
-            todos.append(Todo(content=content, line_number=i))
-
-    return todos

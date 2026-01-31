@@ -7,14 +7,8 @@ export interface Block {
   latex_fragment: string
 }
 
-export interface Todo {
-  content: string
-  line_number: number
-}
-
 export interface ParseResult {
   blocks: Block[]
-  todos: Todo[]
   renderer_errors: string[]
 }
 
@@ -58,7 +52,6 @@ export interface FileContent {
   content: string
   rendered_html: string
   blocks: Block[]
-  todos: Todo[]
 }
 
 // Git型定義

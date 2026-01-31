@@ -118,7 +118,6 @@ def read_file(path: str) -> FileContent:
         content=content,
         rendered_html=render_result.html,
         blocks=parse_result.blocks,
-        todos=parse_result.todos,
     )
 
 

@@ -77,20 +77,20 @@ def _get_proof_title(preceding_blocks: list[Block]) -> str | None:
 
 
 def _extract_title(optional_arg: str | None, content: str) -> str | None:
-    # First try optional argument: \begin{definition}[Title here]
+    # オプション引数から取得: \begin{definition}[Title here]
     if optional_arg:
-        return optional_arg[1:-1].strip()  # Remove [ and ]
+        return optional_arg[1:-1].strip()  # [ と ] を除去
 
-    # Otherwise extract first meaningful line from content
+    # オプション引数がなければ本文の先頭行から抽出
     content = content.strip()
-    # Remove \label{...} from content
+    # \label{...} を除去
     content = re.sub(r"\\label\{[^}]*\}", "", content).strip()
     if not content:
         return None
 
-    # Get first line and clean it up
+    # 先頭行を取得
     first_line = content.split("\n")[0].strip()
-    # Limit length
+    # 長さ制限
     if len(first_line) > 60:
         first_line = first_line[:57] + "..."
     return first_line if first_line else None

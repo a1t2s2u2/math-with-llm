@@ -26,28 +26,28 @@ class _PositionTracker:
 
 
 def render_latex_to_html(source: str) -> RenderResult:
-    """Convert LaTeX source to HTML.
+    """LaTeXソースをHTMLに変換する。
 
-    Uses latex2mathml for math expressions and custom regex for structure.
-    Adds data-line attributes for scroll synchronization.
+    数式にはlatex2mathml、構造にはカスタム正規表現を使用。
+    スクロール同期用にdata-line属性を付与する。
     """
     errors: list[str] = []
     html = source
     tracker = _PositionTracker(source)
 
-    # Step 1: Extract and expand custom commands BEFORE math conversion
+    # Step 1: 数式変換前にカスタムコマンドを展開
     custom_commands = _extract_custom_commands(html)
     for cmd_name, cmd_def in custom_commands.items():
         escaped_def = cmd_def.replace("\\", r"\\")
         html = re.sub(rf"\\{re.escape(cmd_name)}\b", escaped_def, html)
 
-    # Step 2: Convert display math \[...\] with line numbers
+    # Step 2: ディスプレイ数式 \[...\] を行番号付きで変換
     html = _convert_display_math(html, errors, tracker)
 
-    # Step 3: Convert inline math $...$
+    # Step 3: インライン数式 $...$ を変換
     html = _convert_inline_math(html, errors)
 
-    # Step 4: Convert LaTeX structure to HTML with line numbers
+    # Step 4: LaTeX構造をHTMLに変換（行番号付き）
     html = _convert_structure(html, tracker)
 
     return RenderResult(html=html, errors=errors)
@@ -56,7 +56,7 @@ def render_latex_to_html(source: str) -> RenderResult:
 def _convert_display_math(
     html: str, errors: list[str], tracker: _PositionTracker
 ) -> str:
-    r"""Convert display math \[...\] to MathML with line numbers."""
+    r"""ディスプレイ数式 \[...\] を行番号付きMathMLに変換する。"""
 
     def replace_match(match: re.Match[str]) -> str:
         latex_math = match.group(1)
@@ -73,7 +73,7 @@ def _convert_display_math(
 
 
 def _convert_inline_math(html: str, errors: list[str]) -> str:
-    """Convert inline math $...$ to MathML."""
+    """インライン数式 $...$ をMathMLに変換する。"""
 
     def replace_match(match: re.Match[str]) -> str:
         latex_math = match.group(1)
@@ -88,7 +88,7 @@ def _convert_inline_math(html: str, errors: list[str]) -> str:
 
 
 def _extract_custom_commands(text: str) -> dict[str, str]:
-    """Extract custom commands from preamble."""
+    """プリアンブルからカスタムコマンドを抽出する。"""
     commands: dict[str, str] = {}
     regex = re.compile(r"\\newcommand\{\\([^}]+)\}\{")
 
@@ -96,7 +96,7 @@ def _extract_custom_commands(text: str) -> dict[str, str]:
         cmd_name = match.group(1)
         start_pos = match.end()
 
-        # Count braces to find the end
+        # 波括弧を数えて終端を探す
         brace_count = 1
         end_pos = start_pos
         while brace_count > 0 and end_pos < len(text):
@@ -113,15 +113,15 @@ def _extract_custom_commands(text: str) -> dict[str, str]:
 
 
 def _convert_structure(html: str, tracker: _PositionTracker) -> str:
-    """Convert LaTeX structure (sections, environments, lists) to HTML.
+    """LaTeX構造（セクション・環境・リスト）をHTMLに変換する。
 
-    Adds data-line attributes for scroll synchronization.
+    スクロール同期用にdata-line属性を付与する。
     """
-    # Extract and remove preamble
+    # プリアンブルを除去
     html = re.sub(r"^[\s\S]*?\\begin\{document\}", "", html)
     html = re.sub(r"\\end\{document\}[\s\S]*$", "", html)
 
-    # Title/author/date
+    # タイトル・著者・日付
     title_match = re.search(r"\\title\{([^}]*)\}", html)
     author_match = re.search(r"\\author\{([^}]*)\}", html)
     date_match = re.search(r"\\date\{([^}]*)\}", html)
@@ -138,12 +138,12 @@ def _convert_structure(html: str, tracker: _PositionTracker) -> str:
         title_block += "</div>"
         html = html.replace(r"\maketitle", title_block)
 
-    # Remove metadata commands
+    # メタデータコマンドを除去
     html = re.sub(r"\\title\{[^}]*\}", "", html)
     html = re.sub(r"\\author\{[^}]*\}", "", html)
     html = re.sub(r"\\date\{[^}]*\}", "", html)
 
-    # Sections with line numbers
+    # セクション（行番号付き）
     def section_replace(
         match: re.Match[str], tag: str, css_class: str, section_type: str
     ) -> str:
@@ -168,7 +168,7 @@ def _convert_structure(html: str, tracker: _PositionTracker) -> str:
         html,
     )
 
-    # Theorem environments with line numbers
+    # 定理環境（行番号付き）
     env_types = [
         "theorem",
         "definition",
@@ -205,7 +205,7 @@ def _convert_structure(html: str, tracker: _PositionTracker) -> str:
 
         html = re.sub(pattern, env_replace, html)
 
-    # Lists
+    # リスト
     html = re.sub(
         r"\\begin\{enumerate\}([\s\S]*?)\\end\{enumerate\}",
         lambda m: '<ol class="latex-list">'
@@ -230,7 +230,7 @@ def _convert_structure(html: str, tracker: _PositionTracker) -> str:
         html,
     )
 
-    # Paragraphs
+    # 段落
     html = re.sub(r"\n\n+", "</p><p>", html)
     html = f"<p>{html}</p>"
 

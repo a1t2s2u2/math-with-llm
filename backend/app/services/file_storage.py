@@ -17,7 +17,7 @@ def _get_workspace_root() -> Path:
 
 
 def set_workspace_root(path: str) -> list[FileNode]:
-    """Set workspace root and return file tree."""
+    """ワークスペースルートを設定しファイルツリーを返す。"""
     resolved = Path(path).resolve()
     if not resolved.is_dir():
         raise NotADirectoryError(f"Not a directory: {path}")
@@ -26,12 +26,12 @@ def set_workspace_root(path: str) -> list[FileNode]:
 
 
 def get_workspace_path() -> str:
-    """Return the absolute path of the current workspace root."""
+    """現在のワークスペースルートの絶対パスを返す。"""
     return str(_get_workspace_root().resolve())
 
 
 def pick_directory() -> str:
-    """Open native folder selection dialog and return selected path."""
+    """ネイティブフォルダ選択ダイアログを開き選択パスを返す。"""
     result = subprocess.run(
         ["osascript", "-e", 'POSIX path of (choose folder with prompt "Open Folder")'],
         capture_output=True,
@@ -41,7 +41,7 @@ def pick_directory() -> str:
 
 
 def browse_directory(path: str | None) -> dict:
-    """List subdirectories in the given path for folder browsing."""
+    """指定パス内のサブディレクトリを一覧する。"""
     target = Path(path).resolve() if path else Path.home()
     if not target.is_dir():
         raise NotADirectoryError(f"Not a directory: {path}")
@@ -55,7 +55,7 @@ def browse_directory(path: str | None) -> dict:
 
 
 def _validate_path(path: str) -> Path:
-    """Validate and resolve path within workspace root."""
+    """ワークスペースルート内のパスを検証・解決する。"""
     root = _get_workspace_root()
     full_path = (root / path).resolve()
     if not str(full_path).startswith(str(root.resolve())):
@@ -64,7 +64,7 @@ def _validate_path(path: str) -> Path:
 
 
 def get_tree() -> list[FileNode]:
-    """Get directory tree of workspace."""
+    """ワークスペースのディレクトリツリーを取得する。"""
     root = _get_workspace_root()
     return _build_tree(root, root)
 
@@ -101,7 +101,7 @@ def _build_tree(path: Path, root: Path) -> list[FileNode]:
 
 
 def read_file(path: str) -> FileContent:
-    """Read file and return parsed content."""
+    """ファイルを読み込みパース結果を返す。"""
     full_path = _validate_path(path)
     if not full_path.exists():
         raise FileNotFoundError(f"File not found: {path}")
@@ -123,7 +123,7 @@ def read_file(path: str) -> FileContent:
 
 
 def write_file(path: str, content: str) -> FileContent:
-    """Write content to file and return parsed result."""
+    """ファイルに書き込みパース結果を返す。"""
     full_path = _validate_path(path)
     if not full_path.parent.exists():
         raise FileNotFoundError(f"Parent directory not found: {path}")
@@ -133,7 +133,7 @@ def write_file(path: str, content: str) -> FileContent:
 
 
 def create_file(path: str, content: str = "") -> FileContent:
-    """Create new file."""
+    """新規ファイルを作成する。"""
     full_path = _validate_path(path)
     if full_path.exists():
         raise FileExistsError(f"File already exists: {path}")
@@ -145,7 +145,7 @@ def create_file(path: str, content: str = "") -> FileContent:
 
 
 def delete_file(path: str) -> None:
-    """Delete file."""
+    """ファイルを削除する。"""
     full_path = _validate_path(path)
     if not full_path.exists():
         raise FileNotFoundError(f"File not found: {path}")
@@ -156,7 +156,7 @@ def delete_file(path: str) -> None:
 
 
 def rename_file(old_path: str, new_path: str) -> FileContent:
-    """Rename or move file."""
+    """ファイルをリネームまたは移動する。"""
     old_full = _validate_path(old_path)
     new_full = _validate_path(new_path)
 
@@ -172,7 +172,7 @@ def rename_file(old_path: str, new_path: str) -> FileContent:
 
 
 def create_folder(path: str) -> FileNode:
-    """Create new folder."""
+    """新規フォルダを作成する。"""
     full_path = _validate_path(path)
     if full_path.exists():
         raise FileExistsError(f"Path already exists: {path}")
@@ -187,7 +187,7 @@ def create_folder(path: str) -> FileNode:
 
 
 def delete_folder(path: str) -> None:
-    """Delete empty folder."""
+    """空フォルダを削除する。"""
     full_path = _validate_path(path)
     if not full_path.exists():
         raise FileNotFoundError(f"Folder not found: {path}")

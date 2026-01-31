@@ -11,7 +11,7 @@ router = APIRouter(prefix="/assist", tags=["assist"])
 
 
 def _find_block(file_path: str, block_id: str) -> tuple[Block, str]:
-    """Find a block by ID and return it with context string. Raises 404 if not found."""
+    """IDでブロックを検索し、コンテキスト文字列とともに返す。未検出時は404。"""
     file_content = file_storage.read_file(file_path)
     block = next((b for b in file_content.blocks if b.id == block_id), None)
     if block is None:

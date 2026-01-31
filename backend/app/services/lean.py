@@ -1,8 +1,10 @@
 import re
 import subprocess
+import tempfile
 import time
 from pathlib import Path
 
+from app.config import settings
 from app.models.lean import Diagnostic, LeanCheckResult
 
 TEMPLATE_PATH = Path(__file__).parent.parent.parent.parent / "lean" / "template.lean"
@@ -16,7 +18,7 @@ def check_lean(code: str, imports: list[str]) -> LeanCheckResult:
     imports_str = "\n".join(imports)
     full_code = template.replace("{IMPORTS}", imports_str).replace("{CODE}", code)
 
-    temp_file = Path(f"/tmp/lean_check_{int(time.time() * 1000)}.lean")
+    temp_file = Path(tempfile.NamedTemporaryFile(suffix=".lean", delete=False).name)
     temp_file.write_text(full_code)
 
     try:
@@ -24,7 +26,7 @@ def check_lean(code: str, imports: list[str]) -> LeanCheckResult:
             ["lean", str(temp_file)],
             capture_output=True,
             text=True,
-            timeout=10,
+            timeout=settings.lean_timeout,
         )
 
         duration_ms = int((time.time() - start_time) * 1000)
@@ -48,7 +50,7 @@ def check_lean(code: str, imports: list[str]) -> LeanCheckResult:
         return LeanCheckResult(
             status="timeout",
             diagnostics=[],
-            logs="Execution timed out after 10 seconds",
+            logs=f"Execution timed out after {settings.lean_timeout} seconds",
             duration_ms=duration_ms,
         )
     finally:

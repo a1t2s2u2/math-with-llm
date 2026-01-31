@@ -30,7 +30,7 @@
                   @rename="handleRename"
                   @delete="handleDelete"
                   @change-workspace="handleChangeWorkspace"
-                  @move="handleMove"
+                  @move="handleRename"
                 />
               </template>
 
@@ -236,14 +236,6 @@ const handleCreateFolder = async (path: string) => {
 }
 
 const handleRename = async (oldPath: string, newPath: string) => {
-  await renameFile(oldPath, newPath)
-  await loadTree()
-  if (currentPath.value === oldPath) {
-    await handleFileSelect(newPath)
-  }
-}
-
-const handleMove = async (oldPath: string, newPath: string) => {
   await renameFile(oldPath, newPath)
   await loadTree()
   if (currentPath.value === oldPath) {

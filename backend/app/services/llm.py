@@ -1,4 +1,5 @@
 import json
+from typing import Literal
 
 from openai import OpenAI
 
@@ -98,7 +99,11 @@ Output as JSON:
     return LeanGeneration(**result)
 
 
-def chat(message: str, context_type: str | None, context_content: str | None) -> str:
+def chat(
+    message: str,
+    context_type: Literal["block", "selection"] | None,
+    context_content: str | None,
+) -> str:
     context_text = ""
     if context_type and context_content:
         if context_type == "block":

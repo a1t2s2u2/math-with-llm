@@ -3,10 +3,20 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from app.models.block import Block
 from app.models.llm import LeanGeneration, PatchResult, SkeletonResponse
 from app.services import file_storage, llm
 
 router = APIRouter(prefix="/assist", tags=["assist"])
+
+
+def _find_block(file_path: str, block_id: str) -> tuple[Block, str]:
+    """Find a block by ID and return it with context string. Raises 404 if not found."""
+    file_content = file_storage.read_file(file_path)
+    block = next((b for b in file_content.blocks if b.id == block_id), None)
+    if block is None:
+        raise HTTPException(status_code=404, detail="Block not found")
+    return block, f"File: {file_content.name}"
 
 
 class SkeletonRequest(BaseModel):
@@ -21,7 +31,7 @@ class LeanGenerateRequest(BaseModel):
 
 class LeanFixRequest(BaseModel):
     lean_code: str
-    diagnostics: list[dict]
+    diagnostics: list[dict[str, str | int]]
 
 
 class ChatRequest(BaseModel):
@@ -32,27 +42,13 @@ class ChatRequest(BaseModel):
 
 @router.post("/skeleton", response_model=SkeletonResponse)
 def generate_skeleton_endpoint(request: SkeletonRequest) -> SkeletonResponse:
-    file_content = file_storage.read_file(request.file_path)
-
-    block = next((b for b in file_content.blocks if b.id == request.block_id), None)
-    if block is None:
-        raise HTTPException(status_code=404, detail="Block not found")
-
-    context = f"File: {file_content.name}"
-
+    block, context = _find_block(request.file_path, request.block_id)
     return llm.generate_skeleton(block, context)
 
 
 @router.post("/lean/generate", response_model=LeanGeneration)
 def generate_lean_endpoint(request: LeanGenerateRequest) -> LeanGeneration:
-    file_content = file_storage.read_file(request.file_path)
-
-    block = next((b for b in file_content.blocks if b.id == request.block_id), None)
-    if block is None:
-        raise HTTPException(status_code=404, detail="Block not found")
-
-    context = f"File: {file_content.name}"
-
+    block, context = _find_block(request.file_path, request.block_id)
     return llm.generate_lean(block, context)
 
 

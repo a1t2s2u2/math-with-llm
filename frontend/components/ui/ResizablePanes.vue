@@ -1,5 +1,9 @@
 <template>
-  <div class="resizable-panes" :class="{ horizontal, vertical: !horizontal }">
+  <div
+    ref="containerRef"
+    class="resizable-panes"
+    :class="{ horizontal, vertical: !horizontal, dragging: resizing }"
+  >
     <div
       v-for="(pane, index) in panes"
       :key="index"
@@ -31,6 +35,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 
+const COLLAPSE_THRESHOLD = 3
+const MIN_SIZE = 10
+
 const props = defineProps<{
   horizontal?: boolean
   initialSizes?: number[]
@@ -43,14 +50,15 @@ const panes = computed(() => {
   return Array(count).fill(0)
 })
 
+const containerRef = ref<HTMLElement | null>(null)
 const sizes = ref<number[]>(props.initialSizes || [50, 50])
 const collapsed = ref<Set<number>>(new Set())
 const preCollapseSize = ref<Map<number, number>>(new Map())
 
 const resizing = ref(false)
 const resizingIndex = ref(-1)
-const startPos = ref(0)
-const startSizes = ref<number[]>([])
+const pairTotal = ref(0)
+const pairOffset = ref(0)
 
 const isCollapsible = (index: number) => {
   return props.collapsible && (props.collapsiblePanes?.includes(index) ?? false)
@@ -67,12 +75,12 @@ const collapseIndicatorDirection = (index: number) => {
 }
 
 const getPaneStyle = (index: number) => {
-  const size = sizes.value[index]
   if (collapsed.value.has(index)) {
     return props.horizontal
       ? { width: '0%', height: '100%', overflow: 'hidden' }
       : { width: '100%', height: '0%', overflow: 'hidden' }
   }
+  const size = sizes.value[index]
   if (props.horizontal) {
     return { width: `${size}%`, height: '100%' }
   }
@@ -99,51 +107,41 @@ const getDividerStyle = (index: number) => {
   }
 }
 
-const collapsePane = (index: number, newSizes: number[]) => {
-  const adjacentIndex = index === 0 ? 1 : index - 1
-  preCollapseSize.value.set(index, newSizes[index])
-  newSizes[adjacentIndex] += newSizes[index]
-  newSizes[index] = 0
-  collapsed.value.add(index)
-}
-
-const expandPane = (index: number, newSizes: number[]) => {
-  const restoreSize = preCollapseSize.value.get(index) || (props.initialSizes?.[index] ?? 20)
-  const adjacentIndex = index === 0 ? 1 : index - 1
-  newSizes[adjacentIndex] -= restoreSize
-  if (newSizes[adjacentIndex] < 10) {
-    newSizes[adjacentIndex] = 10
-  }
-  newSizes[index] = restoreSize
-  collapsed.value.delete(index)
-  preCollapseSize.value.delete(index)
-}
-
 const toggleCollapse = (dividerIndex: number) => {
-  const leftIndex = dividerIndex
-  const rightIndex = dividerIndex + 1
+  const left = dividerIndex
+  const right = dividerIndex + 1
 
-  // Check if a neighboring pane is collapsed and restore it
-  if (collapsed.value.has(leftIndex) && isCollapsible(leftIndex)) {
-    const newSizes = [...sizes.value]
-    expandPane(leftIndex, newSizes)
-    sizes.value = newSizes
-    return
-  }
-  if (collapsed.value.has(rightIndex) && isCollapsible(rightIndex)) {
-    const newSizes = [...sizes.value]
-    expandPane(rightIndex, newSizes)
-    sizes.value = newSizes
-    return
-  }
+  const target =
+    collapsed.value.has(left) && isCollapsible(left)
+      ? left
+      : collapsed.value.has(right) && isCollapsible(right)
+        ? right
+        : -1
+
+  if (target === -1) return
+
+  const restoreSize = preCollapseSize.value.get(target) || (props.initialSizes?.[target] ?? 20)
+  const neighbor = target === 0 ? 1 : target - 1
+  const newSizes = [...sizes.value]
+
+  newSizes[target] = restoreSize
+  newSizes[neighbor] -= restoreSize
+  if (newSizes[neighbor] < MIN_SIZE) newSizes[neighbor] = MIN_SIZE
+
+  collapsed.value.delete(target)
+  preCollapseSize.value.delete(target)
+  sizes.value = newSizes
 }
 
 const startResize = (index: number, event: MouseEvent) => {
   event.preventDefault()
   resizing.value = true
   resizingIndex.value = index
-  startPos.value = props.horizontal ? event.clientX : event.clientY
-  startSizes.value = [...sizes.value]
+
+  const left = index
+  const right = index + 1
+  pairTotal.value = sizes.value[left] + sizes.value[right]
+  pairOffset.value = sizes.value.slice(0, left).reduce((a, b) => a + b, 0)
 
   document.addEventListener('mousemove', onResize)
   document.addEventListener('mouseup', stopResize)
@@ -152,82 +150,73 @@ const startResize = (index: number, event: MouseEvent) => {
 }
 
 const onResize = (event: MouseEvent) => {
-  if (!resizing.value) return
+  if (!resizing.value || !containerRef.value) return
 
-  const containers = document.querySelectorAll('.resizable-panes')
-  let container: HTMLElement | null = null
+  const rect = containerRef.value.getBoundingClientRect()
+  const containerSize = props.horizontal ? rect.width : rect.height
+  const containerStart = props.horizontal ? rect.left : rect.top
+  const mousePos = props.horizontal ? event.clientX : event.clientY
+  const mousePercent = ((mousePos - containerStart) / containerSize) * 100
 
-  for (const elem of containers) {
-    if (elem.contains(event.target as Node)) {
-      container = elem as HTMLElement
-      break
+  const left = resizingIndex.value
+  const right = left + 1
+  const total = pairTotal.value
+  const desiredLeft = mousePercent - pairOffset.value
+
+  let finalLeft: number
+  let finalRight: number
+
+  // --- Left pane ---
+  if (isCollapsible(left)) {
+    if (collapsed.value.has(left)) {
+      if (desiredLeft > COLLAPSE_THRESHOLD) {
+        collapsed.value.delete(left)
+        finalLeft = Math.max(desiredLeft, MIN_SIZE)
+      } else {
+        finalLeft = 0
+      }
+    } else if (desiredLeft <= COLLAPSE_THRESHOLD) {
+      preCollapseSize.value.set(left, sizes.value[left])
+      collapsed.value.add(left)
+      finalLeft = 0
+    } else {
+      finalLeft = Math.max(desiredLeft, MIN_SIZE)
     }
+  } else {
+    finalLeft = Math.max(desiredLeft, MIN_SIZE)
   }
 
-  if (!container) return
+  finalRight = total - finalLeft
 
-  const containerRect = container.getBoundingClientRect()
-  const containerSize = props.horizontal ? containerRect.width : containerRect.height
-  const currentPos = props.horizontal ? event.clientX : event.clientY
-  const delta = currentPos - startPos.value
-  const deltaPercent = (delta / containerSize) * 100
-
-  const newSizes = [...startSizes.value]
-  const leftIndex = resizingIndex.value
-  const rightIndex = leftIndex + 1
-
-  // If a collapsed pane is being dragged open
-  if (collapsed.value.has(leftIndex) && isCollapsible(leftIndex) && deltaPercent > 5) {
-    expandPane(leftIndex, newSizes)
-    sizes.value = newSizes
-    // Reset start state for continued drag
-    startSizes.value = [...sizes.value]
-    startPos.value = currentPos
-    return
-  }
-  if (collapsed.value.has(rightIndex) && isCollapsible(rightIndex) && deltaPercent < -5) {
-    expandPane(rightIndex, newSizes)
-    sizes.value = newSizes
-    startSizes.value = [...sizes.value]
-    startPos.value = currentPos
-    return
+  // --- Right pane ---
+  if (isCollapsible(right)) {
+    if (collapsed.value.has(right)) {
+      if (finalRight > COLLAPSE_THRESHOLD) {
+        collapsed.value.delete(right)
+        finalRight = Math.max(finalRight, MIN_SIZE)
+        finalLeft = total - finalRight
+      } else {
+        finalRight = 0
+        finalLeft = total
+      }
+    } else if (finalRight <= COLLAPSE_THRESHOLD) {
+      preCollapseSize.value.set(right, sizes.value[right])
+      collapsed.value.add(right)
+      finalRight = 0
+      finalLeft = total
+    } else if (finalRight < MIN_SIZE) {
+      finalRight = MIN_SIZE
+      finalLeft = total - MIN_SIZE
+    }
+  } else if (finalRight < MIN_SIZE) {
+    finalRight = MIN_SIZE
+    finalLeft = total - MIN_SIZE
   }
 
-  // Don't allow normal resize to affect collapsed panes
-  if (collapsed.value.has(leftIndex) || collapsed.value.has(rightIndex)) return
-
-  const newLeftSize = startSizes.value[leftIndex] + deltaPercent
-  const newRightSize = startSizes.value[rightIndex] - deltaPercent
-
-  // Collapsible panes: snap to 0 at threshold
-  if (isCollapsible(leftIndex) && newLeftSize <= 5 && newLeftSize < startSizes.value[leftIndex]) {
-    collapsePane(leftIndex, newSizes)
-    sizes.value = newSizes
-    startSizes.value = [...sizes.value]
-    startPos.value = currentPos
-    return
-  }
-  if (
-    isCollapsible(rightIndex) &&
-    newRightSize <= 5 &&
-    newRightSize < startSizes.value[rightIndex]
-  ) {
-    collapsePane(rightIndex, newSizes)
-    sizes.value = newSizes
-    startSizes.value = [...sizes.value]
-    startPos.value = currentPos
-    return
-  }
-
-  // Normal resize with minimum constraint
-  const leftMin = collapsed.value.has(leftIndex) ? 0 : 10
-  const rightMin = collapsed.value.has(rightIndex) ? 0 : 10
-
-  if (newLeftSize >= leftMin && newRightSize >= rightMin) {
-    newSizes[leftIndex] = newLeftSize
-    newSizes[rightIndex] = newRightSize
-    sizes.value = newSizes
-  }
+  const newSizes = [...sizes.value]
+  newSizes[left] = finalLeft
+  newSizes[right] = finalRight
+  sizes.value = newSizes
 }
 
 const stopResize = () => {
@@ -267,9 +256,11 @@ const stopResize = () => {
     height 0.15s ease;
 }
 
+.dragging .pane {
+  transition: none;
+}
+
 .pane.collapsed {
-  width: 0 !important;
-  height: 0 !important;
   overflow: hidden;
 }
 

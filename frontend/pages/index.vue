@@ -15,7 +15,7 @@
     <div class="main-layout">
       <ResizablePanes
         :horizontal="true"
-        :initial-sizes="[15, 60, 25]"
+        :initial-sizes="[12, 68, 20]"
         :collapsible="true"
         :collapsible-panes="[0, 2]"
       >

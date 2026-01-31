@@ -10,9 +10,19 @@ class RenderResult:
     errors: list[str]
 
 
-def _get_line_number(source: str, pos: int) -> int:
-    """Get 1-based line number from character position."""
-    return source[:pos].count("\n") + 1
+class _PositionTracker:
+    def __init__(self, source: str) -> None:
+        self._source = source
+        self._used: dict[str, set[int]] = {}
+
+    def find_line(self, pattern: str, category: str = "_default") -> int:
+        if category not in self._used:
+            self._used[category] = set()
+        for m in re.finditer(pattern, self._source, re.DOTALL):
+            if m.start() not in self._used[category]:
+                self._used[category].add(m.start())
+                return self._source[: m.start()].count("\n") + 1
+        return 0
 
 
 def render_latex_to_html(source: str) -> RenderResult:
@@ -23,7 +33,7 @@ def render_latex_to_html(source: str) -> RenderResult:
     """
     errors: list[str] = []
     html = source
-    original_source = source
+    tracker = _PositionTracker(source)
 
     # Step 1: Extract and expand custom commands BEFORE math conversion
     custom_commands = _extract_custom_commands(html)
@@ -32,31 +42,26 @@ def render_latex_to_html(source: str) -> RenderResult:
         html = re.sub(rf"\\{re.escape(cmd_name)}\b", escaped_def, html)
 
     # Step 2: Convert display math \[...\] with line numbers
-    html = _convert_display_math(html, errors, original_source)
+    html = _convert_display_math(html, errors, tracker)
 
     # Step 3: Convert inline math $...$
     html = _convert_inline_math(html, errors)
 
     # Step 4: Convert LaTeX structure to HTML with line numbers
-    html = _convert_structure(html, original_source)
+    html = _convert_structure(html, tracker)
 
     return RenderResult(html=html, errors=errors)
 
 
-def _convert_display_math(html: str, errors: list[str], original_source: str) -> str:
+def _convert_display_math(
+    html: str, errors: list[str], tracker: _PositionTracker
+) -> str:
     r"""Convert display math \[...\] to MathML with line numbers."""
-    used_positions: set[int] = set()
 
     def replace_match(match: re.Match[str]) -> str:
         latex_math = match.group(1)
-        # Find position in original source
-        search_text = f"\\[{latex_math}\\]"
-        line_num = 0
-        for m in re.finditer(re.escape(search_text), original_source, re.DOTALL):
-            if m.start() not in used_positions:
-                line_num = _get_line_number(original_source, m.start())
-                used_positions.add(m.start())
-                break
+        search_text = re.escape(f"\\[{latex_math}\\]")
+        line_num = tracker.find_line(search_text, "display_math")
         try:
             mathml = converter.convert(latex_math)
             return f'<div class="display-math" data-line="{line_num}">{mathml}</div>'
@@ -107,7 +112,7 @@ def _extract_custom_commands(text: str) -> dict[str, str]:
     return commands
 
 
-def _convert_structure(html: str, original_source: str) -> str:
+def _convert_structure(html: str, tracker: _PositionTracker) -> str:
     """Convert LaTeX structure (sections, environments, lists) to HTML.
 
     Adds data-line attributes for scroll synchronization.
@@ -122,13 +127,7 @@ def _convert_structure(html: str, original_source: str) -> str:
     date_match = re.search(r"\\date\{([^}]*)\}", html)
 
     if title_match and r"\maketitle" in html:
-        # Find line number of \maketitle in original
-        maketitle_match = re.search(r"\\maketitle", original_source)
-        line_num = (
-            _get_line_number(original_source, maketitle_match.start())
-            if maketitle_match
-            else 0
-        )
+        line_num = tracker.find_line(r"\\maketitle", "maketitle")
         title_block = f'<div class="latex-title-block" data-line="{line_num}">'
         if title_match:
             title_block += f'<h1 class="latex-title">{title_match.group(1)}</h1>'
@@ -145,23 +144,12 @@ def _convert_structure(html: str, original_source: str) -> str:
     html = re.sub(r"\\date\{[^}]*\}", "", html)
 
     # Sections with line numbers
-    used_positions: dict[str, set[int]] = {
-        "section": set(),
-        "subsection": set(),
-        "subsubsection": set(),
-    }
-
     def section_replace(
         match: re.Match[str], tag: str, css_class: str, section_type: str
     ) -> str:
         content = match.group(1)
         pattern = rf"\\{section_type}\{{{re.escape(content)}\}}"
-        line_num = 0
-        for m in re.finditer(pattern, original_source):
-            if m.start() not in used_positions[section_type]:
-                line_num = _get_line_number(original_source, m.start())
-                used_positions[section_type].add(m.start())
-                break
+        line_num = tracker.find_line(pattern, section_type)
         return f'<{tag} class="{css_class}" data-line="{line_num}">{content}</{tag}>'
 
     html = re.sub(
@@ -191,7 +179,6 @@ def _convert_structure(html: str, original_source: str) -> str:
         "remark",
         "example",
     ]
-    env_used_positions: dict[str, set[int]] = {env: set() for env in env_types}
 
     for env_type in env_types:
         pattern = (
@@ -201,17 +188,11 @@ def _convert_structure(html: str, original_source: str) -> str:
         def env_replace(match: re.Match[str], env: str = env_type) -> str:
             opt_title = match.group(1)
             content = match.group(2).strip()
-            # Find line number in original source
             if opt_title:
                 search_pattern = rf"\\begin\{{{env}\}}\[{re.escape(opt_title)}\]"
             else:
                 search_pattern = rf"\\begin\{{{env}\}}"
-            line_num = 0
-            for m in re.finditer(search_pattern, original_source):
-                if m.start() not in env_used_positions[env]:
-                    line_num = _get_line_number(original_source, m.start())
-                    env_used_positions[env].add(m.start())
-                    break
+            line_num = tracker.find_line(search_pattern, env)
             heading = f'<div class="env-heading">{env.capitalize()}'
             if opt_title:
                 heading += f" ({opt_title})"

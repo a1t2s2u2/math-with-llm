@@ -1,8 +1,11 @@
+const MAX_LCS_CELLS = 5_000_000
+const MIN_SIMILARITY = 0.3
+
 /** LCS のインデックスペア [oldIdx, newIdx][] を返す */
 export function buildLCSIndices(a: string[], b: string[]): [number, number][] {
   const m = a.length
   const n = b.length
-  if (m * n > 5_000_000) return []
+  if (m * n > MAX_LCS_CELLS) return []
 
   const dp: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0))
   for (let i = m - 1; i >= 0; i--) {
@@ -45,7 +48,7 @@ export function matchBySimilarity(oldGap: string[], newGap: string[]): Set<numbe
   const usedOld = new Set<number>()
   const usedNew = new Set<number>()
   for (const { oi, ni, sim } of pairs) {
-    if (sim < 0.3) break
+    if (sim < MIN_SIMILARITY) break
     if (usedOld.has(oi) || usedNew.has(ni)) continue
     usedOld.add(oi)
     usedNew.add(ni)

@@ -1,4 +1,11 @@
-import type { FileNode, FileContent, GitStatus, GitDiff, GitCommitResult } from '~/types/api'
+import type {
+  FileNode,
+  FileContent,
+  GitStatus,
+  GitDiff,
+  GitCommitResult,
+  SkeletonCard
+} from '~/types/api'
 
 const API_BASE = '/api'
 
@@ -139,5 +146,17 @@ export function gitCommit(message: string): Promise<GitCommitResult> {
   return request('/git/commit', {
     method: 'POST',
     body: JSON.stringify({ message })
+  })
+}
+
+// Skeleton API
+
+export function generateSkeleton(
+  filePath: string,
+  blockId: string
+): Promise<{ cards: SkeletonCard[] }> {
+  return request('/assist/skeleton', {
+    method: 'POST',
+    body: JSON.stringify({ file_path: filePath, block_id: blockId })
   })
 }

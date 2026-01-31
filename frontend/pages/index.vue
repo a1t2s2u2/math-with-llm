@@ -114,7 +114,11 @@
 
         <template #pane-2>
           <div class="ai-section">
-            <AIAssistantPanel ref="aiPanelRef" @send="handleAIChat" />
+            <AIAssistantPanel
+              ref="aiPanelRef"
+              @send="handleAIChat"
+              @generate-skeleton="handleGenerateSkeleton"
+            />
           </div>
         </template>
       </ResizablePanes>
@@ -136,7 +140,8 @@ import {
   deleteFolder,
   chatApi,
   getGitOriginal,
-  getGitStatus
+  getGitStatus,
+  generateSkeleton
 } from '~/utils/api'
 import type { FileNode, Block, AIContext } from '~/types/api'
 import { BLOCK_TYPE_LABELS } from '~/utils/constants'
@@ -291,13 +296,31 @@ const handleSelectBlock = (block: Block) => {
   aiPanelRef.value.setContext({
     type: 'block',
     label,
-    content: block.latex_fragment
+    content: block.latex_fragment,
+    blockType: block.type,
+    blockId: block.id
   })
 }
 
 const handleDeselectBlock = () => {
   if (!aiPanelRef.value) return
   aiPanelRef.value.clearContext()
+}
+
+const handleGenerateSkeleton = async () => {
+  if (!aiPanelRef.value || !currentPath.value) return
+  const ctx = aiPanelRef.value.getContext()
+  if (!ctx?.blockId) return
+  aiPanelRef.value.setSkeletonLoading(true)
+  try {
+    const result = await generateSkeleton(currentPath.value, ctx.blockId)
+    aiPanelRef.value.setSkeleton(result.cards)
+  } catch (e) {
+    console.error('Failed to generate skeleton:', e)
+    aiPanelRef.value.addAssistantMessage('スケルトン生成に失敗しました。もう一度お試しください。')
+  } finally {
+    aiPanelRef.value.setSkeletonLoading(false)
+  }
 }
 
 const handleAIChat = async (message: string, context: AIContext | null) => {

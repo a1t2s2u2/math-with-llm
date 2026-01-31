@@ -19,3 +19,11 @@ export const BLOCK_TYPE_SHORT: Record<string, string> = {
   remark: 'Rem',
   example: 'Ex'
 }
+
+export const PROVABLE_BLOCK_TYPES = new Set([
+  'definition',
+  'lemma',
+  'theorem',
+  'proposition',
+  'corollary'
+])

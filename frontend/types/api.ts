@@ -54,4 +54,13 @@ export interface AIContext {
   type: 'block' | 'selection'
   label: string
   content: string
+  blockType?: string
+  blockId?: string
+}
+
+export interface SkeletonCard {
+  strategy: string
+  description: string
+  required_lemmas: string[]
+  assumptions_to_check: string[]
 }

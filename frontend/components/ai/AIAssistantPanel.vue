@@ -6,33 +6,71 @@
     </div>
 
     <div class="messages-container" ref="messagesRef">
-      <div v-if="messages.length === 0 && !context" class="empty-state">
-        <p>Outlineでブロックをクリック、またはエディタでテキストを選択してください</p>
-      </div>
+      <template v-if="skeleton">
+        <div v-for="(card, i) in skeleton" :key="i" class="skeleton-card">
+          <div class="skeleton-strategy">{{ card.strategy }}</div>
+          <div class="skeleton-description" v-html="renderMath(card.description)" />
+          <div v-if="card.required_lemmas.length > 0" class="skeleton-section">
+            <div class="skeleton-section-title">必要な補題</div>
+            <ul>
+              <li v-for="(lemma, j) in card.required_lemmas" :key="j" v-html="renderMath(lemma)" />
+            </ul>
+          </div>
+          <div v-if="card.assumptions_to_check.length > 0" class="skeleton-section">
+            <div class="skeleton-section-title">確認事項</div>
+            <ul>
+              <li
+                v-for="(item, j) in card.assumptions_to_check"
+                :key="j"
+                v-html="renderMath(item)"
+              />
+            </ul>
+          </div>
+        </div>
+      </template>
 
-      <div v-for="(msg, i) in messages" :key="i" class="message" :class="msg.role">
-        <div class="message-content" v-html="renderMath(msg.content)" />
-        <button class="copy-button" @click="copyMessage(msg.content)" title="コピー">
-          <svg v-if="copiedIndex === i" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-          </svg>
-          <svg v-else viewBox="0 0 24 24" fill="currentColor">
-            <path
-              d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
-            />
-          </svg>
-        </button>
-      </div>
+      <template v-else>
+        <div v-if="messages.length === 0 && !context" class="empty-state">
+          <p>Outlineでブロックをクリック、またはエディタでテキストを選択してください</p>
+        </div>
 
-      <div v-if="loading" class="message assistant loading-message">
+        <div v-for="(msg, i) in messages" :key="i" class="message" :class="msg.role">
+          <div class="message-content" v-html="renderMath(msg.content)" />
+          <button class="copy-button" @click="copyMessage(msg.content)" title="コピー">
+            <svg v-if="copiedIndex === i" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+            </svg>
+            <svg v-else viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div v-if="loading" class="message assistant loading-message">
+          <span class="spinner" />
+          考え中...
+        </div>
+      </template>
+
+      <div v-if="skeletonLoading" class="message assistant loading-message">
         <span class="spinner" />
-        考え中...
+        スケルトン生成中...
       </div>
     </div>
 
     <div v-if="context" class="context-bar">
       <div class="context-label">コンテキスト:</div>
       <div class="context-content">{{ contextLabel }}</div>
+      <button
+        v-if="isProvableBlock"
+        class="skeleton-button"
+        :disabled="skeletonLoading"
+        @click="emit('generateSkeleton')"
+      >
+        Skeleton
+      </button>
       <button class="context-clear" @click="clearContext">×</button>
     </div>
 
@@ -51,7 +89,8 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
 import { useMathRender } from '~/composables/useMathRender'
-import type { AIContext } from '~/types/api'
+import type { AIContext, SkeletonCard } from '~/types/api'
+import { PROVABLE_BLOCK_TYPES } from '~/utils/constants'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -60,6 +99,7 @@ interface Message {
 
 const emit = defineEmits<{
   send: [message: string, context: AIContext | null]
+  generateSkeleton: []
 }>()
 
 const messages = ref<Message[]>([])
@@ -68,6 +108,8 @@ const loading = ref(false)
 const context = ref<AIContext | null>(null)
 const messagesRef = ref<HTMLElement | null>(null)
 const copiedIndex = ref<number | null>(null)
+const skeleton = ref<SkeletonCard[] | null>(null)
+const skeletonLoading = ref(false)
 
 const { renderMath } = useMathRender()
 
@@ -78,6 +120,13 @@ const contextLabel = computed(() => {
 })
 
 const canSend = computed(() => inputText.value.trim() && !loading.value)
+
+const isProvableBlock = computed(
+  () =>
+    context.value?.type === 'block' &&
+    context.value.blockType !== undefined &&
+    PROVABLE_BLOCK_TYPES.has(context.value.blockType)
+)
 
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.key === 'Enter') {
@@ -126,12 +175,27 @@ const setContext = (ctx: AIContext) => {
 
 const clearContext = () => {
   context.value = null
+  skeleton.value = null
+  skeletonLoading.value = false
 }
 
 const clearAll = () => {
   messages.value = []
   context.value = null
+  skeleton.value = null
+  skeletonLoading.value = false
 }
+
+const setSkeleton = (cards: SkeletonCard[]) => {
+  skeleton.value = cards
+  scrollToBottom()
+}
+
+const setSkeletonLoading = (value: boolean) => {
+  skeletonLoading.value = value
+}
+
+const getContext = () => context.value
 
 const scrollToBottom = () => {
   nextTick(() => {
@@ -155,7 +219,10 @@ defineExpose({
   setLoading,
   setContext,
   clearContext,
-  clearAll
+  clearAll,
+  setSkeleton,
+  setSkeletonLoading,
+  getContext
 })
 </script>
 
@@ -333,6 +400,26 @@ defineExpose({
   white-space: nowrap;
 }
 
+.skeleton-button {
+  padding: 2px 8px;
+  font-size: 11px;
+  background: var(--color-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.skeleton-button:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.skeleton-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .context-clear {
   padding: 2px 6px;
   background: none;
@@ -344,6 +431,50 @@ defineExpose({
 
 .context-clear:hover {
   color: #ffffff;
+}
+
+.skeleton-card {
+  margin-bottom: 12px;
+  padding: 12px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.skeleton-strategy {
+  font-weight: 600;
+  color: #4fc3f7;
+  margin-bottom: 6px;
+}
+
+.skeleton-description {
+  color: var(--color-text);
+  margin-bottom: 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.skeleton-section {
+  margin-top: 8px;
+}
+
+.skeleton-section-title {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+}
+
+.skeleton-section ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.skeleton-section li {
+  color: var(--color-text);
+  margin-bottom: 2px;
 }
 
 .input-area {

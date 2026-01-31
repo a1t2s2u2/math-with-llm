@@ -1,6 +1,9 @@
+import json
+from collections.abc import Generator
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from app.models.block import Block
@@ -65,3 +68,15 @@ class ChatResponse(BaseModel):
 def chat_endpoint(request: ChatRequest) -> ChatResponse:
     response = llm.chat(request.message, request.context_type, request.context_content)
     return ChatResponse(response=response)
+
+
+@router.post("/chat/stream")
+def chat_stream_endpoint(request: ChatRequest) -> StreamingResponse:
+    def generate() -> Generator[str, None, None]:
+        for chunk in llm.chat_stream(
+            request.message, request.context_type, request.context_content
+        ):
+            yield f"data: {json.dumps({'content': chunk})}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(generate(), media_type="text/event-stream")

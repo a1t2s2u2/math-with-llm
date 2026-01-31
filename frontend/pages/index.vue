@@ -143,7 +143,7 @@ import {
   renameFile,
   deleteFile,
   deleteFolder,
-  chatApi,
+  chatStreamApi,
   getGitOriginal,
   getGitStatus,
   generateSkeleton
@@ -330,15 +330,16 @@ const handleGenerateSkeleton = async () => {
 
 const handleAIChat = async (message: string, context: AIContext | null) => {
   if (!aiPanelRef.value) return
-  aiPanelRef.value.setLoading(true)
+  aiPanelRef.value.startAssistantStream()
   try {
-    const result = await chatApi(message, context?.type || null, context?.content || null)
-    aiPanelRef.value.addAssistantMessage(result.response)
+    await chatStreamApi(message, context?.type || null, context?.content || null, (chunk) => {
+      aiPanelRef.value?.appendToLastAssistant(chunk)
+    })
   } catch (e) {
     console.error('Failed to chat:', e)
     aiPanelRef.value.addAssistantMessage('エラーが発生しました。もう一度お試しください。')
   } finally {
-    aiPanelRef.value.setLoading(false)
+    aiPanelRef.value.finishAssistantStream()
   }
 }
 

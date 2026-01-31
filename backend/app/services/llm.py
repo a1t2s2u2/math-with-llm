@@ -1,4 +1,5 @@
 import json
+from collections.abc import Generator
 from typing import Literal
 
 from openai import OpenAI
@@ -117,6 +118,44 @@ def chat(
             context_text = f"\n\n選択されたテキスト:\n{context_content}"
 
     return _call_llm(
+        "あなたは数学の専門家です。"
+        "数式は必ずLaTeX形式で記述してください。"
+        "インライン数式は $...$ で囲み、"
+        "ディスプレイ数式は $$...$$ で囲んでください。"
+        "簡潔かつ正確に回答してください。",
+        f"{message}{context_text}",
+    )
+
+
+def _stream_llm(system: str, prompt: str) -> Generator[str, None, None]:
+    """ストリーミングLLM呼び出しヘルパー"""
+    stream = client.chat.completions.create(
+        model=settings.llm_model,
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": prompt},
+        ],
+        stream=True,
+    )
+    for chunk in stream:
+        delta = chunk.choices[0].delta.content
+        if delta:
+            yield delta
+
+
+def chat_stream(
+    message: str,
+    context_type: Literal["block", "selection"] | None,
+    context_content: str | None,
+) -> Generator[str, None, None]:
+    context_text = ""
+    if context_type and context_content:
+        if context_type == "block":
+            context_text = f"\n\n参照しているブロック:\n{context_content}"
+        elif context_type == "selection":
+            context_text = f"\n\n選択されたテキスト:\n{context_content}"
+
+    yield from _stream_llm(
         "あなたは数学の専門家です。"
         "数式は必ずLaTeX形式で記述してください。"
         "インライン数式は $...$ で囲み、"

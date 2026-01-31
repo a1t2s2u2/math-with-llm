@@ -20,7 +20,7 @@ const emit = defineEmits<{
 const wrapperRef = ref<HTMLElement | null>(null)
 const isScrollingProgrammatically = ref(false)
 
-// Find element with closest data-line attribute and scroll to it
+// 最も近いdata-line属性を持つ要素を探してスクロール
 const scrollToLine = (targetLine: number) => {
   if (!wrapperRef.value) return
 
@@ -46,14 +46,14 @@ const scrollToLine = (targetLine: number) => {
     const wrapper = wrapperRef.value
     const elementTop = (closestElement as HTMLElement).offsetTop
     wrapper.scrollTop = Math.max(0, elementTop - 16)
-    // Reset flag after scroll completes
+    // スクロール完了後にフラグをリセット
     setTimeout(() => {
       isScrollingProgrammatically.value = false
     }, 50)
   }
 }
 
-// Get line number from current scroll position
+// 現在のスクロール位置から行番号を取得
 const getLineFromScrollPosition = (): number => {
   if (!wrapperRef.value) return 1
 
@@ -79,7 +79,7 @@ const getLineFromScrollPosition = (): number => {
   return closestLine
 }
 
-// Handle scroll event from user
+// ユーザーのスクロールイベントを処理
 const onScroll = () => {
   if (isScrollingProgrammatically.value || !props.syncEnabled) return
   const line = getLineFromScrollPosition()
@@ -105,7 +105,7 @@ watch(
   }
 )
 
-// Re-apply scroll position when HTML changes
+// HTML変更時にスクロール位置を再適用
 watch(
   () => props.renderedHtml,
   async () => {
@@ -122,7 +122,7 @@ watch(
   height: 100%;
   overflow-y: auto;
   padding: 16px;
-  background: #1e1e1e;
+  background: var(--color-bg-main);
   min-height: 0;
 }
 
@@ -130,7 +130,7 @@ watch(
   line-height: 1.8;
   font-family: 'Times New Roman', serif;
   font-size: 16px;
-  color: #d4d4d4;
+  color: var(--color-text);
 }
 
 .preview-content p {
@@ -141,22 +141,22 @@ watch(
 .preview-content :deep(.latex-env) {
   margin: 16px 0;
   padding: 12px;
-  border-left: 3px solid #4ec9b0;
-  background: #2d2d2d;
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-bg-secondary);
   border-radius: 4px;
 }
 
 .preview-content :deep(.env-heading) {
   font-weight: bold;
   font-size: 14px;
-  color: #4ec9b0;
+  color: var(--color-accent);
   margin-bottom: 8px;
 }
 
 .preview-content :deep(.env-content) {
   font-size: 15px;
   line-height: 1.6;
-  color: #d4d4d4;
+  color: var(--color-text);
 }
 
 /* Proof environment */
@@ -174,7 +174,7 @@ watch(
 .preview-content :deep(.latex-list) {
   margin: 12px 0;
   padding-left: 24px;
-  color: #d4d4d4;
+  color: var(--color-text);
 }
 
 .preview-content :deep(.latex-list li) {
@@ -187,7 +187,7 @@ watch(
   font-size: 24px;
   font-weight: bold;
   margin: 24px 0 16px 0;
-  color: #4ec9b0;
+  color: var(--color-accent);
   border-bottom: 2px solid #3e3e3e;
   padding-bottom: 8px;
 }
@@ -196,14 +196,14 @@ watch(
   font-size: 20px;
   font-weight: bold;
   margin: 20px 0 12px 0;
-  color: #4ec9b0;
+  color: var(--color-accent);
 }
 
 .preview-content :deep(.latex-subsubsection) {
   font-size: 18px;
   font-weight: bold;
   margin: 16px 0 10px 0;
-  color: #4ec9b0;
+  color: var(--color-accent);
 }
 
 /* Document title block */
@@ -217,7 +217,7 @@ watch(
 .preview-content :deep(.latex-title) {
   font-size: 28px;
   font-weight: bold;
-  color: #4ec9b0;
+  color: var(--color-accent);
   margin-bottom: 16px;
   line-height: 1.3;
 }

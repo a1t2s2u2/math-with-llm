@@ -10,53 +10,58 @@ class RenderResult:
     errors: list[str]
 
 
-def _get_line_number(source: str, pos: int) -> int:
-    """Get 1-based line number from character position."""
-    return source[:pos].count("\n") + 1
+class _PositionTracker:
+    def __init__(self, source: str) -> None:
+        self._source = source
+        self._used: dict[str, set[int]] = {}
+
+    def find_line(self, pattern: str, category: str = "_default") -> int:
+        if category not in self._used:
+            self._used[category] = set()
+        for m in re.finditer(pattern, self._source, re.DOTALL):
+            if m.start() not in self._used[category]:
+                self._used[category].add(m.start())
+                return self._source[: m.start()].count("\n") + 1
+        return 0
 
 
 def render_latex_to_html(source: str) -> RenderResult:
-    """Convert LaTeX source to HTML.
+    """LaTeXソースをHTMLに変換する。
 
-    Uses latex2mathml for math expressions and custom regex for structure.
-    Adds data-line attributes for scroll synchronization.
+    数式にはlatex2mathml、構造にはカスタム正規表現を使用。
+    スクロール同期用にdata-line属性を付与する。
     """
     errors: list[str] = []
     html = source
-    original_source = source
+    tracker = _PositionTracker(source)
 
-    # Step 1: Extract and expand custom commands BEFORE math conversion
+    # Step 1: 数式変換前にカスタムコマンドを展開
     custom_commands = _extract_custom_commands(html)
     for cmd_name, cmd_def in custom_commands.items():
         escaped_def = cmd_def.replace("\\", r"\\")
         html = re.sub(rf"\\{re.escape(cmd_name)}\b", escaped_def, html)
 
-    # Step 2: Convert display math \[...\] with line numbers
-    html = _convert_display_math(html, errors, original_source)
+    # Step 2: ディスプレイ数式 \[...\] を行番号付きで変換
+    html = _convert_display_math(html, errors, tracker)
 
-    # Step 3: Convert inline math $...$
+    # Step 3: インライン数式 $...$ を変換
     html = _convert_inline_math(html, errors)
 
-    # Step 4: Convert LaTeX structure to HTML with line numbers
-    html = _convert_structure(html, original_source)
+    # Step 4: LaTeX構造をHTMLに変換（行番号付き）
+    html = _convert_structure(html, tracker)
 
     return RenderResult(html=html, errors=errors)
 
 
-def _convert_display_math(html: str, errors: list[str], original_source: str) -> str:
-    r"""Convert display math \[...\] to MathML with line numbers."""
-    used_positions: set[int] = set()
+def _convert_display_math(
+    html: str, errors: list[str], tracker: _PositionTracker
+) -> str:
+    r"""ディスプレイ数式 \[...\] を行番号付きMathMLに変換する。"""
 
     def replace_match(match: re.Match[str]) -> str:
         latex_math = match.group(1)
-        # Find position in original source
-        search_text = f"\\[{latex_math}\\]"
-        line_num = 0
-        for m in re.finditer(re.escape(search_text), original_source, re.DOTALL):
-            if m.start() not in used_positions:
-                line_num = _get_line_number(original_source, m.start())
-                used_positions.add(m.start())
-                break
+        search_text = re.escape(f"\\[{latex_math}\\]")
+        line_num = tracker.find_line(search_text, "display_math")
         try:
             mathml = converter.convert(latex_math)
             return f'<div class="display-math" data-line="{line_num}">{mathml}</div>'
@@ -68,7 +73,7 @@ def _convert_display_math(html: str, errors: list[str], original_source: str) ->
 
 
 def _convert_inline_math(html: str, errors: list[str]) -> str:
-    """Convert inline math $...$ to MathML."""
+    """インライン数式 $...$ をMathMLに変換する。"""
 
     def replace_match(match: re.Match[str]) -> str:
         latex_math = match.group(1)
@@ -83,7 +88,7 @@ def _convert_inline_math(html: str, errors: list[str]) -> str:
 
 
 def _extract_custom_commands(text: str) -> dict[str, str]:
-    """Extract custom commands from preamble."""
+    """プリアンブルからカスタムコマンドを抽出する。"""
     commands: dict[str, str] = {}
     regex = re.compile(r"\\newcommand\{\\([^}]+)\}\{")
 
@@ -91,7 +96,7 @@ def _extract_custom_commands(text: str) -> dict[str, str]:
         cmd_name = match.group(1)
         start_pos = match.end()
 
-        # Count braces to find the end
+        # 波括弧を数えて終端を探す
         brace_count = 1
         end_pos = start_pos
         while brace_count > 0 and end_pos < len(text):
@@ -107,28 +112,22 @@ def _extract_custom_commands(text: str) -> dict[str, str]:
     return commands
 
 
-def _convert_structure(html: str, original_source: str) -> str:
-    """Convert LaTeX structure (sections, environments, lists) to HTML.
+def _convert_structure(html: str, tracker: _PositionTracker) -> str:
+    """LaTeX構造（セクション・環境・リスト）をHTMLに変換する。
 
-    Adds data-line attributes for scroll synchronization.
+    スクロール同期用にdata-line属性を付与する。
     """
-    # Extract and remove preamble
+    # プリアンブルを除去
     html = re.sub(r"^[\s\S]*?\\begin\{document\}", "", html)
     html = re.sub(r"\\end\{document\}[\s\S]*$", "", html)
 
-    # Title/author/date
+    # タイトル・著者・日付
     title_match = re.search(r"\\title\{([^}]*)\}", html)
     author_match = re.search(r"\\author\{([^}]*)\}", html)
     date_match = re.search(r"\\date\{([^}]*)\}", html)
 
     if title_match and r"\maketitle" in html:
-        # Find line number of \maketitle in original
-        maketitle_match = re.search(r"\\maketitle", original_source)
-        line_num = (
-            _get_line_number(original_source, maketitle_match.start())
-            if maketitle_match
-            else 0
-        )
+        line_num = tracker.find_line(r"\\maketitle", "maketitle")
         title_block = f'<div class="latex-title-block" data-line="{line_num}">'
         if title_match:
             title_block += f'<h1 class="latex-title">{title_match.group(1)}</h1>'
@@ -139,29 +138,18 @@ def _convert_structure(html: str, original_source: str) -> str:
         title_block += "</div>"
         html = html.replace(r"\maketitle", title_block)
 
-    # Remove metadata commands
+    # メタデータコマンドを除去
     html = re.sub(r"\\title\{[^}]*\}", "", html)
     html = re.sub(r"\\author\{[^}]*\}", "", html)
     html = re.sub(r"\\date\{[^}]*\}", "", html)
 
-    # Sections with line numbers
-    used_positions: dict[str, set[int]] = {
-        "section": set(),
-        "subsection": set(),
-        "subsubsection": set(),
-    }
-
+    # セクション（行番号付き）
     def section_replace(
         match: re.Match[str], tag: str, css_class: str, section_type: str
     ) -> str:
         content = match.group(1)
         pattern = rf"\\{section_type}\{{{re.escape(content)}\}}"
-        line_num = 0
-        for m in re.finditer(pattern, original_source):
-            if m.start() not in used_positions[section_type]:
-                line_num = _get_line_number(original_source, m.start())
-                used_positions[section_type].add(m.start())
-                break
+        line_num = tracker.find_line(pattern, section_type)
         return f'<{tag} class="{css_class}" data-line="{line_num}">{content}</{tag}>'
 
     html = re.sub(
@@ -180,7 +168,7 @@ def _convert_structure(html: str, original_source: str) -> str:
         html,
     )
 
-    # Theorem environments with line numbers
+    # 定理環境（行番号付き）
     env_types = [
         "theorem",
         "definition",
@@ -191,7 +179,6 @@ def _convert_structure(html: str, original_source: str) -> str:
         "remark",
         "example",
     ]
-    env_used_positions: dict[str, set[int]] = {env: set() for env in env_types}
 
     for env_type in env_types:
         pattern = (
@@ -201,17 +188,11 @@ def _convert_structure(html: str, original_source: str) -> str:
         def env_replace(match: re.Match[str], env: str = env_type) -> str:
             opt_title = match.group(1)
             content = match.group(2).strip()
-            # Find line number in original source
             if opt_title:
                 search_pattern = rf"\\begin\{{{env}\}}\[{re.escape(opt_title)}\]"
             else:
                 search_pattern = rf"\\begin\{{{env}\}}"
-            line_num = 0
-            for m in re.finditer(search_pattern, original_source):
-                if m.start() not in env_used_positions[env]:
-                    line_num = _get_line_number(original_source, m.start())
-                    env_used_positions[env].add(m.start())
-                    break
+            line_num = tracker.find_line(search_pattern, env)
             heading = f'<div class="env-heading">{env.capitalize()}'
             if opt_title:
                 heading += f" ({opt_title})"
@@ -224,7 +205,7 @@ def _convert_structure(html: str, original_source: str) -> str:
 
         html = re.sub(pattern, env_replace, html)
 
-    # Lists
+    # リスト
     html = re.sub(
         r"\\begin\{enumerate\}([\s\S]*?)\\end\{enumerate\}",
         lambda m: '<ol class="latex-list">'
@@ -249,7 +230,7 @@ def _convert_structure(html: str, original_source: str) -> str:
         html,
     )
 
-    # Paragraphs
+    # 段落
     html = re.sub(r"\n\n+", "</p><p>", html)
     html = f"<p>{html}</p>"
 

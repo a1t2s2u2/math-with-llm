@@ -30,7 +30,7 @@
                   @rename="handleRename"
                   @delete="handleDelete"
                   @change-workspace="handleChangeWorkspace"
-                  @move="handleMove"
+                  @move="handleRename"
                 />
               </template>
 
@@ -138,7 +138,8 @@ import {
   getGitOriginal,
   getGitStatus
 } from '~/utils/api'
-import type { FileNode, Block } from '~/types/api'
+import type { FileNode, Block, AIContext } from '~/types/api'
+import { BLOCK_TYPE_LABELS } from '~/utils/constants'
 
 import LatexEditor from '~/components/editor/LatexEditor.vue'
 import PreviewPane from '~/components/editor/PreviewPane.vue'
@@ -149,12 +150,12 @@ import FileTree from '~/components/files/FileTree.vue'
 import GitPanel from '~/components/git/GitPanel.vue'
 import GitDiffView from '~/components/git/GitDiffView.vue'
 
-// File tree state
+// ファイルツリー状態
 const fileTree = ref<FileNode[]>([])
 const treeLoading = ref(false)
 const workspacePath = ref('')
 
-// Current file state
+// 現在のファイル状態
 const {
   file: currentFile,
   currentPath,
@@ -166,7 +167,7 @@ const {
   clear: clearFile
 } = useFile()
 
-// Editor state
+// エディタ状態
 const activeTab = ref('outline')
 const scrollSyncEnabled = ref(true)
 const editorScrollLine = ref(1)
@@ -183,17 +184,17 @@ const tabs = [
   { id: 'git', label: 'Git' }
 ]
 
-// Computed from currentFile
+// currentFileからの算出プロパティ
 const blocks = computed<Block[]>(() => currentFile.value?.blocks || [])
 
-// Load file tree
+// ファイルツリー読み込み
 const loadTree = async () => {
   treeLoading.value = true
   fileTree.value = await getFileTree()
   treeLoading.value = false
 }
 
-// Workspace change
+// ワークスペース変更
 const handleChangeWorkspace = async (path: string) => {
   try {
     treeLoading.value = true
@@ -207,7 +208,7 @@ const handleChangeWorkspace = async (path: string) => {
   }
 }
 
-// File selection
+// ファイル選択
 const handleFileSelect = async (path: string) => {
   await loadFile(path)
   await fetchOriginalContent(path)
@@ -223,7 +224,7 @@ const fetchOriginalContent = async (path: string) => {
   originalContent.value = result.content
 }
 
-// File operations
+// ファイル操作
 const handleCreateFile = async (path: string) => {
   await createFile(path)
   await loadTree()
@@ -243,14 +244,6 @@ const handleRename = async (oldPath: string, newPath: string) => {
   }
 }
 
-const handleMove = async (oldPath: string, newPath: string) => {
-  await renameFile(oldPath, newPath)
-  await loadTree()
-  if (currentPath.value === oldPath) {
-    await handleFileSelect(newPath)
-  }
-}
-
 const handleDelete = async (path: string, type: 'file' | 'directory') => {
   if (type === 'file') {
     await deleteFile(path)
@@ -263,7 +256,7 @@ const handleDelete = async (path: string, type: 'file' | 'directory') => {
   }
 }
 
-// Git discard handler
+// Git破棄ハンドラ
 const handleFileDiscarded = async (path: string) => {
   if (currentPath.value === path) {
     await loadFile(path)
@@ -271,7 +264,7 @@ const handleFileDiscarded = async (path: string) => {
   }
 }
 
-// Editor events
+// エディタイベント
 const handleEditorScroll = (line: number) => {
   editorScrollLine.value = line
 }
@@ -284,26 +277,16 @@ const handleJump = (position: number) => {
   editorRef.value?.scrollToPosition(position)
 }
 
-// Save handler
+// 保存ハンドラ
 const handleSave = async () => {
   await saveFile()
   gitPanelRef.value?.refresh()
 }
 
-// AI assist
+// AIアシスト
 const handleSelectBlock = (block: Block) => {
   if (!aiPanelRef.value) return
-  const typeLabel =
-    {
-      definition: '定義',
-      theorem: '定理',
-      lemma: '補題',
-      proposition: '命題',
-      corollary: '系',
-      proof: '証明',
-      remark: '注意',
-      example: '例'
-    }[block.type] || block.type
+  const typeLabel = BLOCK_TYPE_LABELS[block.type] || block.type
   const label = block.title ? `${typeLabel}: ${block.title}` : typeLabel
   aiPanelRef.value.setContext({
     type: 'block',
@@ -315,12 +298,6 @@ const handleSelectBlock = (block: Block) => {
 const handleDeselectBlock = () => {
   if (!aiPanelRef.value) return
   aiPanelRef.value.clearContext()
-}
-
-interface AIContext {
-  type: 'block' | 'selection'
-  label: string
-  content: string
 }
 
 const handleAIChat = async (message: string, context: AIContext | null) => {
@@ -349,8 +326,8 @@ onMounted(async () => {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #2d2d2d;
-  color: #d4d4d4;
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
   overflow: hidden;
 }
 
@@ -359,15 +336,15 @@ onMounted(async () => {
   align-items: center;
   gap: 16px;
   padding: 8px 16px;
-  background: #252526;
-  border-bottom: 1px solid #3e3e42;
+  background: var(--color-bg-header);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .header h1 {
   margin: 0;
   font-size: 14px;
   font-weight: 500;
-  color: #cccccc;
+  color: var(--color-text-secondary);
 }
 
 .header-spacer {
@@ -377,21 +354,21 @@ onMounted(async () => {
 .sync-toggle {
   padding: 4px 12px;
   font-size: 12px;
-  background: #3e3e42;
+  background: var(--color-border);
   border: 1px solid #5a5a5a;
   border-radius: 4px;
-  color: #808080;
+  color: var(--color-text-muted);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .sync-toggle:hover {
-  background: #4e4e52;
+  background: var(--color-bg-hover);
 }
 
 .sync-toggle.active {
-  background: #007acc;
-  border-color: #007acc;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
   color: #ffffff;
 }
 
@@ -402,22 +379,22 @@ onMounted(async () => {
 
 .sidebar {
   height: 100%;
-  background: #1e1e1e;
-  border-right: 1px solid #3e3e42;
+  background: var(--color-bg-main);
+  border-right: 1px solid var(--color-border);
 }
 
 .outline-section {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #1e1e1e;
-  border-top: 1px solid #3e3e42;
+  background: var(--color-bg-main);
+  border-top: 1px solid var(--color-border);
 }
 
 .tabs {
   display: flex;
-  background: #252526;
-  border-bottom: 1px solid #3e3e42;
+  background: var(--color-bg-header);
+  border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
 
@@ -426,7 +403,7 @@ onMounted(async () => {
   padding: 6px 4px;
   background: none;
   border: none;
-  color: #cccccc;
+  color: var(--color-text-secondary);
   font-size: 10px;
   cursor: pointer;
   border-bottom: 2px solid transparent;
@@ -438,7 +415,7 @@ onMounted(async () => {
 
 .tab.active {
   color: #ffffff;
-  border-bottom-color: #007acc;
+  border-bottom-color: var(--color-primary);
 }
 
 .outline-content {
@@ -451,12 +428,12 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #1e1e1e;
+  background: var(--color-bg-main);
 }
 
 .empty-content {
   text-align: center;
-  color: #808080;
+  color: var(--color-text-muted);
 }
 
 .empty-content h2 {
@@ -478,17 +455,17 @@ onMounted(async () => {
 
 .pane-header {
   padding: 8px 16px;
-  background: #252526;
-  border-bottom: 1px solid #3e3e42;
+  background: var(--color-bg-header);
+  border-bottom: 1px solid var(--color-border);
   font-size: 12px;
   font-weight: 500;
-  color: #cccccc;
+  color: var(--color-text-secondary);
   flex-shrink: 0;
 }
 
 .latex-pane,
 .preview-pane {
-  border-right: 1px solid #3e3e42;
+  border-right: 1px solid var(--color-border);
 }
 
 .ai-section {

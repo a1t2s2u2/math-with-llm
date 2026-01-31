@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 class GitFileStatus(BaseModel):
     path: str
-    status: str  # modified, added, deleted, renamed, untracked
+    status: str  # modified, added, deleted, renamed, untracked のいずれか
     staged: bool
 
 

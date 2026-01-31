@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from app.models.block import Block, Todo
+from app.models.block import Block
 
 
 class FileNode(BaseModel):
@@ -18,4 +18,3 @@ class FileContent(BaseModel):
     content: str
     rendered_html: str
     blocks: list[Block]
-    todos: list[Todo]

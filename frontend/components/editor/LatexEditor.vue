@@ -20,6 +20,8 @@
 import { ref, watch, shallowRef } from 'vue'
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
 import { debounce } from '~/utils/debounce'
+import { buildLCSIndices, matchBySimilarity } from '~/utils/gitDiff'
+import { registerLatexLanguage } from '~/utils/monacoLatex'
 import type * as Monaco from 'monaco-editor'
 
 const props = defineProps<{
@@ -38,6 +40,7 @@ const emit = defineEmits<{
 const localSource = ref(props.modelValue)
 const editorRef = shallowRef<Monaco.editor.IStandaloneCodeEditor | null>(null)
 const isScrollingProgrammatically = ref(false)
+const monacoInstance = shallowRef<typeof Monaco | null>(null)
 
 const editorOptions: Monaco.editor.IStandaloneEditorConstructionOptions = {
   fontSize: 14,
@@ -60,7 +63,7 @@ const onInput = (value: string | undefined) => {
   }
 }
 
-// Scroll to specific line
+// 指定行へスクロール
 const scrollToLine = (lineNumber: number) => {
   if (!editorRef.value) return
   isScrollingProgrammatically.value = true
@@ -72,14 +75,14 @@ const scrollToLine = (lineNumber: number) => {
 
 const onEditorMount = (editor: Monaco.editor.IStandaloneCodeEditor, monaco: typeof Monaco) => {
   editorRef.value = editor
-  monacoInstance = monaco
+  monacoInstance.value = monaco
 
-  // Register save command (Cmd+S / Ctrl+S)
+  // 保存コマンド登録 (Cmd+S / Ctrl+S)
   editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
     emit('save')
   })
 
-  // Emit current visible line number on scroll
+  // スクロール時に表示中の行番号をemit
   editor.onDidScrollChange(() => {
     if (isScrollingProgrammatically.value || !props.syncEnabled) return
     const visibleRanges = editor.getVisibleRanges()
@@ -89,58 +92,8 @@ const onEditorMount = (editor: Monaco.editor.IStandaloneCodeEditor, monaco: type
     }
   })
 
-  // Register LaTeX language if not already registered
-  if (!monaco.languages.getLanguages().some((lang) => lang.id === 'latex')) {
-    monaco.languages.register({ id: 'latex' })
-
-    monaco.languages.setMonarchTokensProvider('latex', {
-      tokenizer: {
-        root: [
-          // Comments
-          [/%.*$/, 'comment'],
-
-          // Math mode (display)
-          [/\$\$/, { token: 'string', next: '@mathDisplay' }],
-          [/\\\[/, { token: 'string', next: '@mathDisplayBracket' }],
-
-          // Math mode (inline)
-          [/\$/, { token: 'string', next: '@mathInline' }],
-          [/\\\(/, { token: 'string', next: '@mathInlineParen' }],
-
-          // Environments
-          [/\\begin\{([^}]+)\}/, 'keyword'],
-          [/\\end\{([^}]+)\}/, 'keyword'],
-
-          // Commands
-          [/\\[a-zA-Z@]+\*?/, 'keyword'],
-
-          // Braces
-          [/[{}]/, 'delimiter.bracket'],
-          [/\[|\]/, 'delimiter.square']
-        ],
-        mathInline: [
-          [/\$/, { token: 'string', next: '@pop' }],
-          [/\\./, 'string'],
-          [/[^$\\]+/, 'string']
-        ],
-        mathInlineParen: [
-          [/\\\)/, { token: 'string', next: '@pop' }],
-          [/\\./, 'string'],
-          [/[^\\]+/, 'string']
-        ],
-        mathDisplay: [
-          [/\$\$/, { token: 'string', next: '@pop' }],
-          [/\\./, 'string'],
-          [/[^$\\]+/, 'string']
-        ],
-        mathDisplayBracket: [
-          [/\\\]/, { token: 'string', next: '@pop' }],
-          [/\\./, 'string'],
-          [/[^\\]+/, 'string']
-        ]
-      }
-    })
-  }
+  // LaTeX言語が未登録なら登録
+  registerLatexLanguage(monaco)
 }
 
 watch(
@@ -161,7 +114,7 @@ watch(
   }
 )
 
-// Git gutter decorations
+// Gitガターデコレーション
 let decorationIds: string[] = []
 
 function computeGutterDecorations(monaco: typeof Monaco) {
@@ -234,80 +187,11 @@ function computeGutterDecorations(monaco: typeof Monaco) {
   decorationIds = editor.deltaDecorations(decorationIds, decorations)
 }
 
-/** 類似度ベースで old 行と new 行をマッチングし、modified と判定された new 行のインデックスを返す */
-function matchBySimilarity(oldGap: string[], newGap: string[]): Set<number> {
-  const pairs: { oi: number; ni: number; sim: number }[] = []
-  for (let i = 0; i < oldGap.length; i++) {
-    for (let j = 0; j < newGap.length; j++) {
-      pairs.push({ oi: i, ni: j, sim: lineSimilarity(oldGap[i], newGap[j]) })
-    }
-  }
-  // 類似度の高い順にグリーディマッチ
-  pairs.sort((a, b) => b.sim - a.sim)
-  const usedOld = new Set<number>()
-  const usedNew = new Set<number>()
-  for (const { oi, ni, sim } of pairs) {
-    if (sim < 0.3) break
-    if (usedOld.has(oi) || usedNew.has(ni)) continue
-    usedOld.add(oi)
-    usedNew.add(ni)
-  }
-  return usedNew
-}
-
-/** 2 行の位置ベース文字一致率 */
-function lineSimilarity(a: string, b: string): number {
-  const maxLen = Math.max(a.length, b.length)
-  if (maxLen === 0) return 1
-  let matches = 0
-  const minLen = Math.min(a.length, b.length)
-  for (let i = 0; i < minLen; i++) {
-    if (a[i] === b[i]) matches++
-  }
-  return matches / maxLen
-}
-
-/** LCS のインデックスペア [oldIdx, newIdx][] を返す */
-function buildLCSIndices(a: string[], b: string[]): [number, number][] {
-  const m = a.length
-  const n = b.length
-  if (m * n > 5_000_000) return []
-
-  const dp: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0))
-  for (let i = m - 1; i >= 0; i--) {
-    for (let j = n - 1; j >= 0; j--) {
-      if (a[i] === b[j]) {
-        dp[i][j] = dp[i + 1][j + 1] + 1
-      } else {
-        dp[i][j] = Math.max(dp[i + 1][j], dp[i][j + 1])
-      }
-    }
-  }
-
-  const result: [number, number][] = []
-  let i = 0
-  let j = 0
-  while (i < m && j < n) {
-    if (a[i] === b[j]) {
-      result.push([i, j])
-      i++
-      j++
-    } else if (dp[i + 1][j] >= dp[i][j + 1]) {
-      i++
-    } else {
-      j++
-    }
-  }
-  return result
-}
-
-let monacoInstance: typeof Monaco | null = null
-
 watch([() => props.originalContent, () => localSource.value], () => {
-  if (monacoInstance) computeGutterDecorations(monacoInstance)
+  if (monacoInstance.value) computeGutterDecorations(monacoInstance.value)
 })
 
-// Expose method to scroll to a specific character position
+// 指定文字位置へスクロールするメソッドを公開
 const scrollToPosition = (charPos: number) => {
   if (!editorRef.value) return
   const model = editorRef.value.getModel()
@@ -338,27 +222,27 @@ defineExpose({ scrollToPosition })
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #1e1e1e;
-  color: #808080;
+  background: var(--color-bg-main);
+  color: var(--color-text-muted);
   font-family: 'Monaco', 'Courier New', monospace;
 }
 </style>
 
 <style>
 .git-added-line {
-  background: #2ea04370;
+  background: var(--color-git-added);
   width: 3px !important;
   margin-left: 3px;
 }
 
 .git-modified-line {
-  background: #0078d4;
+  background: var(--color-git-modified);
   width: 3px !important;
   margin-left: 3px;
 }
 
 .git-deleted-line {
-  background: #f85149;
+  background: var(--color-git-deleted);
   width: 3px !important;
   margin-left: 3px;
   height: 3px !important;

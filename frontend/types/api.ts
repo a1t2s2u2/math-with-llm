@@ -7,44 +7,6 @@ export interface Block {
   latex_fragment: string
 }
 
-export interface Todo {
-  content: string
-  line_number: number
-}
-
-export interface ParseResult {
-  blocks: Block[]
-  todos: Todo[]
-  renderer_errors: string[]
-}
-
-export interface SkeletonCard {
-  strategy: string
-  description: string
-  required_lemmas: string[]
-  assumptions_to_check: string[]
-}
-
-export interface LeanGeneration {
-  lean_code: string
-  imports: string[]
-  notes: string
-}
-
-export interface LeanCheckResult {
-  status: string
-  diagnostics: Diagnostic[]
-  logs: string
-  duration_ms: number
-}
-
-export interface Diagnostic {
-  line: number
-  column: number
-  severity: string
-  message: string
-}
-
 export interface FileNode {
   name: string
   type: 'file' | 'directory'
@@ -58,10 +20,9 @@ export interface FileContent {
   content: string
   rendered_html: string
   blocks: Block[]
-  todos: Todo[]
 }
 
-// Git types
+// Git型定義
 
 export interface GitFileStatus {
   path: string
@@ -85,4 +46,12 @@ export interface GitDiff {
 export interface GitCommitResult {
   hash: string
   message: string
+}
+
+// AI型定義
+
+export interface AIContext {
+  type: 'block' | 'selection'
+  label: string
+  content: string
 }

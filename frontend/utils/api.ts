@@ -1,14 +1,4 @@
-import type {
-  ParseResult,
-  SkeletonCard,
-  LeanGeneration,
-  LeanCheckResult,
-  FileNode,
-  FileContent,
-  GitStatus,
-  GitDiff,
-  GitCommitResult
-} from '~/types/api'
+import type { FileNode, FileContent, GitStatus, GitDiff, GitCommitResult } from '~/types/api'
 
 const API_BASE = '/api'
 
@@ -18,40 +8,10 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     ...options
   })
   if (!response.ok) {
-    throw new Error(`API error: ${response.status}`)
+    const body = await response.text()
+    throw new Error(`API error ${response.status}: ${body}`)
   }
   return response.json()
-}
-
-export function parseLatex(latexSource: string): Promise<ParseResult> {
-  return request('/parse', {
-    method: 'POST',
-    body: JSON.stringify({ latex_source: latexSource })
-  })
-}
-
-export function generateSkeleton(
-  filePath: string,
-  blockId: string
-): Promise<{ cards: SkeletonCard[] }> {
-  return request('/assist/skeleton', {
-    method: 'POST',
-    body: JSON.stringify({ file_path: filePath, block_id: blockId })
-  })
-}
-
-export function generateLean(filePath: string, blockId: string): Promise<LeanGeneration> {
-  return request('/assist/lean/generate', {
-    method: 'POST',
-    body: JSON.stringify({ file_path: filePath, block_id: blockId })
-  })
-}
-
-export function checkLean(leanCode: string, imports: string[]): Promise<LeanCheckResult> {
-  return request('/lean/check', {
-    method: 'POST',
-    body: JSON.stringify({ lean_code: leanCode, imports })
-  })
 }
 
 export function chatApi(
@@ -69,15 +29,10 @@ export function chatApi(
   })
 }
 
-// Workspace API
+// ワークスペースAPI
 
 export function getWorkspace(): Promise<{ path: string }> {
   return request('/files/workspace')
-}
-
-export function browseDirectory(path?: string): Promise<{ current: string; dirs: string[] }> {
-  const params = path ? `?path=${encodeURIComponent(path)}` : ''
-  return request(`/files/workspace/browse${params}`)
 }
 
 export function pickWorkspace(): Promise<{ tree: FileNode[] | null; path?: string }> {
@@ -91,7 +46,7 @@ export function changeWorkspace(path: string): Promise<FileNode[]> {
   })
 }
 
-// File API
+// ファイルAPI
 
 export function getFileTree(): Promise<FileNode[]> {
   return request('/files/tree')

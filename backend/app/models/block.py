@@ -23,12 +23,6 @@ class Block(BaseModel):
     latex_fragment: str
 
 
-class Todo(BaseModel):
-    content: str
-    line_number: int
-
-
 class ParseResult(BaseModel):
     blocks: list[Block]
-    todos: list[Todo]
     renderer_errors: list[str] = []

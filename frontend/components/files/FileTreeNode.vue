@@ -120,11 +120,11 @@ const handleDrop = (event: DragEvent) => {
 }
 
 .node-row:hover {
-  background: #2d2d2d;
+  background: var(--color-bg-secondary);
 }
 
 .node-row.selected {
-  background: #094771;
+  background: var(--color-selected);
 }
 
 .node-row.drag-over {
@@ -144,7 +144,7 @@ const handleDrop = (event: DragEvent) => {
 }
 
 .folder-icon {
-  color: #808080;
+  color: var(--color-text-muted);
   font-size: 10px;
 }
 
@@ -154,7 +154,7 @@ const handleDrop = (event: DragEvent) => {
 
 .name {
   font-size: 13px;
-  color: #d4d4d4;
+  color: var(--color-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

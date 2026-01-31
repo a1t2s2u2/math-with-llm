@@ -1,6 +1,7 @@
 import subprocess
 from pathlib import Path
 
+from app.config import settings
 from app.models.git import GitCommitResult, GitDiff, GitFileStatus, GitStatus
 from app.services.file_storage import get_workspace_path
 
@@ -20,7 +21,7 @@ def _run_git(*args: str) -> subprocess.CompletedProcess[str]:
         cwd=cwd,
         capture_output=True,
         text=True,
-        timeout=10,
+        timeout=settings.git_timeout,
     )
 
 
@@ -37,11 +38,11 @@ def get_status() -> GitStatus:
     if not is_repo():
         return GitStatus(is_repo=False, branch="", staged=[], unstaged=[])
 
-    # Get branch name
+    # ブランチ名を取得
     branch_result = _run_git("branch", "--show-current")
     branch = branch_result.stdout.strip()
 
-    # Get porcelain status
+    # porcelain形式でステータスを取得
     result = _run_git("status", "--porcelain=v1")
     staged: list[GitFileStatus] = []
     unstaged: list[GitFileStatus] = []
@@ -53,7 +54,7 @@ def get_status() -> GitStatus:
         worktree_status = line[1]
         path = line[3:]
 
-        # Handle renames: "R  old -> new"
+        # リネーム処理: "R  old -> new"
         if " -> " in path:
             path = path.split(" -> ", 1)[1]
 
@@ -74,18 +75,18 @@ def get_status() -> GitStatus:
 
 def get_diff(path: str, staged: bool) -> GitDiff:
     if staged:
-        # Compare HEAD vs index
+        # HEAD vs インデックスを比較
         old_result = _run_git("show", f"HEAD:{path}")
         old_content = old_result.stdout if old_result.returncode == 0 else ""
         new_result = _run_git("show", f":{path}")
         new_content = new_result.stdout if new_result.returncode == 0 else ""
     else:
-        # Compare index vs working tree
+        # インデックス vs ワーキングツリーを比較
         index_result = _run_git("show", f":{path}")
         if index_result.returncode == 0:
             old_content = index_result.stdout
         else:
-            # Untracked file: no old content
+            # 未追跡ファイル: 旧内容なし
             old_content = ""
 
         workspace = get_workspace_path()
@@ -98,7 +99,7 @@ def get_diff(path: str, staged: bool) -> GitDiff:
 
 
 def get_original(path: str) -> str:
-    """Return the HEAD version of a file. Empty string if not committed yet."""
+    """ファイルのHEADバージョンを返す。未コミットの場合は空文字列。"""
     result = _run_git("show", f"HEAD:{path}")
     return result.stdout if result.returncode == 0 else ""
 
@@ -112,7 +113,7 @@ def unstage_files(paths: list[str]) -> None:
 
 
 def discard_files(paths: list[str]) -> None:
-    """Discard working tree changes. Untracked files are removed."""
+    """ワーキングツリーの変更を破棄する。未追跡ファイルは削除される。"""
     tracked = []
     untracked = []
     result = _run_git("status", "--porcelain=v1")

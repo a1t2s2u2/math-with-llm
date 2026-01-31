@@ -51,26 +51,21 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
 import { useMathRender } from '~/composables/useMathRender'
+import type { AIContext } from '~/types/api'
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
 }
 
-interface Context {
-  type: 'block' | 'selection'
-  label: string
-  content: string
-}
-
 const emit = defineEmits<{
-  send: [message: string, context: Context | null]
+  send: [message: string, context: AIContext | null]
 }>()
 
 const messages = ref<Message[]>([])
 const inputText = ref('')
 const loading = ref(false)
-const context = ref<Context | null>(null)
+const context = ref<AIContext | null>(null)
 const messagesRef = ref<HTMLElement | null>(null)
 const copiedIndex = ref<number | null>(null)
 
@@ -87,7 +82,7 @@ const canSend = computed(() => inputText.value.trim() && !loading.value)
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.key === 'Enter') {
     if (e.metaKey || e.ctrlKey) {
-      // Cmd/Ctrl+Enter: 改行を挿入
+      // Cmd/Ctrl+Enter: 改行挿入
       e.preventDefault()
       const textarea = e.target as HTMLTextAreaElement
       const start = textarea.selectionStart
@@ -125,7 +120,7 @@ const setLoading = (value: boolean) => {
   loading.value = value
 }
 
-const setContext = (ctx: Context) => {
+const setContext = (ctx: AIContext) => {
   context.value = ctx
 }
 
@@ -169,7 +164,7 @@ defineExpose({
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #1e1e1e;
+  background: var(--color-bg-main);
 }
 
 .panel-header {
@@ -177,8 +172,8 @@ defineExpose({
   justify-content: space-between;
   align-items: center;
   padding: 8px 16px;
-  background: #252526;
-  border-bottom: 1px solid #3e3e42;
+  background: var(--color-bg-header);
+  border-bottom: 1px solid var(--color-border);
   flex-shrink: 0;
 }
 
@@ -186,21 +181,21 @@ defineExpose({
   margin: 0;
   font-size: 12px;
   font-weight: 500;
-  color: #cccccc;
+  color: var(--color-text-secondary);
 }
 
 .clear-button {
   padding: 2px 8px;
   font-size: 11px;
-  background: #3e3e42;
-  color: #cccccc;
+  background: var(--color-border);
+  color: var(--color-text-secondary);
   border: none;
   border-radius: 3px;
   cursor: pointer;
 }
 
 .clear-button:hover {
-  background: #4e4e52;
+  background: var(--color-bg-hover);
 }
 
 .messages-container {
@@ -210,7 +205,7 @@ defineExpose({
 }
 
 .empty-state {
-  color: #858585;
+  color: var(--color-text-dimmed);
   font-size: 12px;
   text-align: center;
   padding: 24px;
@@ -236,10 +231,10 @@ defineExpose({
   width: 24px;
   height: 24px;
   padding: 4px;
-  background: #3e3e42;
+  background: var(--color-border);
   border: none;
   border-radius: 3px;
-  color: #858585;
+  color: var(--color-text-dimmed);
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.15s;
@@ -256,7 +251,7 @@ defineExpose({
 }
 
 .copy-button:hover {
-  background: #4e4e52;
+  background: var(--color-bg-hover);
   color: #ffffff;
 }
 
@@ -267,10 +262,10 @@ defineExpose({
 }
 
 .message.assistant {
-  background: #2d2d2d;
-  color: #d4d4d4;
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
   margin-right: 24px;
-  border: 1px solid #3e3e42;
+  border: 1px solid var(--color-border);
 }
 
 .message-content {
@@ -297,14 +292,14 @@ defineExpose({
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #858585;
+  color: var(--color-text-dimmed);
 }
 
 .spinner {
   width: 14px;
   height: 14px;
-  border: 2px solid #3e3e42;
-  border-top-color: #007acc;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -321,12 +316,12 @@ defineExpose({
   gap: 8px;
   padding: 6px 12px;
   background: #2d2d30;
-  border-top: 1px solid #3e3e42;
+  border-top: 1px solid var(--color-border);
   font-size: 11px;
 }
 
 .context-label {
-  color: #858585;
+  color: var(--color-text-dimmed);
   flex-shrink: 0;
 }
 
@@ -342,7 +337,7 @@ defineExpose({
   padding: 2px 6px;
   background: none;
   border: none;
-  color: #858585;
+  color: var(--color-text-dimmed);
   cursor: pointer;
   font-size: 14px;
 }
@@ -355,8 +350,8 @@ defineExpose({
   display: flex;
   gap: 8px;
   padding: 12px;
-  background: #252526;
-  border-top: 1px solid #3e3e42;
+  background: var(--color-bg-header);
+  border-top: 1px solid var(--color-border);
 }
 
 .input-area textarea {
@@ -364,10 +359,10 @@ defineExpose({
   min-height: 36px;
   max-height: 100px;
   padding: 8px 12px;
-  background: #1e1e1e;
-  border: 1px solid #3e3e42;
+  background: var(--color-bg-main);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  color: #d4d4d4;
+  color: var(--color-text);
   font-size: 13px;
   font-family: inherit;
   resize: none;
@@ -375,16 +370,16 @@ defineExpose({
 }
 
 .input-area textarea:focus {
-  border-color: #007acc;
+  border-color: var(--color-primary);
 }
 
 .input-area textarea::placeholder {
-  color: #858585;
+  color: var(--color-text-dimmed);
 }
 
 .send-button {
   padding: 8px 16px;
-  background: #007acc;
+  background: var(--color-primary);
   color: #ffffff;
   border: none;
   border-radius: 4px;
@@ -394,12 +389,12 @@ defineExpose({
 }
 
 .send-button:hover:not(:disabled) {
-  background: #005a9e;
+  background: var(--color-primary-hover);
 }
 
 .send-button:disabled {
-  background: #3e3e42;
-  color: #858585;
+  background: var(--color-border);
+  color: var(--color-text-dimmed);
   cursor: not-allowed;
 }
 </style>

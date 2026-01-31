@@ -161,7 +161,7 @@ const handleDelete = () => {
   closeContextMenu()
 }
 
-// Focus input when shown
+// 表示時にinputにフォーカス
 const focusNewFileInput = async () => {
   await nextTick()
   newFileInputRef.value?.focus()
@@ -172,11 +172,11 @@ const focusNewFolderInput = async () => {
   newFolderInputRef.value?.focus()
 }
 
-// Watch for showNewFileInput/showNewFolderInput changes
+// showNewFileInput/showNewFolderInputの変更を監視
 watch(showNewFileInput, (val) => val && focusNewFileInput())
 watch(showNewFolderInput, (val) => val && focusNewFolderInput())
 
-// Close context menu on click outside
+// 外部クリックでコンテキストメニューを閉じる
 const handleGlobalClick = () => closeContextMenu()
 onMounted(() => document.addEventListener('click', handleGlobalClick))
 onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
@@ -187,7 +187,7 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #1e1e1e;
+  background: var(--color-bg-main);
   position: relative;
 }
 
@@ -196,18 +196,18 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
   justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
-  border-bottom: 1px solid #3e3e42;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .workspace-path-bar {
   padding: 4px 12px;
-  border-bottom: 1px solid #3e3e42;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .workspace-label {
   display: block;
   font-size: 11px;
-  color: #808080;
+  color: var(--color-text-muted);
   cursor: pointer;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -215,7 +215,7 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
 }
 
 .workspace-label:hover {
-  color: #cccccc;
+  color: var(--color-text-secondary);
 }
 
 .title {
@@ -234,28 +234,28 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
   padding: 2px 6px;
   background: transparent;
   border: none;
-  color: #cccccc;
+  color: var(--color-text-secondary);
   cursor: pointer;
   font-size: 14px;
   border-radius: 3px;
 }
 
 .action-btn:hover {
-  background: #3e3e42;
+  background: var(--color-border);
 }
 
 .new-item-input {
   padding: 4px 8px;
-  border-bottom: 1px solid #3e3e42;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .new-item-input input {
   width: 100%;
   padding: 4px 8px;
-  background: #3c3c3c;
-  border: 1px solid #007acc;
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-primary);
   border-radius: 3px;
-  color: #d4d4d4;
+  color: var(--color-text);
   font-size: 13px;
   outline: none;
 }
@@ -263,7 +263,7 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
 .loading,
 .empty {
   padding: 16px;
-  color: #808080;
+  color: var(--color-text-muted);
   font-size: 13px;
   text-align: center;
 }
@@ -276,8 +276,8 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
 
 .context-menu {
   position: fixed;
-  background: #252526;
-  border: 1px solid #3e3e42;
+  background: var(--color-bg-header);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   padding: 4px 0;
   min-width: 120px;
@@ -291,17 +291,17 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
   padding: 6px 12px;
   background: none;
   border: none;
-  color: #d4d4d4;
+  color: var(--color-text);
   font-size: 13px;
   text-align: left;
   cursor: pointer;
 }
 
 .context-menu button:hover {
-  background: #094771;
+  background: var(--color-selected);
 }
 
 .context-menu button.danger:hover {
-  background: #c42b1c;
+  background: var(--color-danger);
 }
 </style>

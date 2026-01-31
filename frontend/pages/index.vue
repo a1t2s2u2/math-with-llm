@@ -13,7 +13,12 @@
     </div>
 
     <div class="main-layout">
-      <ResizablePanes :horizontal="true" :initial-sizes="[15, 60, 25]">
+      <ResizablePanes
+        :horizontal="true"
+        :initial-sizes="[15, 60, 25]"
+        :collapsible="true"
+        :collapsible-panes="[0, 2]"
+      >
         <template #pane-0>
           <div class="sidebar">
             <ResizablePanes :horizontal="false" :initial-sizes="[50, 50]">

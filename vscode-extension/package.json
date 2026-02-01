@@ -1,0 +1,88 @@
+{
+  "name": "math-with-llm",
+  "displayName": "Math with LLM",
+  "description": "LaTeX mathematical proof assistant with AI support",
+  "version": "0.1.0",
+  "publisher": "math-with-llm",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:latex",
+    "onLanguage:tex"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "mathWithLlm",
+          "title": "Math with LLM",
+          "icon": "$(symbol-misc)"
+        }
+      ]
+    },
+    "views": {
+      "mathWithLlm": [
+        {
+          "id": "mathWithLlm.blockOutline",
+          "name": "Block Outline",
+          "type": "tree"
+        }
+      ],
+      "panel": [
+        {
+          "id": "mathWithLlm.chat",
+          "name": "AI Chat",
+          "type": "webview"
+        },
+        {
+          "id": "mathWithLlm.preview",
+          "name": "LaTeX Preview",
+          "type": "webview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "mathWithLlm.generateSkeleton",
+        "title": "Math with LLM: Generate Proof Skeleton"
+      },
+      {
+        "command": "mathWithLlm.convertToLean",
+        "title": "Math with LLM: Convert to Lean 4"
+      }
+    ],
+    "configuration": {
+      "title": "Math with LLM",
+      "properties": {
+        "mathWithLlm.openaiApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "OpenAI API key"
+        },
+        "mathWithLlm.llmModel": {
+          "type": "string",
+          "default": "gpt-4o",
+          "description": "LLM model name"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "dependencies": {
+    "openai": "^4.20.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.0"
+  }
+}

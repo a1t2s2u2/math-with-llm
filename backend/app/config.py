@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     )
 
     openai_api_key: str
-    workspace_root: Path = Path("/Users/a1t2s2u2/Repository/math-note")
+    workspace_root: Path = Path.cwd() / "workspace"
     llm_model: str = "gpt-5-mini"
     lean_timeout: int = 10
     git_timeout: int = 10

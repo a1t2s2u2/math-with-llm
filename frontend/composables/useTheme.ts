@@ -2,7 +2,7 @@ import { ref, onMounted, watch } from 'vue'
 
 type Theme = 'light' | 'dark'
 
-const currentTheme = ref<Theme>('dark')
+const currentTheme = ref<Theme>('light')
 
 export function useTheme() {
   const setTheme = (theme: Theme) => {
@@ -23,7 +23,7 @@ export function useTheme() {
       if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
         setTheme(savedTheme)
       } else {
-        setTheme('dark')
+        setTheme('light')
       }
     }
   }

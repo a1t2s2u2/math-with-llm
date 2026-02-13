@@ -1,0 +1,86 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--vscode-font-family);
+  font-size: 15px;
+  color: var(--vscode-editor-foreground);
+  background: var(--vscode-editor-background);
+  padding: 16px;
+  line-height: 1.6;
+}
+
+.preview-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.latex-env {
+  margin: 16px 0;
+  padding: 12px;
+  border-left: 3px solid var(--vscode-textLink-foreground, #4ec9b0);
+  background: var(--vscode-editor-inactiveSelectionBackground, #2d2d2d);
+  border-radius: 4px;
+}
+
+.env-heading {
+  font-weight: bold;
+  font-size: 14px;
+  color: var(--vscode-textLink-foreground, #4ec9b0);
+  margin-bottom: 8px;
+}
+
+.env-content {
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.latex-env.proof {
+  border-left-color: var(--vscode-descriptionForeground, #888);
+  background: var(--vscode-editor-background);
+}
+
+.proof .env-heading {
+  font-style: italic;
+  color: var(--vscode-symbolIcon-variableForeground, #dcdcaa);
+}
+
+.latex-section {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 24px 0 16px 0;
+  color: var(--vscode-textLink-foreground, #4ec9b0);
+  border-bottom: 2px solid var(--vscode-panel-border, #3e3e3e);
+  padding-bottom: 8px;
+}
+
+.latex-subsection {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 20px 0 12px 0;
+  color: var(--vscode-textLink-foreground, #4ec9b0);
+}
+
+.latex-subsubsection {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 16px 0 10px 0;
+  color: var(--vscode-textLink-foreground, #4ec9b0);
+}
+
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0;
+}
+
+.katex-display > .katex {
+  white-space: nowrap;
+}
+
+p {
+  margin: 8px 0;
+}

@@ -129,18 +129,18 @@ watch(
 .preview-content {
   line-height: 1.8;
   font-family: 'Times New Roman', serif;
-  font-size: 16px;
+  font-size: 20px;
   color: var(--color-text);
 }
 
 .preview-content p {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 /* Theorem environments */
 .preview-content :deep(.latex-env) {
-  margin: 16px 0;
-  padding: 12px;
+  margin: 18px 0;
+  padding: 14px;
   border-left: 3px solid var(--color-accent);
   background: var(--color-bg-secondary);
   border-radius: 4px;
@@ -148,13 +148,13 @@ watch(
 
 .preview-content :deep(.env-heading) {
   font-weight: bold;
-  font-size: 14px;
+  font-size: 18px;
   color: var(--color-accent);
   margin-bottom: 8px;
 }
 
 .preview-content :deep(.env-content) {
-  font-size: 15px;
+  font-size: 19px;
   line-height: 1.6;
   color: var(--color-text);
 }
@@ -236,9 +236,17 @@ watch(
 }
 
 /* Math display */
+.preview-content :deep(.katex) {
+  font-size: 1.15em;
+}
+
 .preview-content :deep(.display-math) {
   margin: 16px 0;
   text-align: center;
+}
+
+.preview-content :deep(.display-math .katex) {
+  font-size: 1.3em;
 }
 
 .preview-content :deep(.inline-math) {

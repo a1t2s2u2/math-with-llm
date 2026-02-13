@@ -11,16 +11,17 @@
         :modified="newContent"
         :options="editorOptions"
         language="latex"
-        theme="vs-dark"
+        :theme="editorTheme"
       />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { VueMonacoDiffEditor } from '@guolao/vue-monaco-editor'
 import { getGitDiff } from '~/utils/api'
+import { useTheme } from '~/composables/useTheme'
 
 const props = defineProps<{
   path: string
@@ -30,6 +31,9 @@ const props = defineProps<{
 defineEmits<{
   close: []
 }>()
+
+const { theme } = useTheme()
+const editorTheme = computed(() => (theme.value === 'dark' ? 'vs-dark' : 'vs'))
 
 const oldContent = ref('')
 const newContent = ref('')

@@ -10,3 +10,9 @@ class SkeletonCard(BaseModel):
 
 class SkeletonResponse(BaseModel):
     cards: list[SkeletonCard]
+
+
+class BlockReference(BaseModel):
+    id: str
+    type: str
+    title: str | None = None

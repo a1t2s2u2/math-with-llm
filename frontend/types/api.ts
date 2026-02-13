@@ -64,3 +64,9 @@ export interface SkeletonCard {
   required_lemmas: string[]
   assumptions_to_check: string[]
 }
+
+export interface BlockReference {
+  id: string
+  type: string
+  title: string | null
+}

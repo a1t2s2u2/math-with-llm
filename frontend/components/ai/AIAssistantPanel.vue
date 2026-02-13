@@ -35,6 +35,17 @@
         </div>
 
         <div v-for="(msg, i) in messages" :key="i" class="message" :class="msg.role">
+          <div v-if="msg.references?.length" class="references-bar">
+            <span class="references-label">参照:</span>
+            <span
+              v-for="ref in msg.references"
+              :key="ref.id"
+              class="reference-badge"
+              :class="`ref-${ref.type}`"
+            >
+              {{ ref.type }}{{ ref.title ? `: ${ref.title}` : '' }}
+            </span>
+          </div>
           <div class="message-content" v-html="renderMath(msg.content)" />
           <button class="copy-button" title="コピー" @click="copyMessage(msg.content)">
             <svg v-if="copiedIndex === i" viewBox="0 0 24 24" fill="currentColor">
@@ -89,12 +100,13 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
 import { useMathRender } from '~/composables/useMathRender'
-import type { AIContext, SkeletonCard } from '~/types/api'
+import type { AIContext, SkeletonCard, BlockReference } from '~/types/api'
 import { PROVABLE_BLOCK_TYPES } from '~/utils/constants'
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
+  references?: BlockReference[]
 }
 
 const emit = defineEmits<{
@@ -181,6 +193,13 @@ const appendToLastAssistant = (chunk: string) => {
   }
 }
 
+const setLastAssistantReferences = (refs: BlockReference[]) => {
+  const last = messages.value[messages.value.length - 1]
+  if (last?.role === 'assistant') {
+    last.references = refs
+  }
+}
+
 const finishAssistantStream = () => {
   streaming.value = false
 }
@@ -238,6 +257,7 @@ defineExpose({
   addAssistantMessage,
   startAssistantStream,
   appendToLastAssistant,
+  setLastAssistantReferences,
   finishAssistantStream,
   setLoading,
   setContext,
@@ -377,6 +397,50 @@ defineExpose({
 
 .message-content :deep(.katex-display > .katex) {
   white-space: nowrap;
+}
+
+.references-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+  font-size: var(--font-size-xs);
+}
+
+.references-label {
+  color: var(--color-text-dimmed);
+}
+
+.reference-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: var(--font-size-xs);
+  background: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.reference-badge.ref-definition {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.reference-badge.ref-theorem,
+.reference-badge.ref-proposition {
+  background: #fce4ec;
+  color: #c62828;
+}
+
+.reference-badge.ref-lemma,
+.reference-badge.ref-corollary {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.reference-badge.ref-proof {
+  background: #e8f5e9;
+  color: #2e7d32;
 }
 
 .loading-message {

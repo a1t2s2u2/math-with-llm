@@ -236,6 +236,13 @@ const handleChangeWorkspace = async (path: string) => {
 const handleFileSelect = async (path: string) => {
   await loadFile(path)
   await fetchOriginalContent(path)
+  if (currentFile.value && aiPanelRef.value) {
+    aiPanelRef.value.setContext({
+      type: 'block',
+      label: currentFile.value.name,
+      content: currentFile.value.content
+    })
+  }
 }
 
 const fetchOriginalContent = async (path: string) => {
@@ -323,7 +330,15 @@ const handleSelectBlock = (block: Block) => {
 
 const handleDeselectBlock = () => {
   if (!aiPanelRef.value) return
-  aiPanelRef.value.clearContext()
+  if (currentFile.value) {
+    aiPanelRef.value.setContext({
+      type: 'block',
+      label: currentFile.value.name,
+      content: currentFile.value.content
+    })
+  } else {
+    aiPanelRef.value.clearContext()
+  }
 }
 
 const handleGenerateSkeleton = async () => {
@@ -346,9 +361,25 @@ const handleAIChat = async (message: string, context: AIContext | null) => {
   if (!aiPanelRef.value) return
   aiPanelRef.value.startAssistantStream()
   try {
-    await chatStreamApi(message, context?.type || null, context?.content || null, (chunk) => {
-      aiPanelRef.value?.appendToLastAssistant(chunk)
-    })
+    const options = context?.blockId && currentPath.value
+      ? {
+          filePath: currentPath.value,
+          blockId: context.blockId,
+          onReferences: (refs: import('~/types/api').BlockReference[]) => {
+            aiPanelRef.value?.setLastAssistantReferences(refs)
+          }
+        }
+      : undefined
+
+    await chatStreamApi(
+      message,
+      context?.type || null,
+      context?.content || null,
+      (chunk) => {
+        aiPanelRef.value?.appendToLastAssistant(chunk)
+      },
+      options
+    )
   } catch (e) {
     console.error('Failed to chat:', e)
     aiPanelRef.value.addAssistantMessage('エラーが発生しました。もう一度お試しください。')

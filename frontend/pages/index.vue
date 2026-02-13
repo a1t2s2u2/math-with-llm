@@ -10,6 +10,7 @@
       >
         {{ scrollSyncEnabled ? 'Sync ON' : 'Sync OFF' }}
       </button>
+      <ThemeToggle />
     </div>
 
     <div class="main-layout">
@@ -159,6 +160,7 @@ import ResizablePanes from '~/components/ui/ResizablePanes.vue'
 import FileTree from '~/components/files/FileTree.vue'
 import GitPanel from '~/components/git/GitPanel.vue'
 import GitDiffView from '~/components/git/GitDiffView.vue'
+import ThemeToggle from '~/components/ui/ThemeToggle.vue'
 
 // ファイルツリー状態
 const fileTree = ref<FileNode[]>([])
@@ -398,7 +400,7 @@ onMounted(async () => {
 .sync-toggle.active {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-bg-main);
 }
 
 .main-layout {
@@ -439,11 +441,11 @@ onMounted(async () => {
 }
 
 .tab:hover {
-  color: #ffffff;
+  color: var(--color-text);
 }
 
 .tab.active {
-  color: #ffffff;
+  color: var(--color-text);
   border-bottom-color: var(--color-primary);
 }
 

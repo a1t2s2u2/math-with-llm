@@ -221,7 +221,7 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
 .title {
   font-size: 12px;
   font-weight: 600;
-  color: #bbbbbb;
+  color: var(--color-text-secondary);
   text-transform: uppercase;
 }
 

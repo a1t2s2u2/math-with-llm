@@ -255,6 +255,7 @@ defineExpose({
   flex-direction: column;
   height: 100%;
   background: var(--color-bg-main);
+  border-left: 1px solid var(--color-border);
 }
 
 .panel-header {
@@ -342,11 +343,11 @@ defineExpose({
 
 .copy-button:hover {
   background: var(--color-bg-hover);
-  color: #ffffff;
+  color: var(--color-text);
 }
 
 .message.user {
-  background: #264f78;
+  background: var(--color-primary);
   color: #ffffff;
   margin-left: 24px;
 }
@@ -405,7 +406,7 @@ defineExpose({
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  background: #2d2d30;
+  background: var(--color-bg-secondary);
   border-top: 1px solid var(--color-border);
   font-size: 11px;
 }
@@ -417,7 +418,7 @@ defineExpose({
 
 .context-content {
   flex: 1;
-  color: #4fc3f7;
+  color: var(--color-accent);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -453,7 +454,7 @@ defineExpose({
 }
 
 .context-clear:hover {
-  color: #ffffff;
+  color: var(--color-text);
 }
 
 .skeleton-card {
@@ -468,7 +469,7 @@ defineExpose({
 
 .skeleton-strategy {
   font-weight: 600;
-  color: #4fc3f7;
+  color: var(--color-accent);
   margin-bottom: 6px;
 }
 

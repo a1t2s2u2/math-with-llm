@@ -1,22 +1,16 @@
-import warnings
 from pathlib import Path
 
-import google.generativeai as genai
+from google import genai
 
 from app.config import settings
 
 
-def configure_gemini() -> genai.GenerativeModel:
-    # google.generativeaiの非推奨警告を抑制（google.genaiへの移行は将来対応）
-    warnings.filterwarnings(
-        "ignore", category=FutureWarning, module="google.generativeai"
-    )
-    """Gemini APIを設定してモデルを返す。"""
+def get_gemini_client() -> genai.Client:
+    """Gemini APIクライアントを返す。"""
     if not settings.gemini_api_key:
         raise ValueError("GEMINI_API_KEY is not configured")
 
-    genai.configure(api_key=settings.gemini_api_key)
-    return genai.GenerativeModel("gemini-2.0-flash-exp")
+    return genai.Client(api_key=settings.gemini_api_key)
 
 
 def image_to_latex(image_path: Path) -> str:
@@ -35,10 +29,10 @@ def image_to_latex(image_path: Path) -> str:
     if not image_path.exists():
         raise FileNotFoundError(f"Image file not found: {image_path}")
 
-    model = configure_gemini()
+    client = get_gemini_client()
 
     with open(image_path, "rb") as f:
-        image_data = f.read()
+        image_bytes = f.read()
 
     prompt = """あなたは数式認識の専門家です。
 画像に書かれた手書き数式をLaTeX形式に変換してください。
@@ -51,8 +45,12 @@ def image_to_latex(image_path: Path) -> str:
 - 認識できない場合は「認識できませんでした」と返す
 """
 
-    response = model.generate_content(
-        [prompt, {"mime_type": "image/png", "data": image_data}]
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=[
+            genai.types.Part.from_bytes(data=image_bytes, mime_type="image/png"),
+            prompt,
+        ],
     )
 
     return response.text.strip()

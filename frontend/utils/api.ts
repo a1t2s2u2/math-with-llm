@@ -202,3 +202,24 @@ export function generateSkeleton(
     body: JSON.stringify({ file_path: filePath, block_id: blockId })
   })
 }
+
+// Handwriting API
+
+export async function convertHandwriting(
+  imageBlob: Blob
+): Promise<{ latex: string; image_path: string }> {
+  const formData = new FormData()
+  formData.append('file', imageBlob, 'handwriting.png')
+
+  const response = await fetch(`${API_BASE}/handwriting/convert`, {
+    method: 'POST',
+    body: formData
+  })
+
+  if (!response.ok) {
+    const body = await response.text()
+    throw new Error(`API error ${response.status}: ${body}`)
+  }
+
+  return response.json()
+}

@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api import assist, files, git, lean, parse
+from app.api import assist, files, git, handwriting, lean, parse
 from app.config import settings
 
 app = FastAPI(title="math-with-llm API", version="0.1.0")
@@ -36,6 +36,7 @@ app.include_router(assist.router)
 app.include_router(lean.router)
 app.include_router(files.router)
 app.include_router(git.router)
+app.include_router(handwriting.router)
 
 
 @app.get("/health")

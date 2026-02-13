@@ -206,7 +206,22 @@ const scrollToPosition = (charPos: number) => {
   }, 50)
 }
 
-defineExpose({ scrollToPosition })
+// カーソル位置にテキストを挿入するメソッド
+const insertTextAtCursor = (text: string) => {
+  if (!editorRef.value) return
+  const selection = editorRef.value.getSelection()
+  if (!selection) return
+
+  editorRef.value.executeEdits('handwriting', [
+    {
+      range: selection,
+      text
+    }
+  ])
+  editorRef.value.focus()
+}
+
+defineExpose({ scrollToPosition, insertTextAtCursor })
 </script>
 
 <style scoped>

@@ -93,7 +93,12 @@
               <ResizablePanes :horizontal="true" :initial-sizes="[50, 50]">
                 <template #pane-0>
                   <div class="pane latex-pane">
-                    <div class="pane-header">{{ currentFile.name }}{{ isDirty ? ' *' : '' }}</div>
+                    <div class="pane-header">
+                      {{ currentFile.name }}{{ isDirty ? ' *' : '' }}
+                      <button @click="openHandwriting" class="handwriting-btn">
+                        ✏️ 手書き入力
+                      </button>
+                    </div>
                     <LatexEditor
                       ref="editorRef"
                       :model-value="localContent"
@@ -132,6 +137,8 @@
         </template>
       </ResizablePanes>
     </div>
+
+    <HandwritingModal ref="handwritingModalRef" @insert="handleInsertLatex" />
   </div>
 </template>
 
@@ -164,6 +171,7 @@ import FileTree from '~/components/files/FileTree.vue'
 import GitPanel from '~/components/git/GitPanel.vue'
 import GitDiffView from '~/components/git/GitDiffView.vue'
 import ThemeToggle from '~/components/ui/ThemeToggle.vue'
+import HandwritingModal from '~/components/handwriting/HandwritingModal.vue'
 
 // ファイルツリー状態
 const fileTree = ref<FileNode[]>([])
@@ -189,6 +197,7 @@ const editorScrollLine = ref(1)
 const previewScrollLine = ref(1)
 const editorRef = ref<InstanceType<typeof LatexEditor> | null>(null)
 const aiPanelRef = ref<InstanceType<typeof AIAssistantPanel> | null>(null)
+const handwritingModalRef = ref<InstanceType<typeof HandwritingModal> | null>(null)
 
 const gitPanelRef = ref<InstanceType<typeof GitPanel> | null>(null)
 const diffView = ref<{ path: string; staged: boolean } | null>(null)
@@ -348,6 +357,16 @@ const handleAIChat = async (message: string, context: AIContext | null) => {
   }
 }
 
+// 手書き入力
+const openHandwriting = () => {
+  handwritingModalRef.value?.open()
+}
+
+const handleInsertLatex = (latex: string) => {
+  editorRef.value?.insertTextAtCursor(latex)
+  setLocalContent(localContent.value)
+}
+
 onMounted(async () => {
   const ws = await getWorkspace()
   workspacePath.value = ws.path
@@ -495,6 +514,26 @@ onMounted(async () => {
   font-weight: 500;
   color: var(--color-text-secondary);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.handwriting-btn {
+  margin-left: auto;
+  padding: 4px 12px;
+  font-size: 11px;
+  background: var(--color-bg-main);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.handwriting-btn:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-primary);
 }
 
 .latex-pane,

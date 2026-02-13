@@ -15,6 +15,7 @@
   --color-selected: #094771;
   --color-danger: #c42b1c;
   --color-git-added: #2ea04370;
+  --color-git-added-text: #73c991;
   --color-git-modified: #0078d4;
   --color-git-deleted: #f85149;
 }
@@ -36,6 +37,7 @@
   --color-selected: #d6ebff;
   --color-danger: #d32f2f;
   --color-git-added: #28a74570;
+  --color-git-added-text: #22863a;
   --color-git-modified: #0078d4;
   --color-git-deleted: #d32f2f;
 }

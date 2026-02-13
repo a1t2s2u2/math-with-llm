@@ -93,7 +93,7 @@ watch(() => [props.path, props.staged], loadDiff, { immediate: true })
 }
 
 .close-btn:hover {
-  color: #ffffff;
+  color: var(--color-text);
 }
 
 .diff-editor {

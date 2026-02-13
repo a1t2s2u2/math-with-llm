@@ -1,3 +1,4 @@
+import warnings
 from pathlib import Path
 
 import google.generativeai as genai
@@ -6,6 +7,10 @@ from app.config import settings
 
 
 def configure_gemini() -> genai.GenerativeModel:
+    # google.generativeaiの非推奨警告を抑制（google.genaiへの移行は将来対応）
+    warnings.filterwarnings(
+        "ignore", category=FutureWarning, module="google.generativeai"
+    )
     """Gemini APIを設定してモデルを返す。"""
     if not settings.gemini_api_key:
         raise ValueError("GEMINI_API_KEY is not configured")

@@ -368,9 +368,15 @@ const handleInsertLatex = (latex: string) => {
 }
 
 onMounted(async () => {
-  const ws = await getWorkspace()
-  workspacePath.value = ws.path
-  await loadTree()
+  try {
+    const ws = await getWorkspace()
+    workspacePath.value = ws.path
+    await loadTree()
+  } catch (e) {
+    console.error('Failed to initialize workspace:', e)
+    // エラーが発生してもUIは表示する
+    treeLoading.value = false
+  }
 })
 </script>
 

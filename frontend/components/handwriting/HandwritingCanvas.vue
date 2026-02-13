@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 const emit = defineEmits<{
   export: [blob: Blob]
@@ -11,6 +11,14 @@ const tool = ref<'pen' | 'eraser'>('pen')
 const lineWidth = ref(3)
 
 let ctx: CanvasRenderingContext2D | null = null
+
+const eraserRadius = computed(() => lineWidth.value * 4)
+const eraserCursor = computed(() => {
+  const r = eraserRadius.value
+  const size = r * 2
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}'><circle cx='${r}' cy='${r}' r='${r - 1}' fill='none' stroke='%23888' stroke-width='1.5'/></svg>`
+  return `url("data:image/svg+xml,${svg}") ${r} ${r}, crosshair`
+})
 
 onMounted(() => {
   if (!canvasRef.value) return
@@ -112,6 +120,7 @@ defineExpose({ exportImage, clear })
     <canvas
       ref="canvasRef"
       class="canvas"
+      :style="tool === 'eraser' ? { cursor: eraserCursor } : {}"
       @pointerdown="handlePointerDown"
       @pointermove="handlePointerMove"
       @pointerup="handlePointerUp"

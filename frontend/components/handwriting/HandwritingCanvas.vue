@@ -11,6 +11,26 @@ const tool = ref<'pen' | 'eraser'>('pen')
 const lineWidth = ref(3)
 
 let ctx: CanvasRenderingContext2D | null = null
+const undoStack = ref<ImageData[]>([])
+const redoStack = ref<ImageData[]>([])
+
+function saveSnapshot() {
+  if (!ctx || !canvasRef.value) return
+  undoStack.value.push(ctx.getImageData(0, 0, canvasRef.value.width, canvasRef.value.height))
+  redoStack.value = []
+}
+
+function undo() {
+  if (!ctx || !canvasRef.value || undoStack.value.length === 0) return
+  redoStack.value.push(ctx.getImageData(0, 0, canvasRef.value.width, canvasRef.value.height))
+  ctx.putImageData(undoStack.value.pop()!, 0, 0)
+}
+
+function redo() {
+  if (!ctx || !canvasRef.value || redoStack.value.length === 0) return
+  undoStack.value.push(ctx.getImageData(0, 0, canvasRef.value.width, canvasRef.value.height))
+  ctx.putImageData(redoStack.value.pop()!, 0, 0)
+}
 
 const eraserRadius = computed(() => lineWidth.value * 4)
 const eraserCursor = computed(() => {
@@ -57,6 +77,7 @@ function handlePointerDown(event: PointerEvent) {
   const coords = getCoordinates(event)
   if (!coords) return
 
+  saveSnapshot()
   isDrawing.value = true
   ctx.beginPath()
   ctx.moveTo(coords.x, coords.y)
@@ -89,6 +110,7 @@ function handlePointerCancel() {
 
 function clear() {
   if (!ctx || !canvasRef.value) return
+  saveSnapshot()
   ctx.fillStyle = '#ffffff'
   ctx.fillRect(0, 0, canvasRef.value.width, canvasRef.value.height)
 }
@@ -115,6 +137,8 @@ defineExpose({ exportImage, clear })
       <button :class="{ active: tool === 'eraser' }" class="tool-btn" @click="tool = 'eraser'">
         🧹 消しゴム
       </button>
+      <button class="tool-btn" :disabled="undoStack.length === 0" @click="undo">↩ 戻る</button>
+      <button class="tool-btn" :disabled="redoStack.length === 0" @click="redo">↪ 進む</button>
       <button class="tool-btn" @click="clear">🗑️ クリア</button>
     </div>
     <canvas
@@ -154,6 +178,11 @@ defineExpose({ exportImage, clear })
 
 .tool-btn:hover {
   background: #f0f0f0;
+}
+
+.tool-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .tool-btn.active {

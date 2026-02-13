@@ -6,7 +6,7 @@ from openai import OpenAI
 
 from app.config import settings
 from app.models.block import Block
-from app.models.llm import LeanGeneration, PatchResult, SkeletonCard, SkeletonResponse
+from app.models.llm import SkeletonCard, SkeletonResponse
 
 client = OpenAI(api_key=settings.openai_api_key)
 
@@ -72,39 +72,6 @@ def generate_skeleton(block: Block, context: str = "") -> SkeletonResponse:
     )
 
 
-def generate_lean(block: Block, context: str = "") -> LeanGeneration:
-    prompt = f"""Convert the following LaTeX mathematical statement to Lean 4 code.
-
-Statement:
-{block.latex_fragment}
-
-Context:
-{context}
-
-Generate Lean 4 code with:
-1. Necessary imports (list them separately)
-2. Type declarations for variables
-3. The theorem/lemma/definition structure
-4. Use 'sorry' for proof placeholders
-
-Output as JSON:
-{{
-  "lean_code": "theorem name : statement := by sorry",
-  "imports": ["Mathlib.Algebra.Group.Defs", "..."],
-  "notes": "Any important notes about the conversion"
-}}"""
-
-    result = json.loads(
-        _call_llm(
-            "You are a Lean 4 code generator. "
-            "Generate skeleton code with 'sorry' placeholders.",
-            prompt,
-            json_mode=True,
-        )
-    )
-    return LeanGeneration(**result)
-
-
 def chat(
     message: str,
     context_type: Literal["block", "selection"] | None,
@@ -163,42 +130,3 @@ def chat_stream(
         "簡潔かつ正確に回答してください。",
         f"{message}{context_text}",
     )
-
-
-def generate_fix_patch(lean_code: str, diagnostics: list[dict]) -> PatchResult:
-    diagnostics_str = "\n".join(
-        [
-            f"Line {d.get('line', '?')}, Col {d.get('column', '?')}: "
-            f"{d.get('message', '')}"
-            for d in diagnostics
-        ]
-    )
-
-    prompt = f"""Fix the following Lean 4 code based on error diagnostics.
-
-Lean Code:
-{lean_code}
-
-Errors:
-{diagnostics_str}
-
-Generate a minimal fix as a unified diff patch. Focus on:
-1. Adding missing imports
-2. Fixing type annotations
-3. Correcting syntax
-4. Resolving name resolution issues
-
-Output as JSON:
-{{
-  "patch": "diff format patch",
-  "description": "Brief description of changes"
-}}"""
-
-    result = json.loads(
-        _call_llm(
-            "You are a Lean 4 code fixer. Generate minimal diff patches.",
-            prompt,
-            json_mode=True,
-        )
-    )
-    return PatchResult(**result)

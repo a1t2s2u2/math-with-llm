@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api import assist, files, git, handwriting, lean, parse
+from app.api import assist, files, git, handwriting, parse
 from app.config import settings
 
 app = FastAPI(title="math-with-llm API", version="0.1.0")
@@ -33,7 +33,6 @@ def handle_value_error(_request: Request, exc: ValueError) -> JSONResponse:
 
 app.include_router(parse.router)
 app.include_router(assist.router)
-app.include_router(lean.router)
 app.include_router(files.router)
 app.include_router(git.router)
 app.include_router(handwriting.router)

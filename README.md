@@ -1,33 +1,29 @@
 # math-with-llm
 
-LaTeX数学ノートエディタ with LLM支援 + Lean4検証
+LaTeX数学ノートエディタ with LLM支援
 
 ## 概要
 
-リアルタイムLaTeX編集、LLM支援による証明スケルトン生成、Lean4による機械的検証を統合したWebアプリケーション。
+リアルタイムLaTeX編集とLLM支援による証明スケルトン生成を統合したWebアプリケーション。
 
 ## 主な機能
 
 ### コアバリュー（spec.mdより）
 
 1. **リアルタイム性** - LaTeX編集→KaTeXプレビューが遅延なく追従
-2. **LLM支援** - 証明戦略提案、LaTeX→Lean変換、エラーパッチ生成
-3. **Lean検証ループ** - LaTeX→Lean→チェック→修正を1画面で完結
+2. **LLM支援** - 証明戦略提案やチャットによる数学サポート
 
 ### 技術スタック
 
 - **Backend**: FastAPI（Python 3.12）
-  - LaTeX解析（ブロック・シンボル・TODO抽出）
-  - OpenAI gpt-5-mini統合
-  - Lean4サンドボックス実行
-  - ファイルベースJSON永続化
+  - LaTeX解析（ブロック抽出）
+  - OpenAI gpt-4o-mini統合
+  - ファイルベースのワークスペース管理
 
 - **Frontend**: Nuxt 3（Vue 3, TypeScript）
   - デュアルペインエディタ（LaTeX + プレビュー）
-  - Leanパネル（コード・診断・パッチ）
-  - アウトライン・定義台帳・シンボルテーブル
-
-- **Verification**: Lean4 + mathlib（Docker sandbox）
+  - Git統合パネル
+  - アウトライン・ブロック管理
 
 ## セットアップ
 
@@ -92,48 +88,49 @@ npm run dev
 
 ## API構造
 
-### ノート管理
+### ファイル管理
 
-- `POST /notes` - ノート作成
-- `GET /notes/{note_id}` - ノート取得
-- `PUT /notes/{note_id}` - LaTeX更新（自動解析）
+- `GET /files/tree` - ファイルツリー取得
+- `GET /files/{path}` - ファイル読み込み
+- `PUT /files/{path}` - ファイル更新
+- `POST /files` - ファイル作成
+- `DELETE /files/{path}` - ファイル削除
 
 ### 解析
 
-- `POST /parse` - LaTeX解析（ブロック/シンボル/TODO抽出）
+- `POST /parse` - LaTeX解析（ブロック抽出）
 
 ### LLM支援
 
 - `POST /assist/skeleton` - 証明スケルトン生成
-- `POST /assist/lean/generate` - LaTeX→Lean変換
-- `POST /assist/lean/fix` - Leanエラーパッチ生成
+- `POST /assist/chat` - チャット
+- `POST /assist/chat/stream` - ストリーミングチャット
 
-### Lean検証
+### Git統合
 
-- `POST /lean/check` - Leanコードチェック
+- `GET /git/status` - Git状態取得
+- `POST /git/stage` - ファイルステージング
+- `POST /git/commit` - コミット作成
 
 ## ディレクトリ構造
 
 ```
 /workspaces/math-with-llm/
 ├── backend/              # FastAPI アプリケーション
-│   ├── app/
-│   │   ├── api/         # APIエンドポイント
-│   │   ├── models/      # Pydanticモデル
-│   │   ├── services/    # ビジネスロジック（parser, llm, lean, storage）
-│   │   └── utils/       # ユーティリティ
-│   └── tests/
+│   └── app/
+│       ├── api/         # APIエンドポイント
+│       ├── models/      # Pydanticモデル
+│       ├── services/    # ビジネスロジック
+│       └── utils/       # ユーティリティ
 ├── frontend/            # Nuxt 3 アプリケーション
 │   ├── components/      # Vueコンポーネント
 │   ├── composables/     # Vue composables
 │   ├── pages/           # ルーティングページ
 │   ├── types/           # TypeScript型定義
 │   └── utils/           # API client等
-├── lean/                # Lean4サンドボックス
-│   ├── Dockerfile
-│   ├── template.lean
-│   └── entrypoint.sh
-├── data/                # ノートJSONストレージ
+├── command/             # 開発用スクリプト
+├── data/                # サンプルTeXファイル
+├── docs/                # ドキュメント
 └── docker-compose.yml
 ```
 

@@ -7,7 +7,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from app.models.block import Block
-from app.models.llm import LeanGeneration, PatchResult, SkeletonResponse
+from app.models.llm import SkeletonResponse
 from app.services import file_storage, llm
 
 router = APIRouter(prefix="/assist", tags=["assist"])
@@ -27,16 +27,6 @@ class SkeletonRequest(BaseModel):
     block_id: str
 
 
-class LeanGenerateRequest(BaseModel):
-    file_path: str
-    block_id: str
-
-
-class LeanFixRequest(BaseModel):
-    lean_code: str
-    diagnostics: list[dict[str, str | int]]
-
-
 class ChatRequest(BaseModel):
     message: str
     context_type: Literal["block", "selection"] | None = None
@@ -47,17 +37,6 @@ class ChatRequest(BaseModel):
 def generate_skeleton_endpoint(request: SkeletonRequest) -> SkeletonResponse:
     block, context = _find_block(request.file_path, request.block_id)
     return llm.generate_skeleton(block, context)
-
-
-@router.post("/lean/generate", response_model=LeanGeneration)
-def generate_lean_endpoint(request: LeanGenerateRequest) -> LeanGeneration:
-    block, context = _find_block(request.file_path, request.block_id)
-    return llm.generate_lean(block, context)
-
-
-@router.post("/lean/fix", response_model=PatchResult)
-def generate_fix_endpoint(request: LeanFixRequest) -> PatchResult:
-    return llm.generate_fix_patch(request.lean_code, request.diagnostics)
 
 
 class ChatResponse(BaseModel):

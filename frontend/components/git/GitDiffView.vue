@@ -75,13 +75,13 @@ watch(() => [props.path, props.staged], loadDiff, { immediate: true })
 }
 
 .diff-path {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--color-text-secondary);
 }
 
 .diff-label {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--color-text-muted);
 }
 
@@ -90,7 +90,7 @@ watch(() => [props.path, props.staged], loadDiff, { immediate: true })
   background: none;
   border: none;
   color: var(--color-text-muted);
-  font-size: 18px;
+  font-size: var(--font-size-lg);
   cursor: pointer;
   padding: 0 4px;
   line-height: 1;

@@ -173,7 +173,7 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
 
 .workspace-label {
   display: block;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--color-text-muted);
   cursor: pointer;
   overflow: hidden;
@@ -186,7 +186,7 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
 }
 
 .title {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--color-text-secondary);
   text-transform: uppercase;
@@ -203,7 +203,7 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
   border: none;
   color: var(--color-text-secondary);
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--font-size-icon);
   border-radius: 3px;
 }
 
@@ -223,7 +223,7 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
   border: 1px solid var(--color-primary);
   border-radius: 3px;
   color: var(--color-text);
-  font-size: 13px;
+  font-size: var(--font-size-base);
   outline: none;
 }
 
@@ -231,7 +231,7 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
 .empty {
   padding: 16px;
   color: var(--color-text-muted);
-  font-size: 13px;
+  font-size: var(--font-size-base);
   text-align: center;
 }
 
@@ -259,7 +259,7 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
   background: none;
   border: none;
   color: var(--color-text);
-  font-size: 13px;
+  font-size: var(--font-size-base);
   text-align: left;
   cursor: pointer;
 }

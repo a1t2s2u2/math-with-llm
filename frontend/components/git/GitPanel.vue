@@ -158,7 +158,7 @@ defineExpose({ refresh })
   height: 100%;
   overflow-y: auto;
   padding: 8px;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
 }
 
@@ -178,7 +178,7 @@ defineExpose({ refresh })
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
 }
 
 .init-btn:hover {
@@ -190,12 +190,12 @@ defineExpose({ refresh })
   align-items: center;
   gap: 6px;
   padding: 4px 0 8px;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   color: var(--color-text);
 }
 
 .branch-icon {
-  font-size: 14px;
+  font-size: var(--font-size-icon);
 }
 
 .commit-section {
@@ -211,7 +211,7 @@ defineExpose({ refresh })
   border: 1px solid var(--color-border);
   border-radius: 3px;
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   outline: none;
 }
 
@@ -226,7 +226,7 @@ defineExpose({ refresh })
   border: none;
   border-radius: 3px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   white-space: nowrap;
 }
 
@@ -248,7 +248,7 @@ defineExpose({ refresh })
   align-items: center;
   gap: 6px;
   padding: 4px 0;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   text-transform: uppercase;
   color: var(--color-text-muted);
@@ -258,7 +258,7 @@ defineExpose({ refresh })
   background: var(--color-bg-hover);
   border-radius: 8px;
   padding: 0 6px;
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   font-weight: normal;
 }
 
@@ -276,7 +276,7 @@ defineExpose({ refresh })
 }
 
 .status-badge {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   width: 14px;
   text-align: center;
@@ -304,7 +304,7 @@ defineExpose({ refresh })
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
 }
 
 .action-btn {
@@ -318,7 +318,7 @@ defineExpose({ refresh })
   border-radius: 3px;
   color: var(--color-text-secondary);
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--font-size-icon);
   font-weight: bold;
   flex-shrink: 0;
   opacity: 0;

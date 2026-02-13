@@ -137,7 +137,7 @@ const handleDrop = (event: DragEvent) => {
 }
 
 .icon {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   width: 16px;
   text-align: center;
   flex-shrink: 0;
@@ -145,15 +145,15 @@ const handleDrop = (event: DragEvent) => {
 
 .folder-icon {
   color: var(--color-text-muted);
-  font-size: 10px;
+  font-size: var(--font-size-xs);
 }
 
 .file-icon {
-  font-size: 14px;
+  font-size: var(--font-size-icon);
 }
 
 .name {
-  font-size: 13px;
+  font-size: var(--font-size-base);
   color: var(--color-text);
   overflow: hidden;
   text-overflow: ellipsis;

@@ -270,14 +270,14 @@ defineExpose({
 
 .panel-header h3 {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--color-text-secondary);
 }
 
 .clear-button {
   padding: 2px 8px;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   background: var(--color-border);
   color: var(--color-text-secondary);
   border: none;
@@ -297,7 +297,7 @@ defineExpose({
 
 .empty-state {
   color: var(--color-text-dimmed);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   text-align: center;
   padding: 24px;
 }
@@ -311,7 +311,7 @@ defineExpose({
   margin-bottom: 12px;
   padding: 10px 12px;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: var(--font-size-base);
   line-height: 1.5;
 }
 
@@ -408,7 +408,7 @@ defineExpose({
   padding: 6px 12px;
   background: var(--color-bg-secondary);
   border-top: 1px solid var(--color-border);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
 }
 
 .context-label {
@@ -426,7 +426,7 @@ defineExpose({
 
 .skeleton-button {
   padding: 2px 8px;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   background: var(--color-primary);
   color: #ffffff;
   border: none;
@@ -450,7 +450,7 @@ defineExpose({
   border: none;
   color: var(--color-text-dimmed);
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }
 
 .context-clear:hover {
@@ -463,7 +463,7 @@ defineExpose({
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
   border-radius: 8px;
-  font-size: 13px;
+  font-size: var(--font-size-base);
   line-height: 1.5;
 }
 
@@ -485,7 +485,7 @@ defineExpose({
 }
 
 .skeleton-section-title {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--color-text-secondary);
   margin-bottom: 4px;
@@ -518,7 +518,7 @@ defineExpose({
   border: 1px solid var(--color-border);
   border-radius: 4px;
   color: var(--color-text);
-  font-size: 13px;
+  font-size: var(--font-size-base);
   font-family: inherit;
   resize: none;
   outline: none;
@@ -538,7 +538,7 @@ defineExpose({
   color: #ffffff;
   border: none;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   cursor: pointer;
   flex-shrink: 0;
 }

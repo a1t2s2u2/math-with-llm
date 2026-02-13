@@ -401,7 +401,7 @@ onMounted(async () => {
 
 .header h1 {
   margin: 0;
-  font-size: 14px;
+  font-size: var(--font-size-base);
   font-weight: 500;
   color: var(--color-text-secondary);
 }
@@ -412,9 +412,9 @@ onMounted(async () => {
 
 .sync-toggle {
   padding: 4px 12px;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   background: var(--color-border);
-  border: 1px solid #5a5a5a;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   color: var(--color-text-muted);
   cursor: pointer;
@@ -463,7 +463,7 @@ onMounted(async () => {
   background: none;
   border: none;
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   cursor: pointer;
   border-bottom: 2px solid transparent;
 }
@@ -496,13 +496,13 @@ onMounted(async () => {
 }
 
 .empty-content h2 {
-  font-size: 18px;
+  font-size: var(--font-size-lg);
   font-weight: 500;
   margin-bottom: 8px;
 }
 
 .empty-content p {
-  font-size: 14px;
+  font-size: var(--font-size-base);
 }
 
 .pane {
@@ -516,7 +516,7 @@ onMounted(async () => {
   padding: 8px 16px;
   background: var(--color-bg-header);
   border-bottom: 1px solid var(--color-border);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--color-text-secondary);
   flex-shrink: 0;
@@ -528,7 +528,7 @@ onMounted(async () => {
 .handwriting-btn {
   margin-left: auto;
   padding: 4px 12px;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   background: var(--color-bg-main);
   border: 1px solid var(--color-border);
   border-radius: 4px;

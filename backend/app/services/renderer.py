@@ -56,12 +56,12 @@ def render_latex_to_html(source: str) -> RenderResult:
 def _convert_display_math(
     html: str, errors: list[str], tracker: _PositionTracker
 ) -> str:
-    r"""ディスプレイ数式 \[...\] を行番号付きMathMLに変換する。"""
+    r"""ディスプレイ数式 $$...$$ と \[...\] を行番号付きMathMLに変換する。"""
 
-    def replace_match(match: re.Match[str]) -> str:
+    def replace_double_dollar(match: re.Match[str]) -> str:
         latex_math = match.group(1)
-        search_text = re.escape(f"\\[{latex_math}\\]")
-        line_num = tracker.find_line(search_text, "display_math")
+        search_text = re.escape(f"$${latex_math}$$")
+        line_num = tracker.find_line(search_text, "display_math_dollar")
         try:
             mathml = converter.convert(latex_math)
             return f'<div class="display-math" data-line="{line_num}">{mathml}</div>'
@@ -69,7 +69,23 @@ def _convert_display_math(
             errors.append(f"Display math error: {str(e)}")
             return match.group(0)
 
-    return re.sub(r"\\\[(.*?)\\\]", replace_match, html, flags=re.DOTALL)
+    def replace_bracket(match: re.Match[str]) -> str:
+        latex_math = match.group(1)
+        search_text = re.escape(f"\\[{latex_math}\\]")
+        line_num = tracker.find_line(search_text, "display_math_bracket")
+        try:
+            mathml = converter.convert(latex_math)
+            return f'<div class="display-math" data-line="{line_num}">{mathml}</div>'
+        except Exception as e:
+            errors.append(f"Display math error: {str(e)}")
+            return match.group(0)
+
+    # $$...$$ を先に処理（より具体的なパターン）
+    html = re.sub(r"\$\$(.*?)\$\$", replace_double_dollar, html, flags=re.DOTALL)
+    # \[...\] を処理
+    html = re.sub(r"\\\[(.*?)\\\]", replace_bracket, html, flags=re.DOTALL)
+
+    return html
 
 
 def _convert_inline_math(html: str, errors: list[str]) -> str:

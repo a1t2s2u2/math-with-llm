@@ -10,7 +10,7 @@ class Settings(BaseSettings):
 
     openai_api_key: str
     gemini_api_key: str = ""
-    workspace_root: Path = Path.cwd() / "workspace"
+    workspace_root: Path = Path.cwd() / "data"
     llm_model: str = "gpt-5-mini"
     lean_timeout: int = 10
     git_timeout: int = 10

@@ -255,7 +255,7 @@ defineExpose({
   flex-direction: column;
   height: 100%;
   background: var(--color-bg-main);
-  border-left: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
 }
 
 .panel-header {

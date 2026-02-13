@@ -65,7 +65,7 @@ defineExpose({ open, close })
     <div class="modal-content" @click.stop>
       <div class="modal-header">
         <h2>手書き数式入力</h2>
-        <button @click="close" class="close-btn">×</button>
+        <button class="close-btn" @click="close">×</button>
       </div>
 
       <div class="modal-body">
@@ -77,8 +77,8 @@ defineExpose({ open, close })
           {{ error }}
         </div>
         <div class="button-group">
-          <button @click="close" class="btn btn-secondary">キャンセル</button>
-          <button @click="handleConvert" :disabled="isConverting" class="btn btn-primary">
+          <button class="btn btn-secondary" @click="close">キャンセル</button>
+          <button :disabled="isConverting" class="btn btn-primary" @click="handleConvert">
             {{ isConverting ? '変換中...' : '変換' }}
           </button>
         </div>

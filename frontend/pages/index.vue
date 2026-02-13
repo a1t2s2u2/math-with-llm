@@ -95,7 +95,7 @@
                   <div class="pane latex-pane">
                     <div class="pane-header">
                       {{ currentFile.name }}{{ isDirty ? ' *' : '' }}
-                      <button @click="openHandwriting" class="handwriting-btn">
+                      <button class="handwriting-btn" @click="openHandwriting">
                         ✏️ 手書き入力
                       </button>
                     </div>

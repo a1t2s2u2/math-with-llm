@@ -5,7 +5,7 @@
       <button v-if="messages.length > 0" class="clear-button" @click="clearAll">Clear</button>
     </div>
 
-    <div class="messages-container" ref="messagesRef">
+    <div ref="messagesRef" class="messages-container">
       <template v-if="skeleton">
         <div v-for="(card, i) in skeleton" :key="i" class="skeleton-card">
           <div class="skeleton-strategy">{{ card.strategy }}</div>
@@ -36,7 +36,7 @@
 
         <div v-for="(msg, i) in messages" :key="i" class="message" :class="msg.role">
           <div class="message-content" v-html="renderMath(msg.content)" />
-          <button class="copy-button" @click="copyMessage(msg.content)" title="コピー">
+          <button class="copy-button" title="コピー" @click="copyMessage(msg.content)">
             <svg v-if="copiedIndex === i" viewBox="0 0 24 24" fill="currentColor">
               <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
             </svg>
@@ -78,10 +78,10 @@
       <textarea
         v-model="inputText"
         placeholder="質問を入力... (Enterで送信)"
-        @keydown="handleKeydown"
         :disabled="loading || streaming"
+        @keydown="handleKeydown"
       />
-      <button class="send-button" @click="sendMessage" :disabled="!canSend">送信</button>
+      <button class="send-button" :disabled="!canSend" @click="sendMessage">送信</button>
     </div>
   </div>
 </template>

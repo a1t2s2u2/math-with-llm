@@ -58,7 +58,7 @@ function handlePointerDown(event: PointerEvent) {
     ctx.lineWidth = lineWidth.value
   } else {
     ctx.strokeStyle = '#ffffff'
-    ctx.lineWidth = lineWidth.value * 3
+    ctx.lineWidth = lineWidth.value * 8
   }
 }
 
@@ -101,13 +101,13 @@ defineExpose({ exportImage, clear })
 <template>
   <div class="handwriting-canvas">
     <div class="toolbar">
-      <button :class="{ active: tool === 'pen' }" @click="tool = 'pen'" class="tool-btn">
+      <button :class="{ active: tool === 'pen' }" class="tool-btn" @click="tool = 'pen'">
         ✏️ ペン
       </button>
-      <button :class="{ active: tool === 'eraser' }" @click="tool = 'eraser'" class="tool-btn">
+      <button :class="{ active: tool === 'eraser' }" class="tool-btn" @click="tool = 'eraser'">
         🧹 消しゴム
       </button>
-      <button @click="clear" class="tool-btn">🗑️ クリア</button>
+      <button class="tool-btn" @click="clear">🗑️ クリア</button>
     </div>
     <canvas
       ref="canvasRef"

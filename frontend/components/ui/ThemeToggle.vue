@@ -1,8 +1,8 @@
 <template>
   <button
     class="theme-toggle"
-    @click="toggleTheme"
     :title="`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`"
+    @click="toggleTheme"
   >
     <svg
       v-if="theme === 'dark'"

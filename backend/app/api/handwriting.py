@@ -53,6 +53,8 @@ async def convert_handwriting(file: UploadFile = File(...)) -> ConvertResponse:
             status_code=500, detail=f"Failed to convert image: {e}"
         ) from e
 
-    relative_path = image_path.relative_to(Path.cwd())
+    # PROJECT_ROOT = config.pyから2階層上
+    project_root = Path(__file__).parent.parent.parent.parent
+    relative_path = image_path.relative_to(project_root)
 
     return ConvertResponse(latex=latex, image_path=str(relative_path))

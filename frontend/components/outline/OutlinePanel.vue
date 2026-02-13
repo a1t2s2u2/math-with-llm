@@ -120,26 +120,26 @@ const formatType = (type: string) => {
   font-weight: 600;
   padding: 1px 4px;
   border-radius: 2px;
-  background: #3e3e3e;
+  background: var(--color-bg-hover);
   color: var(--color-text-secondary);
 }
 
 .block-definition .block-type {
-  background: #0d6efd33;
-  color: #6cb2f7;
+  background: #0d6efd20;
+  color: #0d6efd;
 }
 
 .block-theorem .block-type,
 .block-lemma .block-type,
 .block-proposition .block-type,
 .block-corollary .block-type {
-  background: #19875433;
-  color: #6fcf97;
+  background: #19875420;
+  color: #198754;
 }
 
 .block-proof .block-type {
-  background: #ffc10733;
-  color: #ffd966;
+  background: #b8860b20;
+  color: #b8860b;
 }
 
 .block-label {

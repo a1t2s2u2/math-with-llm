@@ -162,12 +162,12 @@ watch(
 /* Proof environment */
 .preview-content :deep(.latex-env.proof) {
   border-left-color: #888;
-  background: #252525;
+  background: var(--color-bg-secondary);
 }
 
 .preview-content :deep(.proof .env-heading) {
   font-style: italic;
-  color: #dcdcaa;
+  color: var(--color-text-muted);
 }
 
 /* Lists */

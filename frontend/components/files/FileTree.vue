@@ -61,6 +61,7 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import type { FileNode } from '~/types/api'
+import { pickWorkspace } from '~/utils/api'
 import FileTreeNode from './FileTreeNode.vue'
 import WorkspacePicker from './WorkspacePicker.vue'
 
@@ -89,8 +90,13 @@ const newFileInputRef = ref<HTMLInputElement | null>(null)
 const contextMenu = ref<{ node: FileNode; x: number; y: number } | null>(null)
 const showWorkspacePicker = ref(false)
 
-const handlePickWorkspace = () => {
-  showWorkspacePicker.value = true
+const handlePickWorkspace = async () => {
+  const result = await pickWorkspace()
+  if (result.path) {
+    emit('changeWorkspace', result.path)
+  } else {
+    showWorkspacePicker.value = true
+  }
 }
 
 const handleWorkspaceSelect = (path: string) => {

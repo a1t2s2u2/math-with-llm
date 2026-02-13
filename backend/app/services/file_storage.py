@@ -46,20 +46,6 @@ def pick_directory() -> str:
     return ""
 
 
-def browse_directory(path: str | None) -> dict:
-    """指定パス内のサブディレクトリを一覧する。"""
-    target = Path(path).resolve() if path else Path.home()
-    if not target.is_dir():
-        raise NotADirectoryError(f"Not a directory: {path}")
-    dirs: list[str] = []
-    for item in sorted(target.iterdir(), key=lambda x: x.name.lower()):
-        if item.name.startswith("."):
-            continue
-        if item.is_dir():
-            dirs.append(item.name)
-    return {"current": str(target), "dirs": dirs}
-
-
 def _validate_path(path: str) -> Path:
     """ワークスペースルート内のパスを検証・解決する。"""
     root = _get_workspace_root()

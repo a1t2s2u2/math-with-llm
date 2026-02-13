@@ -61,14 +61,20 @@
       <button @click="handleRename">Rename</button>
       <button class="danger" @click="handleDelete">Delete</button>
     </div>
+
+    <WorkspacePicker
+      :show="showWorkspacePicker"
+      @close="showWorkspacePicker = false"
+      @select="handleWorkspaceSelect"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import type { FileNode } from '~/types/api'
-import { pickWorkspace } from '~/utils/api'
 import FileTreeNode from './FileTreeNode.vue'
+import WorkspacePicker from './WorkspacePicker.vue'
 
 defineProps<{
   tree: FileNode[]
@@ -96,12 +102,14 @@ const newFileInputRef = ref<HTMLInputElement | null>(null)
 const newFolderInputRef = ref<HTMLInputElement | null>(null)
 
 const contextMenu = ref<{ node: FileNode; x: number; y: number } | null>(null)
+const showWorkspacePicker = ref(false)
 
-const handlePickWorkspace = async () => {
-  const result = await pickWorkspace()
-  if (result.tree && result.path) {
-    emit('changeWorkspace', result.path)
-  }
+const handlePickWorkspace = () => {
+  showWorkspacePicker.value = true
+}
+
+const handleWorkspaceSelect = (path: string) => {
+  emit('changeWorkspace', path)
 }
 
 const createNewFile = () => {

@@ -32,12 +32,18 @@ def get_workspace_path() -> str:
 
 def pick_directory() -> str:
     """ネイティブフォルダ選択ダイアログを開き選択パスを返す。"""
-    result = subprocess.run(
-        ["osascript", "-e", 'POSIX path of (choose folder with prompt "Open Folder")'],
-        capture_output=True,
-        text=True,
-    )
-    return result.stdout.strip().rstrip("/")
+    import platform
+
+    system = platform.system()
+    if system == "Darwin":
+        prompt = 'POSIX path of (choose folder with prompt "Open Folder")'
+        result = subprocess.run(
+            ["osascript", "-e", prompt],
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip().rstrip("/")
+    return ""
 
 
 def browse_directory(path: str | None) -> dict:

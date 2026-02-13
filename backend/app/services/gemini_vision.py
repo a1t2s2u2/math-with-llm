@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from google import genai
 
 from app.config import settings
@@ -13,26 +11,9 @@ def get_gemini_client() -> genai.Client:
     return genai.Client(api_key=settings.gemini_api_key)
 
 
-def image_to_latex(image_path: Path) -> str:
-    """手書き数式画像をLaTeXコードに変換する。
-
-    Args:
-        image_path: 変換対象の画像ファイルパス
-
-    Returns:
-        LaTeXコード文字列
-
-    Raises:
-        ValueError: Gemini APIキーが未設定の場合
-        FileNotFoundError: 画像ファイルが存在しない場合
-    """
-    if not image_path.exists():
-        raise FileNotFoundError(f"Image file not found: {image_path}")
-
+def image_to_latex(image_bytes: bytes, mime_type: str = "image/png") -> str:
+    """手書き数式画像のバイトデータをLaTeXコードに変換する。"""
     client = get_gemini_client()
-
-    with open(image_path, "rb") as f:
-        image_bytes = f.read()
 
     prompt = """あなたは数式認識の専門家です。
 画像に書かれた手書き数式をLaTeX形式に変換してください。
@@ -48,7 +29,7 @@ def image_to_latex(image_path: Path) -> str:
     response = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=[
-            genai.types.Part.from_bytes(data=image_bytes, mime_type="image/png"),
+            genai.types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
             prompt,
         ],
     )

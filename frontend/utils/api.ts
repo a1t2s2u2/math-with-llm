@@ -205,9 +205,7 @@ export function generateSkeleton(
 
 // Handwriting API
 
-export async function convertHandwriting(
-  imageBlob: Blob
-): Promise<{ latex: string; image_path: string }> {
+export async function convertHandwriting(imageBlob: Blob): Promise<{ latex: string }> {
   const formData = new FormData()
   formData.append('file', imageBlob, 'handwriting.png')
 

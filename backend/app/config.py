@@ -18,7 +18,6 @@ class Settings(BaseSettings):
     llm_model: str = "gpt-4o-mini"
     git_timeout: int = 10
     cors_origins: list[str] = ["http://localhost:3000"]
-    handwriting_storage_path: Path = PROJECT_ROOT / "data" / "handwriting"
 
 
 settings = Settings()

@@ -54,27 +54,10 @@
   box-sizing: border-box;
 }
 
-html {
-  height: 100dvh;
-}
-
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overscroll-behavior: none;
-  height: 100dvh;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right)
-    env(safe-area-inset-bottom) env(safe-area-inset-left);
-}
-
-/* iOS PWA: suppress long-press context menu on UI elements */
-button,
-nav,
-header,
-[role='button'] {
-  -webkit-touch-callout: none;
-  user-select: none;
 }
 
 .container {

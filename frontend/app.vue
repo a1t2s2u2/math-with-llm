@@ -16,6 +16,6 @@ html,
 body,
 #__nuxt,
 .app {
-  height: 100dvh;
+  height: 100%;
 }
 </style>

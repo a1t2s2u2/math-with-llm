@@ -352,7 +352,11 @@ const handleGenerateSkeleton = async () => {
   }
 }
 
-const handleAIChat = async (message: string, context: AIContext | null) => {
+const handleAIChat = async (
+  message: string,
+  context: AIContext | null,
+  history: import('~/types/api').ChatMessage[]
+) => {
   if (!aiPanelRef.value) return
   aiPanelRef.value.startAssistantStream()
   try {
@@ -374,7 +378,7 @@ const handleAIChat = async (message: string, context: AIContext | null) => {
       (chunk) => {
         aiPanelRef.value?.appendToLastAssistant(chunk)
       },
-      options
+      { ...options, history }
     )
   } catch (e) {
     console.error('Failed to chat:', e)

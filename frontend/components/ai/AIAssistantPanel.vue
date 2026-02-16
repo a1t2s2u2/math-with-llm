@@ -100,7 +100,7 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
 import { useMathRender } from '~/composables/useMathRender'
-import type { AIContext, SkeletonCard, BlockReference } from '~/types/api'
+import type { AIContext, ChatMessage, SkeletonCard, BlockReference } from '~/types/api'
 import { PROVABLE_BLOCK_TYPES } from '~/utils/constants'
 
 interface Message {
@@ -110,7 +110,7 @@ interface Message {
 }
 
 const emit = defineEmits<{
-  send: [message: string, context: AIContext | null]
+  send: [message: string, context: AIContext | null, history: ChatMessage[]]
   generateSkeleton: []
 }>()
 
@@ -167,10 +167,13 @@ const sendMessage = () => {
   const text = inputText.value.trim()
   inputText.value = ''
 
+  // 送信前の履歴を取得（今回のユーザーメッセージは含めない）
+  const history: ChatMessage[] = messages.value.map((m) => ({ role: m.role, content: m.content }))
+
   messages.value.push({ role: 'user', content: text })
   scrollToBottom()
 
-  emit('send', text, context.value)
+  emit('send', text, context.value, history)
 }
 
 const addAssistantMessage = (content: string) => {

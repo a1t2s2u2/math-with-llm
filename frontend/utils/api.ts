@@ -1,6 +1,7 @@
 import type {
   FileNode,
   FileContent,
+  ChatMessage,
   GitStatus,
   GitDiff,
   GitCommitResult,
@@ -45,6 +46,7 @@ export async function chatStreamApi(
   options?: {
     filePath?: string
     blockId?: string
+    history?: ChatMessage[]
     onReferences?: (refs: BlockReference[]) => void
   }
 ): Promise<void> {
@@ -55,6 +57,7 @@ export async function chatStreamApi(
   }
   if (options?.filePath) body.file_path = options.filePath
   if (options?.blockId) body.block_id = options.blockId
+  if (options?.history?.length) body.history = options.history
 
   const response = await fetch(`${API_BASE}/assist/chat/stream`, {
     method: 'POST',

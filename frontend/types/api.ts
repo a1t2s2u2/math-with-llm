@@ -50,6 +50,11 @@ export interface GitCommitResult {
 
 // AI型定義
 
+export interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
 export interface AIContext {
   type: 'block' | 'selection'
   label: string

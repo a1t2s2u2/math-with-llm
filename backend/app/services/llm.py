@@ -94,14 +94,19 @@ def chat(
     )
 
 
-def _stream_llm(system: str, prompt: str) -> Generator[str, None, None]:
+def _stream_llm(
+    system: str,
+    prompt: str,
+    history: list[dict[str, str]] | None = None,
+) -> Generator[str, None, None]:
     """ストリーミングLLM呼び出しヘルパー"""
+    messages: list[dict[str, str]] = [{"role": "system", "content": system}]
+    if history:
+        messages.extend(history)
+    messages.append({"role": "user", "content": prompt})
     stream = client.chat.completions.create(
         model=settings.llm_model,
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": prompt},
-        ],
+        messages=messages,
         stream=True,
     )
     for chunk in stream:
@@ -114,6 +119,7 @@ def chat_stream(
     message: str,
     context_type: Literal["block", "selection"] | None,
     context_content: str | None,
+    history: list[dict[str, str]] | None = None,
 ) -> Generator[str, None, None]:
     context_text = ""
     if context_type and context_content:
@@ -129,6 +135,7 @@ def chat_stream(
         "ディスプレイ数式は $$...$$ で囲んでください。"
         "簡潔かつ正確に回答してください。",
         f"{message}{context_text}",
+        history,
     )
 
 
@@ -166,12 +173,13 @@ def chat_stream_with_tools(
     context_content: str | None,
     block_id: str,
     blocks: list[Block],
+    history: list[dict[str, str]] | None = None,
 ) -> Generator[dict[str, Any], None, None]:
     block_map = {b.id: b for b in blocks}
 
     current_block = block_map.get(block_id)
     if not current_block:
-        yield from _fallback_stream(message, context_content)
+        yield from _fallback_stream(message, context_content, history)
         return
 
     outline_lines = []
@@ -191,10 +199,10 @@ def chat_stream_with_tools(
     if context_content and context_content != current_block.latex_fragment:
         context_text = f"\n\n参照しているブロック:\n{context_content}"
 
-    messages: list[dict[str, Any]] = [
-        {"role": "system", "content": system},
-        {"role": "user", "content": f"{message}{context_text}"},
-    ]
+    messages: list[dict[str, Any]] = [{"role": "system", "content": system}]
+    if history:
+        messages.extend(history)
+    messages.append({"role": "user", "content": f"{message}{context_text}"})
 
     references: list[BlockReference] = []
 
@@ -248,17 +256,20 @@ def chat_stream_with_tools(
 
 
 def _fallback_stream(
-    message: str, context_content: str | None
+    message: str,
+    context_content: str | None,
+    history: list[dict[str, str]] | None = None,
 ) -> Generator[dict[str, Any], None, None]:
     context_text = ""
     if context_content:
         context_text = f"\n\n参照しているブロック:\n{context_content}"
+    messages: list[dict[str, Any]] = [{"role": "system", "content": _MATH_SYSTEM}]
+    if history:
+        messages.extend(history)
+    messages.append({"role": "user", "content": f"{message}{context_text}"})
     stream = client.chat.completions.create(
         model=settings.llm_model,
-        messages=[
-            {"role": "system", "content": _MATH_SYSTEM},
-            {"role": "user", "content": f"{message}{context_text}"},
-        ],
+        messages=messages,
         stream=True,
     )
     for chunk in stream:

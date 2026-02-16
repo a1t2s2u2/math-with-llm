@@ -16,9 +16,9 @@
     <div class="main-layout">
       <ResizablePanes
         :horizontal="true"
-        :initial-sizes="[20, 80]"
+        :initial-sizes="[12, 68, 20]"
         :collapsible="true"
-        :collapsible-panes="[0]"
+        :collapsible-panes="[0, 2]"
       >
         <template #pane-0>
           <div class="sidebar">
@@ -88,52 +88,47 @@
             </div>
           </div>
 
-          <ResizablePanes v-else :horizontal="false" :initial-sizes="[65, 35]">
+          <ResizablePanes v-else :horizontal="true" :initial-sizes="[50, 50]">
             <template #pane-0>
-              <ResizablePanes :horizontal="true" :initial-sizes="[50, 50]">
-                <template #pane-0>
-                  <div class="pane latex-pane">
-                    <div class="pane-header">
-                      {{ currentFile.name }}{{ isDirty ? ' *' : '' }}
-                      <button class="handwriting-btn" @click="openHandwriting">
-                        ✏️ 手書き入力
-                      </button>
-                    </div>
-                    <LatexEditor
-                      ref="editorRef"
-                      :model-value="localContent"
-                      :original-content="originalContent"
-                      :scroll-line="previewScrollLine"
-                      :sync-enabled="scrollSyncEnabled"
-                      @update:model-value="setLocalContent"
-                      @scroll="handleEditorScroll"
-                      @save="handleSave"
-                    />
-                  </div>
-                </template>
-                <template #pane-1>
-                  <div class="pane preview-pane">
-                    <div class="pane-header">Preview</div>
-                    <PreviewPane
-                      :rendered-html="currentFile.rendered_html"
-                      :scroll-line="editorScrollLine"
-                      :sync-enabled="scrollSyncEnabled"
-                      @scroll="handlePreviewScroll"
-                    />
-                  </div>
-                </template>
-              </ResizablePanes>
+              <div class="pane latex-pane">
+                <div class="pane-header">
+                  {{ currentFile.name }}{{ isDirty ? ' *' : '' }}
+                  <button class="handwriting-btn" @click="openHandwriting">✏️ 手書き入力</button>
+                </div>
+                <LatexEditor
+                  ref="editorRef"
+                  :model-value="localContent"
+                  :original-content="originalContent"
+                  :scroll-line="previewScrollLine"
+                  :sync-enabled="scrollSyncEnabled"
+                  @update:model-value="setLocalContent"
+                  @scroll="handleEditorScroll"
+                  @save="handleSave"
+                />
+              </div>
             </template>
             <template #pane-1>
-              <div class="ai-section">
-                <AIAssistantPanel
-                  ref="aiPanelRef"
-                  @send="handleAIChat"
-                  @generate-skeleton="handleGenerateSkeleton"
+              <div class="pane preview-pane">
+                <div class="pane-header">Preview</div>
+                <PreviewPane
+                  :rendered-html="currentFile.rendered_html"
+                  :scroll-line="editorScrollLine"
+                  :sync-enabled="scrollSyncEnabled"
+                  @scroll="handlePreviewScroll"
                 />
               </div>
             </template>
           </ResizablePanes>
+        </template>
+
+        <template #pane-2>
+          <div class="ai-section">
+            <AIAssistantPanel
+              ref="aiPanelRef"
+              @send="handleAIChat"
+              @generate-skeleton="handleGenerateSkeleton"
+            />
+          </div>
         </template>
       </ResizablePanes>
     </div>

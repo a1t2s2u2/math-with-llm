@@ -41,13 +41,19 @@ def render_latex_to_html(source: str) -> RenderResult:
         escaped_def = cmd_def.replace("\\", r"\\")
         html = re.sub(rf"\\{re.escape(cmd_name)}\b", escaped_def, html)
 
+    # Step 1.5: \textcolor{color}{content} → \color{color}{content} に正規化
+    html = re.sub(r"\\textcolor\{", r"\\color{", html)
+
     # Step 2: ディスプレイ数式 \[...\] を行番号付きで変換
     html = _convert_display_math(html, errors, tracker)
 
     # Step 3: インライン数式 $...$ を変換
     html = _convert_inline_math(html, errors)
 
-    # Step 4: LaTeX構造をHTMLに変換（行番号付き）
+    # Step 4: テキスト装飾コマンドを変換
+    html = _convert_text_commands(html)
+
+    # Step 5: LaTeX構造をHTMLに変換（行番号付き）
     html = _convert_structure(html, tracker)
 
     return RenderResult(html=html, errors=errors)
@@ -126,6 +132,50 @@ def _extract_custom_commands(text: str) -> dict[str, str]:
             commands[cmd_name] = text[start_pos : end_pos - 1]
 
     return commands
+
+
+def _find_brace_content(text: str, start: int) -> tuple[str, int] | None:
+    """start位置の '{' から対応する '}' までの中身と終了位置を返す。"""
+    if start >= len(text) or text[start] != "{":
+        return None
+    depth = 1
+    pos = start + 1
+    while depth > 0 and pos < len(text):
+        if text[pos] == "{":
+            depth += 1
+        elif text[pos] == "}":
+            depth -= 1
+        pos += 1
+    if depth != 0:
+        return None
+    return text[start + 1 : pos - 1], pos
+
+
+_TEXT_COMMANDS: dict[str, tuple[str, str]] = {
+    "textbf": ("<strong>", "</strong>"),
+    "textit": ("<em>", "</em>"),
+    "emph": ("<em>", "</em>"),
+    "underline": ("<u>", "</u>"),
+    "texttt": ("<code>", "</code>"),
+    "textsc": ('<span style="font-variant:small-caps">', "</span>"),
+}
+
+
+def _convert_text_commands(html: str) -> str:
+    """テキスト装飾コマンド（\\textbf, \\textit 等）をHTMLタグに変換する。"""
+    for cmd, (open_tag, close_tag) in _TEXT_COMMANDS.items():
+        pattern = re.compile(rf"\\{cmd}\{{")
+        while True:
+            m = pattern.search(html)
+            if not m:
+                break
+            brace_start = m.end() - 1  # '{' の位置
+            result = _find_brace_content(html, brace_start)
+            if result is None:
+                break
+            content, end_pos = result
+            html = html[: m.start()] + open_tag + content + close_tag + html[end_pos:]
+    return html
 
 
 def _convert_structure(html: str, tracker: _PositionTracker) -> str:

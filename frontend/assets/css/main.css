@@ -12,6 +12,7 @@
   --color-text-muted: #808080;
   --color-text-dimmed: #858585;
   --color-accent: #4ec9b0;
+  --color-math: #dcdcaa;
   --color-selected: #094771;
   --color-danger: #c42b1c;
   --color-git-added: #2ea04370;
@@ -40,6 +41,7 @@
   --color-text-muted: #666666;
   --color-text-dimmed: #999999;
   --color-accent: #00a896;
+  --color-math: #1a5fb4;
   --color-selected: #d6ebff;
   --color-danger: #d32f2f;
   --color-git-added: #28a74570;

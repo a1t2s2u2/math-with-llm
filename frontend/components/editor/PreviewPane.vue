@@ -243,6 +243,11 @@ watch(
 .preview-content :deep(.display-math) {
   margin: 16px 0;
   text-align: center;
+  color: var(--color-math);
+}
+
+.preview-content :deep(.display-math math) {
+  color: var(--color-math);
 }
 
 .preview-content :deep(.display-math .katex) {
@@ -251,6 +256,11 @@ watch(
 
 .preview-content :deep(.inline-math) {
   display: inline;
+  color: var(--color-math);
+}
+
+.preview-content :deep(.inline-math math) {
+  color: var(--color-math);
 }
 
 /* KaTeX overflow handling */

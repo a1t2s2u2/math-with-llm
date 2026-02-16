@@ -361,15 +361,16 @@ const handleAIChat = async (message: string, context: AIContext | null) => {
   if (!aiPanelRef.value) return
   aiPanelRef.value.startAssistantStream()
   try {
-    const options = context?.blockId && currentPath.value
-      ? {
-          filePath: currentPath.value,
-          blockId: context.blockId,
-          onReferences: (refs: import('~/types/api').BlockReference[]) => {
-            aiPanelRef.value?.setLastAssistantReferences(refs)
+    const options =
+      context?.blockId && currentPath.value
+        ? {
+            filePath: currentPath.value,
+            blockId: context.blockId,
+            onReferences: (refs: import('~/types/api').BlockReference[]) => {
+              aiPanelRef.value?.setLastAssistantReferences(refs)
+            }
           }
-        }
-      : undefined
+        : undefined
 
     await chatStreamApi(
       message,

@@ -10,6 +10,7 @@
       >
         {{ scrollSyncEnabled ? 'Sync ON' : 'Sync OFF' }}
       </button>
+      <ThemeToggle />
     </div>
 
     <div class="main-layout">
@@ -90,7 +91,10 @@
           <ResizablePanes v-else :horizontal="true" :initial-sizes="[50, 50]">
             <template #pane-0>
               <div class="pane latex-pane">
-                <div class="pane-header">{{ currentFile.name }}{{ isDirty ? ' *' : '' }}</div>
+                <div class="pane-header">
+                  {{ currentFile.name }}{{ isDirty ? ' *' : '' }}
+                  <button class="handwriting-btn" @click="openHandwriting">✏️ 手書き入力</button>
+                </div>
                 <LatexEditor
                   ref="editorRef"
                   :model-value="localContent"
@@ -128,6 +132,8 @@
         </template>
       </ResizablePanes>
     </div>
+
+    <HandwritingModal ref="handwritingModalRef" @insert="handleInsertLatex" />
   </div>
 </template>
 
@@ -159,6 +165,8 @@ import ResizablePanes from '~/components/ui/ResizablePanes.vue'
 import FileTree from '~/components/files/FileTree.vue'
 import GitPanel from '~/components/git/GitPanel.vue'
 import GitDiffView from '~/components/git/GitDiffView.vue'
+import ThemeToggle from '~/components/ui/ThemeToggle.vue'
+import HandwritingModal from '~/components/handwriting/HandwritingModal.vue'
 
 // ファイルツリー状態
 const fileTree = ref<FileNode[]>([])
@@ -184,6 +192,7 @@ const editorScrollLine = ref(1)
 const previewScrollLine = ref(1)
 const editorRef = ref<InstanceType<typeof LatexEditor> | null>(null)
 const aiPanelRef = ref<InstanceType<typeof AIAssistantPanel> | null>(null)
+const handwritingModalRef = ref<InstanceType<typeof HandwritingModal> | null>(null)
 
 const gitPanelRef = ref<InstanceType<typeof GitPanel> | null>(null)
 const diffView = ref<{ path: string; staged: boolean } | null>(null)
@@ -222,6 +231,13 @@ const handleChangeWorkspace = async (path: string) => {
 const handleFileSelect = async (path: string) => {
   await loadFile(path)
   await fetchOriginalContent(path)
+  if (currentFile.value && aiPanelRef.value) {
+    aiPanelRef.value.setContext({
+      type: 'block',
+      label: currentFile.value.name,
+      content: currentFile.value.content
+    })
+  }
 }
 
 const fetchOriginalContent = async (path: string) => {
@@ -309,7 +325,15 @@ const handleSelectBlock = (block: Block) => {
 
 const handleDeselectBlock = () => {
   if (!aiPanelRef.value) return
-  aiPanelRef.value.clearContext()
+  if (currentFile.value) {
+    aiPanelRef.value.setContext({
+      type: 'block',
+      label: currentFile.value.name,
+      content: currentFile.value.content
+    })
+  } else {
+    aiPanelRef.value.clearContext()
+  }
 }
 
 const handleGenerateSkeleton = async () => {
@@ -328,13 +352,34 @@ const handleGenerateSkeleton = async () => {
   }
 }
 
-const handleAIChat = async (message: string, context: AIContext | null) => {
+const handleAIChat = async (
+  message: string,
+  context: AIContext | null,
+  history: import('~/types/api').ChatMessage[]
+) => {
   if (!aiPanelRef.value) return
   aiPanelRef.value.startAssistantStream()
   try {
-    await chatStreamApi(message, context?.type || null, context?.content || null, (chunk) => {
-      aiPanelRef.value?.appendToLastAssistant(chunk)
-    })
+    const options =
+      context?.blockId && currentPath.value
+        ? {
+            filePath: currentPath.value,
+            blockId: context.blockId,
+            onReferences: (refs: import('~/types/api').BlockReference[]) => {
+              aiPanelRef.value?.setLastAssistantReferences(refs)
+            }
+          }
+        : undefined
+
+    await chatStreamApi(
+      message,
+      context?.type || null,
+      context?.content || null,
+      (chunk) => {
+        aiPanelRef.value?.appendToLastAssistant(chunk)
+      },
+      { ...options, history }
+    )
   } catch (e) {
     console.error('Failed to chat:', e)
     aiPanelRef.value.addAssistantMessage('エラーが発生しました。もう一度お試しください。')
@@ -343,10 +388,26 @@ const handleAIChat = async (message: string, context: AIContext | null) => {
   }
 }
 
+// 手書き入力
+const openHandwriting = () => {
+  handwritingModalRef.value?.open()
+}
+
+const handleInsertLatex = (latex: string) => {
+  editorRef.value?.insertTextAtCursor(latex)
+  setLocalContent(localContent.value)
+}
+
 onMounted(async () => {
-  const ws = await getWorkspace()
-  workspacePath.value = ws.path
-  await loadTree()
+  try {
+    const ws = await getWorkspace()
+    workspacePath.value = ws.path
+    await loadTree()
+  } catch (e) {
+    console.error('Failed to initialize workspace:', e)
+    // エラーが発生してもUIは表示する
+    treeLoading.value = false
+  }
 })
 </script>
 
@@ -371,7 +432,7 @@ onMounted(async () => {
 
 .header h1 {
   margin: 0;
-  font-size: 14px;
+  font-size: var(--font-size-base);
   font-weight: 500;
   color: var(--color-text-secondary);
 }
@@ -382,9 +443,9 @@ onMounted(async () => {
 
 .sync-toggle {
   padding: 4px 12px;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   background: var(--color-border);
-  border: 1px solid #5a5a5a;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   color: var(--color-text-muted);
   cursor: pointer;
@@ -398,7 +459,7 @@ onMounted(async () => {
 .sync-toggle.active {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-bg-main);
 }
 
 .main-layout {
@@ -433,17 +494,17 @@ onMounted(async () => {
   background: none;
   border: none;
   color: var(--color-text-secondary);
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   cursor: pointer;
   border-bottom: 2px solid transparent;
 }
 
 .tab:hover {
-  color: #ffffff;
+  color: var(--color-text);
 }
 
 .tab.active {
-  color: #ffffff;
+  color: var(--color-text);
   border-bottom-color: var(--color-primary);
 }
 
@@ -466,13 +527,13 @@ onMounted(async () => {
 }
 
 .empty-content h2 {
-  font-size: 18px;
+  font-size: var(--font-size-lg);
   font-weight: 500;
   margin-bottom: 8px;
 }
 
 .empty-content p {
-  font-size: 14px;
+  font-size: var(--font-size-base);
 }
 
 .pane {
@@ -486,10 +547,30 @@ onMounted(async () => {
   padding: 8px 16px;
   background: var(--color-bg-header);
   border-bottom: 1px solid var(--color-border);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--color-text-secondary);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.handwriting-btn {
+  margin-left: auto;
+  padding: 4px 12px;
+  font-size: var(--font-size-xs);
+  background: var(--color-bg-main);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.handwriting-btn:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-primary);
 }
 
 .latex-pane,

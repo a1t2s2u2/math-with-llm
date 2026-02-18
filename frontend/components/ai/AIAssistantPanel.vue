@@ -5,7 +5,7 @@
       <button v-if="messages.length > 0" class="clear-button" @click="clearAll">Clear</button>
     </div>
 
-    <div class="messages-container" ref="messagesRef">
+    <div ref="messagesRef" class="messages-container">
       <template v-if="skeleton">
         <div v-for="(card, i) in skeleton" :key="i" class="skeleton-card">
           <div class="skeleton-strategy">{{ card.strategy }}</div>
@@ -35,8 +35,19 @@
         </div>
 
         <div v-for="(msg, i) in messages" :key="i" class="message" :class="msg.role">
+          <div v-if="msg.references?.length" class="references-bar">
+            <span class="references-label">参照:</span>
+            <span
+              v-for="ref in msg.references"
+              :key="ref.id"
+              class="reference-badge"
+              :class="`ref-${ref.type}`"
+            >
+              {{ ref.type }}{{ ref.title ? `: ${ref.title}` : '' }}
+            </span>
+          </div>
           <div class="message-content" v-html="renderMath(msg.content)" />
-          <button class="copy-button" @click="copyMessage(msg.content)" title="コピー">
+          <button class="copy-button" title="コピー" @click="copyMessage(msg.content)">
             <svg v-if="copiedIndex === i" viewBox="0 0 24 24" fill="currentColor">
               <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
             </svg>
@@ -78,10 +89,10 @@
       <textarea
         v-model="inputText"
         placeholder="質問を入力... (Enterで送信)"
-        @keydown="handleKeydown"
         :disabled="loading || streaming"
+        @keydown="handleKeydown"
       />
-      <button class="send-button" @click="sendMessage" :disabled="!canSend">送信</button>
+      <button class="send-button" :disabled="!canSend" @click="sendMessage">送信</button>
     </div>
   </div>
 </template>
@@ -89,16 +100,17 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
 import { useMathRender } from '~/composables/useMathRender'
-import type { AIContext, SkeletonCard } from '~/types/api'
+import type { AIContext, ChatMessage, SkeletonCard, BlockReference } from '~/types/api'
 import { PROVABLE_BLOCK_TYPES } from '~/utils/constants'
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
+  references?: BlockReference[]
 }
 
 const emit = defineEmits<{
-  send: [message: string, context: AIContext | null]
+  send: [message: string, context: AIContext | null, history: ChatMessage[]]
   generateSkeleton: []
 }>()
 
@@ -155,10 +167,13 @@ const sendMessage = () => {
   const text = inputText.value.trim()
   inputText.value = ''
 
+  // 送信前の履歴を取得（今回のユーザーメッセージは含めない）
+  const history: ChatMessage[] = messages.value.map((m) => ({ role: m.role, content: m.content }))
+
   messages.value.push({ role: 'user', content: text })
   scrollToBottom()
 
-  emit('send', text, context.value)
+  emit('send', text, context.value, history)
 }
 
 const addAssistantMessage = (content: string) => {
@@ -178,6 +193,13 @@ const appendToLastAssistant = (chunk: string) => {
   if (last?.role === 'assistant') {
     last.content += chunk
     scrollToBottom()
+  }
+}
+
+const setLastAssistantReferences = (refs: BlockReference[]) => {
+  const last = messages.value[messages.value.length - 1]
+  if (last?.role === 'assistant') {
+    last.references = refs
   }
 }
 
@@ -238,6 +260,7 @@ defineExpose({
   addAssistantMessage,
   startAssistantStream,
   appendToLastAssistant,
+  setLastAssistantReferences,
   finishAssistantStream,
   setLoading,
   setContext,
@@ -255,6 +278,7 @@ defineExpose({
   flex-direction: column;
   height: 100%;
   background: var(--color-bg-main);
+  border-left: 1px solid var(--color-border);
 }
 
 .panel-header {
@@ -269,14 +293,14 @@ defineExpose({
 
 .panel-header h3 {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--color-text-secondary);
 }
 
 .clear-button {
   padding: 2px 8px;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   background: var(--color-border);
   color: var(--color-text-secondary);
   border: none;
@@ -296,7 +320,7 @@ defineExpose({
 
 .empty-state {
   color: var(--color-text-dimmed);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   text-align: center;
   padding: 24px;
 }
@@ -310,7 +334,7 @@ defineExpose({
   margin-bottom: 12px;
   padding: 10px 12px;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: var(--font-size-base);
   line-height: 1.5;
 }
 
@@ -342,11 +366,11 @@ defineExpose({
 
 .copy-button:hover {
   background: var(--color-bg-hover);
-  color: #ffffff;
+  color: var(--color-text);
 }
 
 .message.user {
-  background: #264f78;
+  background: var(--color-primary);
   color: #ffffff;
   margin-left: 24px;
 }
@@ -378,6 +402,50 @@ defineExpose({
   white-space: nowrap;
 }
 
+.references-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+  font-size: var(--font-size-xs);
+}
+
+.references-label {
+  color: var(--color-text-dimmed);
+}
+
+.reference-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: var(--font-size-xs);
+  background: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.reference-badge.ref-definition {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.reference-badge.ref-theorem,
+.reference-badge.ref-proposition {
+  background: #fce4ec;
+  color: #c62828;
+}
+
+.reference-badge.ref-lemma,
+.reference-badge.ref-corollary {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.reference-badge.ref-proof {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
 .loading-message {
   display: flex;
   align-items: center;
@@ -405,9 +473,9 @@ defineExpose({
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  background: #2d2d30;
+  background: var(--color-bg-secondary);
   border-top: 1px solid var(--color-border);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
 }
 
 .context-label {
@@ -417,7 +485,7 @@ defineExpose({
 
 .context-content {
   flex: 1;
-  color: #4fc3f7;
+  color: var(--color-accent);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -425,7 +493,7 @@ defineExpose({
 
 .skeleton-button {
   padding: 2px 8px;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   background: var(--color-primary);
   color: #ffffff;
   border: none;
@@ -449,11 +517,11 @@ defineExpose({
   border: none;
   color: var(--color-text-dimmed);
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--font-size-md);
 }
 
 .context-clear:hover {
-  color: #ffffff;
+  color: var(--color-text);
 }
 
 .skeleton-card {
@@ -462,13 +530,13 @@ defineExpose({
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
   border-radius: 8px;
-  font-size: 13px;
+  font-size: var(--font-size-base);
   line-height: 1.5;
 }
 
 .skeleton-strategy {
   font-weight: 600;
-  color: #4fc3f7;
+  color: var(--color-accent);
   margin-bottom: 6px;
 }
 
@@ -484,7 +552,7 @@ defineExpose({
 }
 
 .skeleton-section-title {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--color-text-secondary);
   margin-bottom: 4px;
@@ -517,7 +585,7 @@ defineExpose({
   border: 1px solid var(--color-border);
   border-radius: 4px;
   color: var(--color-text);
-  font-size: 13px;
+  font-size: var(--font-size-base);
   font-family: inherit;
   resize: none;
   outline: none;
@@ -537,7 +605,7 @@ defineExpose({
   color: #ffffff;
   border: none;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   cursor: pointer;
   flex-shrink: 0;
 }

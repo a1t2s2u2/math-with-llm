@@ -4,7 +4,7 @@
       <span class="title">Files</span>
       <div class="actions">
         <button class="action-btn" title="New File" @click="showNewFileInput = true">+</button>
-        <button class="action-btn" title="New Folder" @click="showNewFolderInput = true">📁</button>
+        <button class="action-btn" title="Open Workspace" @click="handlePickWorkspace">📁</button>
         <button class="action-btn" title="Refresh" @click="$emit('refresh')">↻</button>
       </div>
     </div>
@@ -23,18 +23,6 @@
         @keyup.enter="createNewFile"
         @keyup.escape="cancelNewFile"
         @blur="cancelNewFile"
-      />
-    </div>
-
-    <div v-if="showNewFolderInput" class="new-item-input">
-      <input
-        ref="newFolderInputRef"
-        v-model="newFolderName"
-        type="text"
-        placeholder="folder name"
-        @keyup.enter="createNewFolder"
-        @keyup.escape="cancelNewFolder"
-        @blur="cancelNewFolder"
       />
     </div>
 
@@ -89,17 +77,14 @@ const emit = defineEmits<{
 }>()
 
 const showNewFileInput = ref(false)
-const showNewFolderInput = ref(false)
 const newFileName = ref('')
-const newFolderName = ref('')
 const newFileInputRef = ref<HTMLInputElement | null>(null)
-const newFolderInputRef = ref<HTMLInputElement | null>(null)
 
 const contextMenu = ref<{ node: FileNode; x: number; y: number } | null>(null)
 
 const handlePickWorkspace = async () => {
   const result = await pickWorkspace()
-  if (result.tree && result.path) {
+  if (result.path) {
     emit('changeWorkspace', result.path)
   }
 }
@@ -118,18 +103,6 @@ const createNewFile = () => {
 const cancelNewFile = () => {
   showNewFileInput.value = false
   newFileName.value = ''
-}
-
-const createNewFolder = () => {
-  if (newFolderName.value.trim()) {
-    emit('createFolder', newFolderName.value.trim())
-  }
-  cancelNewFolder()
-}
-
-const cancelNewFolder = () => {
-  showNewFolderInput.value = false
-  newFolderName.value = ''
 }
 
 const handleContextMenu = (event: { node: FileNode; x: number; y: number }) => {
@@ -167,14 +140,8 @@ const focusNewFileInput = async () => {
   newFileInputRef.value?.focus()
 }
 
-const focusNewFolderInput = async () => {
-  await nextTick()
-  newFolderInputRef.value?.focus()
-}
-
-// showNewFileInput/showNewFolderInputの変更を監視
+// showNewFileInputの変更を監視
 watch(showNewFileInput, (val) => val && focusNewFileInput())
-watch(showNewFolderInput, (val) => val && focusNewFolderInput())
 
 // 外部クリックでコンテキストメニューを閉じる
 const handleGlobalClick = () => closeContextMenu()
@@ -206,7 +173,7 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
 
 .workspace-label {
   display: block;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--color-text-muted);
   cursor: pointer;
   overflow: hidden;
@@ -219,9 +186,9 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
 }
 
 .title {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   font-weight: 600;
-  color: #bbbbbb;
+  color: var(--color-text-secondary);
   text-transform: uppercase;
 }
 
@@ -236,7 +203,7 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
   border: none;
   color: var(--color-text-secondary);
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--font-size-icon);
   border-radius: 3px;
 }
 
@@ -256,7 +223,7 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
   border: 1px solid var(--color-primary);
   border-radius: 3px;
   color: var(--color-text);
-  font-size: 13px;
+  font-size: var(--font-size-base);
   outline: none;
 }
 
@@ -264,7 +231,7 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
 .empty {
   padding: 16px;
   color: var(--color-text-muted);
-  font-size: 13px;
+  font-size: var(--font-size-base);
   text-align: center;
 }
 
@@ -292,7 +259,7 @@ onUnmounted(() => document.removeEventListener('click', handleGlobalClick))
   background: none;
   border: none;
   color: var(--color-text);
-  font-size: 13px;
+  font-size: var(--font-size-base);
   text-align: left;
   cursor: pointer;
 }

@@ -158,7 +158,7 @@ defineExpose({ refresh })
   height: 100%;
   overflow-y: auto;
   padding: 8px;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
 }
 
@@ -178,11 +178,11 @@ defineExpose({ refresh })
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
 }
 
 .init-btn:hover {
-  background: #1a8ad4;
+  background: var(--color-primary-hover);
 }
 
 .branch-info {
@@ -190,12 +190,12 @@ defineExpose({ refresh })
   align-items: center;
   gap: 6px;
   padding: 4px 0 8px;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   color: var(--color-text);
 }
 
 .branch-icon {
-  font-size: 14px;
+  font-size: var(--font-size-icon);
 }
 
 .commit-section {
@@ -208,10 +208,10 @@ defineExpose({ refresh })
   flex: 1;
   padding: 4px 8px;
   background: var(--color-bg-input);
-  border: 1px solid #5a5a5a;
+  border: 1px solid var(--color-border);
   border-radius: 3px;
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   outline: none;
 }
 
@@ -226,7 +226,7 @@ defineExpose({ refresh })
   border: none;
   border-radius: 3px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   white-space: nowrap;
 }
 
@@ -236,7 +236,7 @@ defineExpose({ refresh })
 }
 
 .commit-btn:not(:disabled):hover {
-  background: #1a8ad4;
+  background: var(--color-primary-hover);
 }
 
 .file-section {
@@ -248,17 +248,17 @@ defineExpose({ refresh })
   align-items: center;
   gap: 6px;
   padding: 4px 0;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   text-transform: uppercase;
-  color: #969696;
+  color: var(--color-text-muted);
 }
 
 .count {
-  background: #4d4d4d;
+  background: var(--color-bg-hover);
   border-radius: 8px;
   padding: 0 6px;
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   font-weight: normal;
 }
 
@@ -272,11 +272,11 @@ defineExpose({ refresh })
 }
 
 .file-item:hover {
-  background: #2a2d2e;
+  background: var(--color-bg-hover);
 }
 
 .status-badge {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   width: 14px;
   text-align: center;
@@ -284,19 +284,19 @@ defineExpose({ refresh })
 }
 
 .status-badge.modified {
-  color: #e2c08d;
+  color: var(--color-git-modified);
 }
 .status-badge.added {
-  color: #73c991;
+  color: var(--color-git-added-text);
 }
 .status-badge.deleted {
-  color: #c74e39;
+  color: var(--color-git-deleted);
 }
 .status-badge.renamed {
-  color: #73c991;
+  color: var(--color-git-added-text);
 }
 .status-badge.untracked {
-  color: #73c991;
+  color: var(--color-git-added-text);
 }
 
 .file-path {
@@ -304,7 +304,7 @@ defineExpose({ refresh })
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
 }
 
 .action-btn {
@@ -318,7 +318,7 @@ defineExpose({ refresh })
   border-radius: 3px;
   color: var(--color-text-secondary);
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--font-size-icon);
   font-weight: bold;
   flex-shrink: 0;
   opacity: 0;
@@ -330,7 +330,7 @@ defineExpose({ refresh })
 
 .action-btn:hover {
   background: var(--color-bg-input);
-  border-color: #5a5a5a;
+  border-color: var(--color-border);
 }
 
 .action-btn.discard:hover {

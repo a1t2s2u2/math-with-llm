@@ -4,7 +4,7 @@
       <VueMonacoEditor
         v-model:value="localSource"
         language="latex"
-        theme="vs-dark"
+        :theme="editorTheme"
         :options="editorOptions"
         @change="onInput"
         @mount="onEditorMount"
@@ -17,11 +17,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, shallowRef } from 'vue'
+import { ref, watch, shallowRef, computed } from 'vue'
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
 import { debounce } from '~/utils/debounce'
 import { buildLCSIndices, matchBySimilarity } from '~/utils/gitDiff'
 import { registerLatexLanguage } from '~/utils/monacoLatex'
+import { useTheme } from '~/composables/useTheme'
 import type * as Monaco from 'monaco-editor'
 
 const props = defineProps<{
@@ -41,6 +42,9 @@ const localSource = ref(props.modelValue)
 const editorRef = shallowRef<Monaco.editor.IStandaloneCodeEditor | null>(null)
 const isScrollingProgrammatically = ref(false)
 const monacoInstance = shallowRef<typeof Monaco | null>(null)
+
+const { theme } = useTheme()
+const editorTheme = computed(() => (theme.value === 'dark' ? 'vs-dark' : 'vs'))
 
 const editorOptions: Monaco.editor.IStandaloneEditorConstructionOptions = {
   fontSize: 14,
@@ -206,7 +210,22 @@ const scrollToPosition = (charPos: number) => {
   }, 50)
 }
 
-defineExpose({ scrollToPosition })
+// カーソル位置にテキストを挿入するメソッド
+const insertTextAtCursor = (text: string) => {
+  if (!editorRef.value) return
+  const selection = editorRef.value.getSelection()
+  if (!selection) return
+
+  editorRef.value.executeEdits('handwriting', [
+    {
+      range: selection,
+      text
+    }
+  ])
+  editorRef.value.focus()
+}
+
+defineExpose({ scrollToPosition, insertTextAtCursor })
 </script>
 
 <style scoped>

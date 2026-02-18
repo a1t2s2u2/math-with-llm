@@ -2,16 +2,20 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# プロジェクトルート = config.pyから2階層上
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+ENV_FILE = PROJECT_ROOT / ".env"
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+        env_file=str(ENV_FILE), env_file_encoding="utf-8", extra="ignore"
     )
 
     openai_api_key: str
-    workspace_root: Path = Path("/Users/a1t2s2u2/Repository/math-note")
-    llm_model: str = "gpt-5-mini"
-    lean_timeout: int = 10
+    gemini_api_key: str = ""
+    workspace_root: Path = PROJECT_ROOT / "data"
+    llm_model: str = "gpt-4o-mini"
     git_timeout: int = 10
     cors_origins: list[str] = ["http://localhost:3000"]
 

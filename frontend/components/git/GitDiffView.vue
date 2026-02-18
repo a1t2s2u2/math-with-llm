@@ -11,16 +11,17 @@
         :modified="newContent"
         :options="editorOptions"
         language="latex"
-        theme="vs-dark"
+        :theme="editorTheme"
       />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { VueMonacoDiffEditor } from '@guolao/vue-monaco-editor'
 import { getGitDiff } from '~/utils/api'
+import { useTheme } from '~/composables/useTheme'
 
 const props = defineProps<{
   path: string
@@ -30,6 +31,9 @@ const props = defineProps<{
 defineEmits<{
   close: []
 }>()
+
+const { theme } = useTheme()
+const editorTheme = computed(() => (theme.value === 'dark' ? 'vs-dark' : 'vs'))
 
 const oldContent = ref('')
 const newContent = ref('')
@@ -71,13 +75,13 @@ watch(() => [props.path, props.staged], loadDiff, { immediate: true })
 }
 
 .diff-path {
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--color-text-secondary);
 }
 
 .diff-label {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--color-text-muted);
 }
 
@@ -86,14 +90,14 @@ watch(() => [props.path, props.staged], loadDiff, { immediate: true })
   background: none;
   border: none;
   color: var(--color-text-muted);
-  font-size: 18px;
+  font-size: var(--font-size-lg);
   cursor: pointer;
   padding: 0 4px;
   line-height: 1;
 }
 
 .close-btn:hover {
-  color: #ffffff;
+  color: var(--color-text);
 }
 
 .diff-editor {

@@ -1,12 +1,12 @@
 import json
 from collections.abc import Generator
-from typing import Literal
+from typing import Any, Literal
 
 from openai import OpenAI
 
 from app.config import settings
 from app.models.block import Block
-from app.models.llm import LeanGeneration, PatchResult, SkeletonCard, SkeletonResponse
+from app.models.llm import BlockReference, SkeletonCard, SkeletonResponse
 
 client = OpenAI(api_key=settings.openai_api_key)
 
@@ -72,39 +72,6 @@ def generate_skeleton(block: Block, context: str = "") -> SkeletonResponse:
     )
 
 
-def generate_lean(block: Block, context: str = "") -> LeanGeneration:
-    prompt = f"""Convert the following LaTeX mathematical statement to Lean 4 code.
-
-Statement:
-{block.latex_fragment}
-
-Context:
-{context}
-
-Generate Lean 4 code with:
-1. Necessary imports (list them separately)
-2. Type declarations for variables
-3. The theorem/lemma/definition structure
-4. Use 'sorry' for proof placeholders
-
-Output as JSON:
-{{
-  "lean_code": "theorem name : statement := by sorry",
-  "imports": ["Mathlib.Algebra.Group.Defs", "..."],
-  "notes": "Any important notes about the conversion"
-}}"""
-
-    result = json.loads(
-        _call_llm(
-            "You are a Lean 4 code generator. "
-            "Generate skeleton code with 'sorry' placeholders.",
-            prompt,
-            json_mode=True,
-        )
-    )
-    return LeanGeneration(**result)
-
-
 def chat(
     message: str,
     context_type: Literal["block", "selection"] | None,
@@ -127,14 +94,19 @@ def chat(
     )
 
 
-def _stream_llm(system: str, prompt: str) -> Generator[str, None, None]:
+def _stream_llm(
+    system: str,
+    prompt: str,
+    history: list[dict[str, str]] | None = None,
+) -> Generator[str, None, None]:
     """ストリーミングLLM呼び出しヘルパー"""
+    messages: list[dict[str, str]] = [{"role": "system", "content": system}]
+    if history:
+        messages.extend(history)
+    messages.append({"role": "user", "content": prompt})
     stream = client.chat.completions.create(
         model=settings.llm_model,
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": prompt},
-        ],
+        messages=messages,
         stream=True,
     )
     for chunk in stream:
@@ -147,6 +119,7 @@ def chat_stream(
     message: str,
     context_type: Literal["block", "selection"] | None,
     context_content: str | None,
+    history: list[dict[str, str]] | None = None,
 ) -> Generator[str, None, None]:
     context_text = ""
     if context_type and context_content:
@@ -162,43 +135,144 @@ def chat_stream(
         "ディスプレイ数式は $$...$$ で囲んでください。"
         "簡潔かつ正確に回答してください。",
         f"{message}{context_text}",
+        history,
     )
 
 
-def generate_fix_patch(lean_code: str, diagnostics: list[dict]) -> PatchResult:
-    diagnostics_str = "\n".join(
-        [
-            f"Line {d.get('line', '?')}, Col {d.get('column', '?')}: "
-            f"{d.get('message', '')}"
-            for d in diagnostics
-        ]
+_MATH_SYSTEM = (
+    "あなたは数学の専門家です。"
+    "数式は必ずLaTeX形式で記述してください。"
+    "インライン数式は $...$ で囲み、"
+    "ディスプレイ数式は $$...$$ で囲んでください。"
+    "簡潔かつ正確に回答してください。"
+)
+
+_GET_BLOCKS_TOOL: dict[str, Any] = {
+    "type": "function",
+    "function": {
+        "name": "get_blocks",
+        "description": "指定したIDのブロック（定義・定理・補題等）の内容を取得します。"
+        "前後の文脈が必要な場合に使ってください。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "block_ids": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "取得したいブロックのIDリスト",
+                }
+            },
+            "required": ["block_ids"],
+        },
+    },
+}
+
+
+def chat_stream_with_tools(
+    message: str,
+    context_content: str | None,
+    block_id: str,
+    blocks: list[Block],
+    history: list[dict[str, str]] | None = None,
+) -> Generator[dict[str, Any], None, None]:
+    block_map = {b.id: b for b in blocks}
+
+    current_block = block_map.get(block_id)
+    if not current_block:
+        yield from _fallback_stream(message, context_content, history)
+        return
+
+    outline_lines = []
+    for b in blocks:
+        marker = " ← 選択中" if b.id == block_id else ""
+        title_part = f" ({b.title})" if b.title else ""
+        outline_lines.append(f"- [{b.id}] {b.type.value}{title_part}{marker}")
+    outline = "\n".join(outline_lines)
+
+    system = (
+        f"{_MATH_SYSTEM}\n\n"
+        f"## ファイル内のブロック一覧\n{outline}\n\n"
+        "回答に他のブロックの内容が必要な場合は get_blocks ツールで取得できます。"
     )
 
-    prompt = f"""Fix the following Lean 4 code based on error diagnostics.
+    context_text = f"\n\n選択ブロックの内容:\n{current_block.latex_fragment}"
+    if context_content and context_content != current_block.latex_fragment:
+        context_text = f"\n\n参照しているブロック:\n{context_content}"
 
-Lean Code:
-{lean_code}
+    messages: list[dict[str, Any]] = [{"role": "system", "content": system}]
+    if history:
+        messages.extend(history)
+    messages.append({"role": "user", "content": f"{message}{context_text}"})
 
-Errors:
-{diagnostics_str}
+    references: list[BlockReference] = []
 
-Generate a minimal fix as a unified diff patch. Focus on:
-1. Adding missing imports
-2. Fixing type annotations
-3. Correcting syntax
-4. Resolving name resolution issues
-
-Output as JSON:
-{{
-  "patch": "diff format patch",
-  "description": "Brief description of changes"
-}}"""
-
-    result = json.loads(
-        _call_llm(
-            "You are a Lean 4 code fixer. Generate minimal diff patches.",
-            prompt,
-            json_mode=True,
+    for _ in range(3):
+        response = client.chat.completions.create(
+            model=settings.llm_model,
+            messages=messages,
+            tools=[_GET_BLOCKS_TOOL],
         )
+        choice = response.choices[0]
+
+        if choice.finish_reason != "tool_calls":
+            break
+
+        messages.append(choice.message.model_dump(exclude_none=True))
+
+        for tool_call in choice.message.tool_calls or []:
+            args = json.loads(tool_call.function.arguments)
+            block_ids = args.get("block_ids", [])
+            results = []
+            for bid in block_ids:
+                b = block_map.get(bid)
+                if b:
+                    results.append(f"[{b.id}] {b.type.value}: {b.latex_fragment}")
+                    references.append(
+                        BlockReference(id=b.id, type=b.type.value, title=b.title)
+                    )
+                else:
+                    results.append(f"[{bid}] not found")
+
+            messages.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": "\n\n".join(results),
+                }
+            )
+
+    if references:
+        yield {"references": [r.model_dump() for r in references]}
+
+    stream = client.chat.completions.create(
+        model=settings.llm_model,
+        messages=messages,
+        stream=True,
     )
-    return PatchResult(**result)
+    for chunk in stream:
+        delta = chunk.choices[0].delta.content
+        if delta:
+            yield {"content": delta}
+
+
+def _fallback_stream(
+    message: str,
+    context_content: str | None,
+    history: list[dict[str, str]] | None = None,
+) -> Generator[dict[str, Any], None, None]:
+    context_text = ""
+    if context_content:
+        context_text = f"\n\n参照しているブロック:\n{context_content}"
+    messages: list[dict[str, Any]] = [{"role": "system", "content": _MATH_SYSTEM}]
+    if history:
+        messages.extend(history)
+    messages.append({"role": "user", "content": f"{message}{context_text}"})
+    stream = client.chat.completions.create(
+        model=settings.llm_model,
+        messages=messages,
+        stream=True,
+    )
+    for chunk in stream:
+        delta = chunk.choices[0].delta.content
+        if delta:
+            yield {"content": delta}

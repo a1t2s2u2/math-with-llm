@@ -65,7 +65,7 @@ const formatType = (type: string) => {
 
 .empty {
   color: var(--color-text-dimmed);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   padding: 8px;
 }
 
@@ -116,35 +116,35 @@ const formatType = (type: string) => {
 
 .block-type {
   flex-shrink: 0;
-  font-size: 10px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   padding: 1px 4px;
   border-radius: 2px;
-  background: #3e3e3e;
+  background: var(--color-bg-hover);
   color: var(--color-text-secondary);
 }
 
 .block-definition .block-type {
-  background: #0d6efd33;
-  color: #6cb2f7;
+  background: #0d6efd20;
+  color: #0d6efd;
 }
 
 .block-theorem .block-type,
 .block-lemma .block-type,
 .block-proposition .block-type,
 .block-corollary .block-type {
-  background: #19875433;
-  color: #6fcf97;
+  background: #19875420;
+  color: #198754;
 }
 
 .block-proof .block-type {
-  background: #ffc10733;
-  color: #ffd966;
+  background: #b8860b20;
+  color: #b8860b;
 }
 
 .block-label {
   flex-shrink: 0;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--color-text-muted);
   font-family: monospace;
 }
@@ -152,7 +152,7 @@ const formatType = (type: string) => {
 .block-title {
   flex: 1;
   min-width: 0;
-  font-size: 12px;
+  font-size: var(--font-size-sm);
   color: var(--color-text);
   line-height: 1.4;
   overflow: hidden;

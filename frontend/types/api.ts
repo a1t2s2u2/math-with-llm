@@ -50,6 +50,11 @@ export interface GitCommitResult {
 
 // AI型定義
 
+export interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
 export interface AIContext {
   type: 'block' | 'selection'
   label: string
@@ -63,4 +68,10 @@ export interface SkeletonCard {
   description: string
   required_lemmas: string[]
   assumptions_to_check: string[]
+}
+
+export interface BlockReference {
+  id: string
+  type: string
+  title: string | null
 }

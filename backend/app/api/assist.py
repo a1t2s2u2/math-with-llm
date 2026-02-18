@@ -7,7 +7,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from app.models.block import Block
-from app.models.llm import LeanGeneration, PatchResult, SkeletonResponse
+from app.models.llm import SkeletonResponse
 from app.services import file_storage, llm
 
 router = APIRouter(prefix="/assist", tags=["assist"])
@@ -27,37 +27,24 @@ class SkeletonRequest(BaseModel):
     block_id: str
 
 
-class LeanGenerateRequest(BaseModel):
-    file_path: str
-    block_id: str
-
-
-class LeanFixRequest(BaseModel):
-    lean_code: str
-    diagnostics: list[dict[str, str | int]]
+class ChatHistoryItem(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
 
 
 class ChatRequest(BaseModel):
     message: str
     context_type: Literal["block", "selection"] | None = None
     context_content: str | None = None
+    file_path: str | None = None
+    block_id: str | None = None
+    history: list[ChatHistoryItem] = []
 
 
 @router.post("/skeleton", response_model=SkeletonResponse)
 def generate_skeleton_endpoint(request: SkeletonRequest) -> SkeletonResponse:
     block, context = _find_block(request.file_path, request.block_id)
     return llm.generate_skeleton(block, context)
-
-
-@router.post("/lean/generate", response_model=LeanGeneration)
-def generate_lean_endpoint(request: LeanGenerateRequest) -> LeanGeneration:
-    block, context = _find_block(request.file_path, request.block_id)
-    return llm.generate_lean(block, context)
-
-
-@router.post("/lean/fix", response_model=PatchResult)
-def generate_fix_endpoint(request: LeanFixRequest) -> PatchResult:
-    return llm.generate_fix_patch(request.lean_code, request.diagnostics)
 
 
 class ChatResponse(BaseModel):
@@ -72,11 +59,40 @@ def chat_endpoint(request: ChatRequest) -> ChatResponse:
 
 @router.post("/chat/stream")
 def chat_stream_endpoint(request: ChatRequest) -> StreamingResponse:
+    history = [{"role": h.role, "content": h.content} for h in request.history]
+
+    if request.file_path and request.block_id:
+        file_content = file_storage.read_file(request.file_path)
+        return StreamingResponse(
+            _generate_with_tools(
+                request.message,
+                request.context_content,
+                request.block_id,
+                file_content.blocks,
+                history,
+            ),
+            media_type="text/event-stream",
+        )
+
     def generate() -> Generator[str, None, None]:
         for chunk in llm.chat_stream(
-            request.message, request.context_type, request.context_content
+            request.message, request.context_type, request.context_content, history
         ):
             yield f"data: {json.dumps({'content': chunk})}\n\n"
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(generate(), media_type="text/event-stream")
+
+
+def _generate_with_tools(
+    message: str,
+    context_content: str | None,
+    block_id: str,
+    blocks: list[Block],
+    history: list[dict[str, str]],
+) -> Generator[str, None, None]:
+    for event in llm.chat_stream_with_tools(
+        message, context_content, block_id, blocks, history
+    ):
+        yield f"data: {json.dumps(event)}\n\n"
+    yield "data: [DONE]\n\n"

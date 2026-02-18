@@ -12,12 +12,7 @@ class SkeletonResponse(BaseModel):
     cards: list[SkeletonCard]
 
 
-class LeanGeneration(BaseModel):
-    lean_code: str
-    imports: list[str] = []
-    notes: str = ""
-
-
-class PatchResult(BaseModel):
-    patch: str
-    description: str
+class BlockReference(BaseModel):
+    id: str
+    type: str
+    title: str | None = None

@@ -1,10 +1,12 @@
 import type {
   FileNode,
   FileContent,
+  ChatMessage,
   GitStatus,
   GitDiff,
   GitCommitResult,
-  SkeletonCard
+  SkeletonCard,
+  BlockReference
 } from '~/types/api'
 
 const API_BASE = '/api'
@@ -40,20 +42,31 @@ export async function chatStreamApi(
   message: string,
   contextType: string | null,
   contextContent: string | null,
-  onChunk: (text: string) => void
+  onChunk: (text: string) => void,
+  options?: {
+    filePath?: string
+    blockId?: string
+    history?: ChatMessage[]
+    onReferences?: (refs: BlockReference[]) => void
+  }
 ): Promise<void> {
+  const body: Record<string, unknown> = {
+    message,
+    context_type: contextType,
+    context_content: contextContent
+  }
+  if (options?.filePath) body.file_path = options.filePath
+  if (options?.blockId) body.block_id = options.blockId
+  if (options?.history?.length) body.history = options.history
+
   const response = await fetch(`${API_BASE}/assist/chat/stream`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      message,
-      context_type: contextType,
-      context_content: contextContent
-    })
+    body: JSON.stringify(body)
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new Error(`API error ${response.status}: ${body}`)
+    const text = await response.text()
+    throw new Error(`API error ${response.status}: ${text}`)
   }
 
   const reader = response.body!.getReader()
@@ -73,7 +86,11 @@ export async function chatStreamApi(
       const data = line.slice(6)
       if (data === '[DONE]') return
       const parsed = JSON.parse(data)
-      onChunk(parsed.content)
+      if (parsed.references && options?.onReferences) {
+        options.onReferences(parsed.references)
+      } else if (parsed.content) {
+        onChunk(parsed.content)
+      }
     }
   }
 }
@@ -201,4 +218,23 @@ export function generateSkeleton(
     method: 'POST',
     body: JSON.stringify({ file_path: filePath, block_id: blockId })
   })
+}
+
+// Handwriting API
+
+export async function convertHandwriting(imageBlob: Blob): Promise<{ latex: string }> {
+  const formData = new FormData()
+  formData.append('file', imageBlob, 'handwriting.png')
+
+  const response = await fetch(`${API_BASE}/handwriting/convert`, {
+    method: 'POST',
+    body: formData
+  })
+
+  if (!response.ok) {
+    const body = await response.text()
+    throw new Error(`API error ${response.status}: ${body}`)
+  }
+
+  return response.json()
 }

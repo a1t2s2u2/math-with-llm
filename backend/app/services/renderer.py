@@ -303,6 +303,8 @@ def _convert_structure(html: str, tracker: _PositionTracker) -> str:
 
     # 段落
     html = re.sub(r"\n\n+", "</p><p>", html)
+    # 単一改行を <br> に変換
+    html = re.sub(r"\n", "<br>\n", html)
     html = f"<p>{html}</p>"
 
     return html

@@ -164,6 +164,15 @@ watch(
   color: var(--color-text);
 }
 
+/* Proposition environment */
+.preview-content :deep(.latex-env.proposition) {
+  border-left-color: #e8873a;
+}
+
+.preview-content :deep(.proposition .env-heading) {
+  color: #e8873a;
+}
+
 /* Proof environment */
 .preview-content :deep(.latex-env.proof) {
   border-left-color: #888;

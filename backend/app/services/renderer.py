@@ -301,10 +301,12 @@ def _convert_structure(html: str, tracker: _PositionTracker) -> str:
         html,
     )
 
-    # 段落
-    html = re.sub(r"\n\n+", "</p><p>", html)
-    # 単一改行を <br> に変換
+    # 改行を <br> に変換（空行は <br> 連続で段落間の空きになる）
     html = re.sub(r"\n", "<br>\n", html)
+    # ブロック要素の前後の不要な <br> を除去
+    _block = r"div|/div|h[1-4]|/h[1-4]|ol|/ol|ul|/ul"
+    html = re.sub(rf"(<br>\s*)+(<(?:{_block}))", r"\2", html)
+    html = re.sub(r"(</(?:div|h[1-4]|ol|ul)>)(\s*<br>)+", r"\1", html)
     html = f"<p>{html}</p>"
 
     return html

@@ -100,9 +100,12 @@ const formatType = (type: string) => {
 
 .block-theorem,
 .block-lemma,
-.block-proposition,
 .block-corollary {
   border-left-color: #198754;
+}
+
+.block-proposition {
+  border-left-color: #e8873a;
 }
 
 .block-proof {
@@ -131,10 +134,14 @@ const formatType = (type: string) => {
 
 .block-theorem .block-type,
 .block-lemma .block-type,
-.block-proposition .block-type,
 .block-corollary .block-type {
   background: #19875420;
   color: #198754;
+}
+
+.block-proposition .block-type {
+  background: #e8873a20;
+  color: #e8873a;
 }
 
 .block-proof .block-type {

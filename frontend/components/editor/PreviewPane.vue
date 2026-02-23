@@ -146,7 +146,7 @@ watch(
 .preview-content :deep(.latex-env) {
   margin: 18px 0;
   padding: 14px;
-  border-left: 3px solid var(--color-accent);
+  border-left: 3px solid #6c757d;
   background: var(--color-bg-secondary);
   border-radius: 4px;
 }
@@ -154,7 +154,7 @@ watch(
 .preview-content :deep(.env-heading) {
   font-weight: bold;
   font-size: 18px;
-  color: var(--color-accent);
+  color: #6c757d;
   margin-bottom: 8px;
 }
 
@@ -164,7 +164,29 @@ watch(
   color: var(--color-text);
 }
 
-/* Proposition environment */
+/* Definition */
+.preview-content :deep(.latex-env.definition) {
+  border-left-color: #0d6efd;
+}
+
+.preview-content :deep(.definition .env-heading) {
+  color: #0d6efd;
+}
+
+/* Theorem, Lemma, Corollary */
+.preview-content :deep(.latex-env.theorem),
+.preview-content :deep(.latex-env.lemma),
+.preview-content :deep(.latex-env.corollary) {
+  border-left-color: #198754;
+}
+
+.preview-content :deep(.theorem .env-heading),
+.preview-content :deep(.lemma .env-heading),
+.preview-content :deep(.corollary .env-heading) {
+  color: #198754;
+}
+
+/* Proposition */
 .preview-content :deep(.latex-env.proposition) {
   border-left-color: #e8873a;
 }
@@ -173,15 +195,20 @@ watch(
   color: #e8873a;
 }
 
-/* Proof environment */
+/* Proof */
 .preview-content :deep(.latex-env.proof) {
-  border-left-color: #888;
-  background: var(--color-bg-secondary);
+  border-left-color: #ffc107;
 }
 
 .preview-content :deep(.proof .env-heading) {
   font-style: italic;
-  color: var(--color-text-muted);
+  color: #b8860b;
+}
+
+/* Remark, Example */
+.preview-content :deep(.remark .env-heading),
+.preview-content :deep(.example .env-heading) {
+  color: #6c757d;
 }
 
 /* Lists */

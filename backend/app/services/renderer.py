@@ -233,6 +233,11 @@ def _convert_structure(html: str, tracker: _PositionTracker) -> str:
         lambda m: section_replace(m, "h3", "latex-subsubsection", "subsubsection"),
         html,
     )
+    html = re.sub(
+        r"\\paragraph\{([^}]+)\}",
+        lambda m: section_replace(m, "h4", "latex-paragraph", "paragraph"),
+        html,
+    )
 
     # 定理環境（行番号付き）
     env_types = [

@@ -206,6 +206,13 @@ watch(
   color: var(--color-accent);
 }
 
+.preview-content :deep(.latex-paragraph) {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 12px 0 8px 0;
+  color: var(--color-accent);
+}
+
 /* Document title block */
 .preview-content :deep(.latex-title-block) {
   text-align: center;

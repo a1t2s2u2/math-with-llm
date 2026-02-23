@@ -1,0 +1,54 @@
+\begin{definition}[Stiefel 多様体]
+$n,p$ を自然数で $p\le n$ とする．
+実数体上の Stiefel 多様体 $\mathrm{St}(p,n)$ を
+\[
+\mathrm{St}(p,n)
+=
+\{\, W\in\mathbb{R}^{n\times p}\mid W^\top W = I_p \,\}
+\]
+によって定義する．
+\end{definition}
+
+\noindent
+すなわち $\mathrm{St}(p,n)$ は，
+$\mathbb{R}^n$ における $p$ 本の互いに直交し，
+かつ単位長を持つ列ベクトルの組全体からなる集合である．
+各行列 $W=[w_1,\dots,w_p]$ の列ベクトルは
+\[
+\langle w_i , w_j \rangle = \delta_{ij}
+\]
+を満たし，ここで $\delta_{ij}$ は Kronecker のデルタである．
+
+\begin{remark}
+幾何学的には，$\mathrm{St}(p,n)$ の各点 $W$ は
+$\mathbb{R}^n$ 内の $p$ 次元部分空間の
+\emph{正規直交基底}を表す．
+ただし基底の取り方は一意ではなく，
+任意の直交行列 $Q\in O(p)$ に対して
+$W$ と $WQ$ は同じ部分空間を張る．
+この同一視を行うと Grassmann 多様体
+\[
+\mathrm{Gr}(p,n)
+\]
+が得られる．
+\end{remark}
+
+\begin{remark}
+$\mathrm{St}(p,n)$ は
+$\mathbb{R}^{n\times p}$ の部分集合であり，
+制約条件 $W^\top W=I_p$ によって定まる
+滑らかな多様体となる．
+その次元は
+\[
+\dim \mathrm{St}(p,n)=np-\frac{p(p+1)}{2}
+\]
+で与えられる．
+\end{remark}
+
+\begin{example}
+$p=1$ のとき，
+\[
+\mathrm{St}(1,n)=\{w\in\mathbb{R}^n\mid \|w\|=1\}
+\]
+となり，これは $n$ 次元ユークリッド空間における単位球面 $S^{n-1}$ に一致する．
+\end{example}

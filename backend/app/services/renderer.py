@@ -301,12 +301,16 @@ def _convert_structure(html: str, tracker: _PositionTracker) -> str:
         html,
     )
 
-    # 改行を <br> に変換（空行は <br> 連続で段落間の空きになる）
+    # 段落分割（空行で区切る）
+    html = re.sub(r"\n\n+", "</p><p>", html)
+    # 単一改行を <br> に変換
     html = re.sub(r"\n", "<br>\n", html)
     # ブロック要素の前後の不要な <br> を除去
-    _block = r"div|/div|h[1-4]|/h[1-4]|ol|/ol|ul|/ul"
+    _block = r"div|/div|h[1-4]|/h[1-4]|ol|/ol|ul|/ul|p|/p"
     html = re.sub(rf"(<br>\s*)+(<(?:{_block}))", r"\2", html)
-    html = re.sub(r"(</(?:div|h[1-4]|ol|ul)>)(\s*<br>)+", r"\1", html)
+    html = re.sub(r"(</(?:div|h[1-4]|ol|ul|p)>)(\s*<br>)+", r"\1", html)
     html = f"<p>{html}</p>"
+    # \noindent を段落のクラスに変換
+    html = re.sub(r"(<p>)\s*\\noindent\b\s*", r'<p class="noindent">', html)
 
     return html

@@ -134,7 +134,12 @@ watch(
 }
 
 .preview-content p {
-  margin-bottom: 14px;
+  text-indent: 1em;
+  margin-bottom: 1.5em;
+}
+
+.preview-content p.noindent {
+  text-indent: 0;
 }
 
 /* Theorem environments */

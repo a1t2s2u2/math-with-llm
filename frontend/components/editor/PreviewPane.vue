@@ -200,22 +200,26 @@ watch(
 .preview-content :deep(.latex-subsection) {
   font-size: 20px;
   font-weight: bold;
-  margin: 20px 0 12px 0;
+  margin: 24px 0 12px 0;
   color: var(--color-accent);
+  border-bottom: 1px solid #3e3e3e;
+  padding-bottom: 6px;
 }
 
 .preview-content :deep(.latex-subsubsection) {
   font-size: 18px;
   font-weight: bold;
-  margin: 16px 0 10px 0;
+  margin: 20px 0 10px 0;
   color: var(--color-accent);
 }
 
 .preview-content :deep(.latex-paragraph) {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: bold;
-  margin: 12px 0 8px 0;
+  margin: 16px 0 4px 0;
   color: var(--color-accent);
+  border-bottom: 1px dashed var(--color-accent);
+  padding-bottom: 2px;
 }
 
 /* Document title block */
